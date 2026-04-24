@@ -49,7 +49,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background">
       <aside className="w-64 flex-shrink-0 border-r border-border bg-card flex flex-col">
         <div className="h-20 flex items-center px-5 border-b border-border">
-          <Logo size="sm" showSlogan={false} />
+          <Logo variant="wordmark" heightPx={36} />
         </div>
         <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
           {filteredNav.map((item) => {

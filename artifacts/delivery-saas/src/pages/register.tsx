@@ -55,7 +55,7 @@ export default function Register() {
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="mb-8">
-            <Logo size="md" showSlogan={true} />
+            <Logo heightPx={110} />
           </div>
 
           <h2 className="text-3xl font-extrabold tracking-tight text-foreground">

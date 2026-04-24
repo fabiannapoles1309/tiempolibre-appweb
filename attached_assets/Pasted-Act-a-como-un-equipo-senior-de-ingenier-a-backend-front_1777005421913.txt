@@ -1,0 +1,153 @@
+Actúa como un equipo senior de ingeniería (backend, frontend, DevOps, UX) y genera una aplicación B2B de entregas a domicilio lista para producción.
+
+## 🎯 OBJETIVO
+Construir un SaaS web completo donde:
+- Clientes crean pedidos
+- Admin gestiona operación
+- Sistema asigna repartidores por zona (manual y automático)
+- Hay dashboard financiero real
+- Incluye autenticación segura
+
+## 🧱 STACK (OBLIGATORIO)
+- Backend: Node.js + Express
+- DB: PostgreSQL
+- ORM: Prisma
+- Auth: JWT + bcrypt
+- Frontend: React (Vite) con UI moderna (Tailwind o similar)
+- Estado: React Query o Context
+- Validación: Zod o similar
+
+## 🗂️ ESTRUCTURA
+Monorepo:
+- /server (API)
+- /web (frontend)
+- /prisma (schema)
+- .env.example
+
+## 🔐 AUTENTICACIÓN
+- Registro y login
+- Roles: ADMIN, CLIENTE, DRIVER
+- Middleware de autorización por rol
+- Persistencia de sesión (JWT en httpOnly cookie o header)
+
+## 📦 MÓDULO DE PEDIDOS
+Campos:
+- pickup (string)
+- delivery (string)
+- zona (enum: Norte, Sur, Este, Oeste)
+- pago (enum: Efectivo, Transferencia, Billetera)
+- monto (number)
+- status (enum: PENDIENTE, ASIGNADO, EN_RUTA, ENTREGADO)
+- driverId (nullable)
+
+Endpoints:
+- POST /orders
+- GET /orders (filtros por estado/fecha/cliente)
+- PATCH /orders/:id (status, asignación)
+- POST /orders/assign-auto (por zona)
+- POST /orders/assign-manual (driverId)
+
+## 🚚 REPARTIDORES (DRIVERS)
+- CRUD de drivers
+- Campo zona (puede cubrir varias)
+- Disponibilidad (activo/inactivo)
+
+## 🧭 ZONIFICACIÓN
+- Tabla Zone
+- Reglas simples de asignación por zona
+- Función de auto-asignación: toma pedidos PENDIENTE y asigna driver disponible de la misma zona (round-robin o el de menor carga)
+
+## 💰 FINANZAS
+- Tabla Transaction (orderId, amount, type: ingreso/gasto, method)
+- Endpoints:
+  - GET /finance/summary?range=day|week|month
+- KPIs:
+  - ingresos, gastos, utilidad
+  - pedidos por periodo
+- Billetera digital por cliente (balance, movimientos)
+  - POST /wallet/topup
+  - GET /wallet
+  - GET /wallet/transactions
+
+## 📊 REPORTES
+- Entregas por día/semana/mes
+- Rendimiento por driver
+- Filtros por fecha y zona
+
+## 🗄️ PRISMA SCHEMA
+Incluye modelos:
+- User (id, email, password, role)
+- Order (campos arriba)
+- Driver (id, name, zonas[], active)
+- Zone (id, name)
+- Transaction (id, orderId, amount, type, method, createdAt)
+- Wallet (userId, balance)
+- WalletTx (id, userId, amount, type, createdAt)
+
+## 🔌 API (Express)
+- Rutas organizadas por módulo
+- Middleware de auth y roles
+- Validación de payloads
+- Manejo de errores centralizado
+- Seed script con:
+  - 1 admin
+  - 2 drivers (Norte/Sur)
+  - datos de prueba
+
+## 🌐 FRONTEND (React)
+Pantallas:
+1. Login / Registro
+2. Dashboard (KPIs: ingresos, pedidos, asignados)
+3. Crear Pedido
+4. Lista de Pedidos (filtros + acciones)
+5. Panel Admin (asignación manual/automática)
+6. Drivers (gestión)
+7. Reportes (gráficas)
+8. Finanzas (ingresos/gastos/utilidad)
+9. Billetera (saldo + movimientos)
+
+Requisitos UI:
+- Estilo SaaS moderno (tipo Uber)
+- Componentes reutilizables
+- Estados de carga y error
+- Tablas con paginación
+- Gráficas (Chart.js o Recharts)
+
+## 🔐 SEGURIDAD
+- Hash de contraseñas (bcrypt)
+- JWT con expiración
+- Validación de inputs
+- CORS configurado
+- No exponer secretos
+
+## ⚙️ DEVOPS / RUN
+- Scripts:
+  - `npm run dev` (server y web)
+  - `npm run build`
+  - `npm run migrate`
+  - `npm run seed`
+- `.env.example` con:
+  - DATABASE_URL
+  - JWT_SECRET
+- README con pasos claros para correr en Replit:
+  1. Instalar deps
+  2. Configurar env
+  3. `npx prisma migrate dev`
+  4. `npm run dev`
+
+## 🚀 CRITERIOS DE ENTREGA
+- Código completo funcional
+- Sin pseudocódigo
+- Endpoints probables
+- UI navegable
+- Datos seed para demo
+- Comentarios donde sea necesario
+
+## 🎯 ENFOQUE
+Optimizar para:
+- Demostración a clientes/inversionistas
+- Claridad de flujo
+- KPIs visibles
+- Operación completa (no mock)
+
+Entrega todo el código en bloques por archivo con rutas claras.

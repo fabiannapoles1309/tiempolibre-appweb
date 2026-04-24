@@ -1,0 +1,233 @@
+import { useState } from "react";
+import { useGetFinanceSummary, GetFinanceSummaryRange, useListTransactions } from "@workspace/api-client-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { DollarSign, TrendingUp, TrendingDown, Wallet, Activity, CreditCard, ArrowUpRight, ArrowDownRight } from "lucide-react";
+
+const formatMoney = (val: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(val);
+
+const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6'];
+
+export default function Finance() {
+  const [range, setRange] = useState<GetFinanceSummaryRange>("week");
+
+  const { data: summary, isLoading: loadingSummary } = useGetFinanceSummary({ range });
+  const { data: transactions, isLoading: loadingTx } = useListTransactions();
+
+  const formatChartDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return range === 'day' ? format(d, 'HH:mm') : 
+           range === 'month' ? format(d, 'dd MMM', { locale: es }) : 
+           format(d, 'EEEE', { locale: es });
+  };
+
+  return (
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Finanzas</h1>
+          <p className="text-muted-foreground mt-1">Control de ingresos, gastos y rentabilidad general.</p>
+        </div>
+        <Select value={range} onValueChange={(v: any) => setRange(v)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Periodo" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="day">Hoy</SelectItem>
+            <SelectItem value="week">Esta semana</SelectItem>
+            <SelectItem value="month">Este mes</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {!summary || loadingSummary ? (
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {[1,2,3,4,5].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <Card className="bg-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Ingresos Totales</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{formatMoney(summary.income)}</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Gastos Totales</CardTitle>
+              <TrendingDown className="h-4 w-4 text-red-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{formatMoney(summary.expenses)}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-primary/10 border-primary/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-bold text-primary">Ganancia Neta</CardTitle>
+              <DollarSign className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className={`text-3xl font-extrabold ${summary.profit >= 0 ? 'text-primary' : 'text-red-500'}`}>
+                {formatMoney(summary.profit)}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pedidos Liquidados</CardTitle>
+              <Activity className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{summary.ordersCount}</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Ticket Promedio</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-foreground">{formatMoney(summary.avgTicket)}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Flujo de Caja</CardTitle>
+            <CardDescription>Evolución de ingresos y egresos en el tiempo</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            {loadingSummary ? <Skeleton className="h-full w-full" /> : summary?.timeline.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-muted-foreground">No hay actividad</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={summary?.timeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorIncome" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorExpenses" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" tickFormatter={formatChartDate} axisLine={false} tickLine={false} dy={10} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                  <RechartsTooltip formatter={(val: number) => formatMoney(val)} labelFormatter={formatChartDate} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }} />
+                  <Legend />
+                  <Area type="monotone" dataKey="income" name="Ingresos" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorIncome)" />
+                  <Area type="monotone" dataKey="expenses" name="Gastos" stroke="#ef4444" strokeWidth={2} fillOpacity={1} fill="url(#colorExpenses)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Métodos de Pago</CardTitle>
+            <CardDescription>Distribución de ingresos por canal</CardDescription>
+          </CardHeader>
+          <CardContent className="h-[350px]">
+            {loadingSummary ? <Skeleton className="h-full w-full" /> : summary?.byMethod.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-muted-foreground">Sin pagos registrados</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={summary?.byMethod}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={5}
+                    dataKey="total"
+                    nameKey="method"
+                  >
+                    {summary?.byMethod.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip formatter={(val: number) => formatMoney(val)} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Transacciones Recientes</CardTitle>
+          <CardDescription>Últimos movimientos financieros del sistema</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          {loadingTx ? (
+            <div className="p-6 space-y-4">
+              {[1,2,3,4].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+            </div>
+          ) : !transactions || transactions.length === 0 ? (
+            <div className="p-12 text-center text-muted-foreground">No hay transacciones recientes.</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Método</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.map((tx) => (
+                  <TableRow key={tx.id}>
+                    <TableCell className="text-muted-foreground">
+                      {format(new Date(tx.createdAt), "dd MMM HH:mm", { locale: es })}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {tx.description}
+                      {tx.orderId && <span className="ml-2 text-xs text-muted-foreground">Ord #{tx.orderId}</span>}
+                    </TableCell>
+                    <TableCell>
+                      {tx.type === "INGRESO" ? (
+                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20"><ArrowUpRight className="mr-1 h-3 w-3" /> INGRESO</Badge>
+                      ) : (
+                        <Badge variant="outline" className="bg-red-500/10 text-red-600 border-red-500/20"><ArrowDownRight className="mr-1 h-3 w-3" /> GASTO</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">{tx.method}</Badge>
+                    </TableCell>
+                    <TableCell className={`text-right font-bold ${tx.type === 'INGRESO' ? 'text-green-500' : 'text-red-500'}`}>
+                      {tx.type === 'INGRESO' ? '+' : '-'}{formatMoney(tx.amount)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -1,9 +1,10 @@
 import { useGetDashboard, OrderStatus } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Package, Truck, CheckCircle2, DollarSign, Clock, Users } from "lucide-react";
+import { Package, Truck, CheckCircle2, DollarSign, Clock, Users, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { BarChart, Bar, XAxis, YAxis, Tooltip as RechartsTooltip, ResponsiveContainer, Cell, PieChart, Pie, Legend } from "recharts";
@@ -17,7 +18,9 @@ const statusColors: Record<string, string> = {
   [OrderStatus.CANCELADO]: "bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-400",
 };
 
-const CHART_COLORS = ['#ff6b00', '#3b82f6', '#10b981', '#8b5cf6', '#ef4444'];
+const CHART_COLORS = ['#00B5E2', '#0B1E2D', '#10b981', '#f59e0b', '#ef4444'];
+
+const ARS = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -52,9 +55,20 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{getGreeting()}, {user?.name?.split(' ')[0]}</h1>
-        <p className="text-muted-foreground mt-1">Aquí está el resumen de tu operación hoy.</p>
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold tracking-wider text-primary uppercase">{getGreeting()}, {user?.name?.split(' ')[0]}</p>
+          <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mt-1">
+            Panel de Control de Reparto
+          </h1>
+          <p className="text-muted-foreground mt-2">Resumen en tiempo real de tu operación.</p>
+        </div>
+        <Link href="/orders/new">
+          <Button size="lg" className="h-11 text-base font-semibold shadow-sm">
+            <Plus className="w-5 h-5 mr-2" />
+            Crear Nuevo Pedido
+          </Button>
+        </Link>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -100,7 +114,7 @@ export default function Dashboard() {
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${kpis.todayRevenue.toFixed(2)}</div>
+            <div className="text-2xl font-bold">{ARS.format(kpis.todayRevenue)}</div>
           </CardContent>
         </Card>
         <Card>
@@ -199,8 +213,8 @@ export default function Dashboard() {
                       <Badge variant="outline" className={statusColors[order.status]}>
                         {order.status}
                       </Badge>
-                      <div className="font-medium text-right w-16">
-                        ${order.amount.toFixed(2)}
+                      <div className="font-medium text-right w-24">
+                        {ARS.format(order.amount)}
                       </div>
                     </div>
                   </div>

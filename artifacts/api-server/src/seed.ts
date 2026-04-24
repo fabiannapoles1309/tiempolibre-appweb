@@ -13,9 +13,9 @@ async function main() {
 
   // Users
   const users = [
-    { email: "admin@rapidoo.com", name: "Admin Rapidoo", password: "admin123", role: "ADMIN" },
-    { email: "cliente@rapidoo.com", name: "María Pérez", password: "cliente123", role: "CLIENTE" },
-    { email: "driver@rapidoo.com", name: "Carlos Gómez", password: "driver123", role: "DRIVER" },
+    { email: "admin@tiempolibre.com", name: "Admin TiempoLibre", password: "admin123", role: "ADMIN" },
+    { email: "cliente@tiempolibre.com", name: "María Pérez", password: "cliente123", role: "CLIENTE" },
+    { email: "driver@tiempolibre.com", name: "Carlos Gómez", password: "driver123", role: "DRIVER" },
   ] as const;
 
   for (const u of users) {
@@ -35,7 +35,7 @@ async function main() {
     }
   }
 
-  const [cliente] = await db.select().from(usersTable).where(eq(usersTable.email, "cliente@rapidoo.com"));
+  const [cliente] = await db.select().from(usersTable).where(eq(usersTable.email, "cliente@tiempolibre.com"));
 
   // Drivers
   const driverSeeds = [

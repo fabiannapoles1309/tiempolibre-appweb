@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
 import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/logo";
 
 interface NavItem {
   title: string;
@@ -47,11 +48,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <aside className="w-64 flex-shrink-0 border-r border-border bg-card flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-border">
-          <div className="flex items-center gap-2 text-primary font-bold text-xl tracking-tight">
-            <Truck className="w-6 h-6" />
-            <span>RAPIDOO</span>
-          </div>
+        <div className="h-20 flex items-center px-5 border-b border-border">
+          <Logo size="sm" showSlogan={false} />
         </div>
         <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
           {filteredNav.map((item) => {

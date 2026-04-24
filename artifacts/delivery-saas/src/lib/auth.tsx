@@ -13,7 +13,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(() => {
-    const saved = localStorage.getItem("rapidoo_user");
+    const saved = localStorage.getItem("tiempolibre_user");
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -36,25 +36,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (meData?.user) {
       setUserState(meData.user);
-      localStorage.setItem("rapidoo_user", JSON.stringify(meData.user));
+      localStorage.setItem("tiempolibre_user", JSON.stringify(meData.user));
     } else if (meData && !meData.user) {
       setUserState(null);
-      localStorage.removeItem("rapidoo_user");
+      localStorage.removeItem("tiempolibre_user");
     }
   }, [meData]);
 
   const setUser = (newUser: User | null) => {
     setUserState(newUser);
     if (newUser) {
-      localStorage.setItem("rapidoo_user", JSON.stringify(newUser));
+      localStorage.setItem("tiempolibre_user", JSON.stringify(newUser));
     } else {
-      localStorage.removeItem("rapidoo_user");
+      localStorage.removeItem("tiempolibre_user");
     }
   };
 
   const logout = () => {
     setUserState(null);
-    localStorage.removeItem("rapidoo_user");
+    localStorage.removeItem("tiempolibre_user");
     queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
   };
 

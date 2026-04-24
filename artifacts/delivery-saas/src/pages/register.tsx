@@ -12,7 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Truck, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { Logo } from "@/components/logo";
 
 const registerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
@@ -53,9 +54,8 @@ export default function Register() {
     <div className="min-h-screen bg-background flex">
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
-          <div className="flex items-center gap-2 text-primary font-bold text-2xl tracking-tight mb-8">
-            <Truck className="w-8 h-8" />
-            <span>RAPIDOO</span>
+          <div className="mb-8">
+            <Logo size="md" showSlogan={true} />
           </div>
 
           <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
@@ -146,16 +146,14 @@ export default function Register() {
         </div>
       </div>
       <div className="hidden lg:block relative w-0 flex-1">
-        <div className="absolute inset-0 bg-primary h-full w-full object-cover">
-          <div className="h-full w-full bg-gradient-to-bl from-primary to-orange-600 flex items-center justify-center p-12">
-             <div className="text-primary-foreground max-w-2xl">
-               <h1 className="text-5xl font-extrabold tracking-tight mb-6">
-                 Crece tu negocio con entregas rápidas.
-               </h1>
-               <p className="text-xl opacity-90">
-                 Únete a cientos de empresas que confían en Rapidoo para su logística de última milla.
-               </p>
-             </div>
+        <div className="absolute inset-0 h-full w-full bg-gradient-to-bl from-[#00B5E2] via-[#0096BD] to-[#0B1E2D] flex items-center justify-center p-12">
+          <div className="text-white max-w-2xl">
+            <h1 className="text-5xl font-extrabold tracking-tight mb-6">
+              Hacé crecer tu negocio con entregas rápidas.
+            </h1>
+            <p className="text-xl opacity-90">
+              Sumate a las empresas que confían en TiempoLibre para su logística de última milla.
+            </p>
           </div>
         </div>
       </div>

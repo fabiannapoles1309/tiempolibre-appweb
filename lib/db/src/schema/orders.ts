@@ -21,6 +21,7 @@ export const ordersTable = pgTable("orders", {
   deliveryLat: numeric("delivery_lat", { precision: 10, scale: 7 }),
   deliveryLng: numeric("delivery_lng", { precision: 10, scale: 7 }),
   // Datos de contacto y cobro adicionales
+  recipientName: varchar("recipient_name", { length: 255 }),
   recipientPhone: varchar("recipient_phone", { length: 64 }),
   cashAmount: numeric("cash_amount", { precision: 12, scale: 2 }),
   cashChange: numeric("cash_change", { precision: 12, scale: 2 }),

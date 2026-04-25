@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import maplibregl, { type Map as MapLibreMap, type Marker } from "maplibre-gl";
@@ -22,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -77,7 +79,10 @@ const orderSchema = z
   .object({
     pickup: z.string().min(1, "La dirección de recolección es requerida"),
     delivery: z.string().min(1, "La dirección de entrega es requerida"),
+    recipientName: z.string().min(2, "Captura el nombre del destinatario"),
     recipientPhone: z.string().min(6, "Ingresa el teléfono del destinatario"),
+    allowMarketingSms: z.boolean().optional().default(false),
+    allowMarketingEmail: z.boolean().optional().default(false),
     payment: z.enum(ALL_PAYMENTS, {
       required_error: "Selecciona un método de pago",
     }),
@@ -202,7 +207,10 @@ export default function NewOrder() {
     defaultValues: {
       pickup: "",
       delivery: "",
+      recipientName: "",
       recipientPhone: "",
+      allowMarketingSms: false,
+      allowMarketingEmail: false,
       notes: "",
       cashAmount: "",
       cashChange: "",
@@ -210,6 +218,50 @@ export default function NewOrder() {
   });
 
   const payment = form.watch("payment");
+  const recipientPhoneVal = form.watch("recipientPhone");
+
+  // Directorio de destinatarios del cliente (sólo para CLIENTE). Se usa para
+  // autollenar el nombre + consentimientos cuando el teléfono coincide con
+  // un destinatario previamente registrado.
+  type RecipientRow = {
+    id: number;
+    name: string;
+    phone: string;
+    allowMarketingSms: boolean;
+    allowMarketingEmail: boolean;
+    orderCount: number;
+    lastUsedAt: string;
+  };
+  const { data: myRecipients = [] } = useQuery<RecipientRow[]>({
+    enabled: isCliente,
+    queryKey: ["my-recipients"],
+    queryFn: async () => {
+      const r = await fetch("/api/me/recipients", { credentials: "include" });
+      if (!r.ok) return [];
+      return r.json();
+    },
+    staleTime: 60_000,
+  });
+  const phoneIndex = useMemo(() => {
+    const m = new Map<string, RecipientRow>();
+    for (const r of myRecipients) m.set(r.phone, r);
+    return m;
+  }, [myRecipients]);
+
+  // Cuando el teléfono coincide exacto con uno conocido, autollenamos el
+  // nombre + consentimientos (sólo si el nombre todavía no fue tipeado a
+  // mano por el usuario).
+  useEffect(() => {
+    if (!isCliente || !recipientPhoneVal) return;
+    const match = phoneIndex.get(recipientPhoneVal.trim());
+    if (!match) return;
+    const currentName = (form.getValues("recipientName") ?? "").trim();
+    if (!currentName || currentName === match.name) {
+      form.setValue("recipientName", match.name, { shouldValidate: true });
+      form.setValue("allowMarketingSms", match.allowMarketingSms);
+      form.setValue("allowMarketingEmail", match.allowMarketingEmail);
+    }
+  }, [isCliente, recipientPhoneVal, phoneIndex, form]);
 
   // Para CLIENTE el domicilio de recolección está fijado en su perfil y se
   // pre-llena automáticamente cuando llega `/me/customer`. El campo del
@@ -378,12 +430,18 @@ export default function NewOrder() {
     }
     try {
       await createMutation.mutateAsync({
+        // Los campos `recipientName` + `allowMarketing*` aún no están en el
+        // OpenAPI generado; el backend los acepta como opcionales. Casteamos
+        // a `any` para sortear el chequeo estricto sin regenerar el cliente.
         data: {
           pickup: data.pickup,
           delivery: data.delivery,
           payment: data.payment,
           notes: data.notes ?? null,
           recipientPhone: data.recipientPhone,
+          recipientName: data.recipientName,
+          allowMarketingSms: !!data.allowMarketingSms,
+          allowMarketingEmail: !!data.allowMarketingEmail,
           cashAmount:
             data.payment === PaymentMethod.EFECTIVO && data.cashAmount
               ? Number(data.cashAmount)
@@ -394,7 +452,7 @@ export default function NewOrder() {
               : null,
           deliveryLat: selectedPoint?.lat ?? null,
           deliveryLng: selectedPoint?.lng ?? null,
-        },
+        } as any,
       });
       queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
@@ -549,6 +607,24 @@ export default function NewOrder() {
 
                 <FormField
                   control={form.control}
+                  name="recipientName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre del destinatario</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ej. María López"
+                          data-testid="input-recipient-name"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
                   name="recipientPhone"
                   render={({ field }) => (
                     <FormItem>
@@ -565,6 +641,55 @@ export default function NewOrder() {
                     </FormItem>
                   )}
                 />
+
+                {isCliente && (
+                  <div className="space-y-2 rounded-md border bg-muted/30 p-3">
+                    <p className="text-sm font-medium">
+                      Consentimientos del destinatario (opcional)
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Marca sólo si el destinatario aceptó recibir comunicaciones
+                      promocionales en este número o correo. Se guarda en tu
+                      directorio para próximos envíos.
+                    </p>
+                    <FormField
+                      control={form.control}
+                      name="allowMarketingSms"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={!!field.value}
+                              onCheckedChange={(v) => field.onChange(!!v)}
+                              data-testid="checkbox-marketing-sms"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm font-normal">
+                            Acepta recibir SMS promocionales
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="allowMarketingEmail"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={!!field.value}
+                              onCheckedChange={(v) => field.onChange(!!v)}
+                              data-testid="checkbox-marketing-email"
+                            />
+                          </FormControl>
+                          <FormLabel className="text-sm font-normal">
+                            Acepta recibir correos promocionales
+                          </FormLabel>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
 
                 <FormField
                   control={form.control}

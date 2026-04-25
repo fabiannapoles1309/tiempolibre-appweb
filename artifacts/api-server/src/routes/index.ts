@@ -13,6 +13,8 @@ import financeExtraRouter from "./finance-extra";
 import financeExportRouter from "./finance-export";
 import benefitsTrackingRouter from "./benefits-tracking";
 import adminRouter from "./admin";
+import recipientsRouter from "./recipients";
+import packageRequestsRouter from "./package-requests";
 
 const router: IRouter = Router();
 
@@ -30,5 +32,7 @@ router.use(financeExtraRouter);
 router.use(financeExportRouter);
 router.use(benefitsTrackingRouter);
 router.use(adminRouter);
+router.use(recipientsRouter);
+router.use(packageRequestsRouter);
 
 export default router;

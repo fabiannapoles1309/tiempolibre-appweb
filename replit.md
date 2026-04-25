@@ -120,3 +120,28 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 - Dashboard KPI for CLIENTE:
   - `routes/reports.ts /reports/dashboard` now returns `kpis.todayDeliveryExpense` = sum of today's non-`CANCELADO` orders' `amount` for the requesting cliente.
   - `pages/dashboard.tsx` renders a sixth card "Gasto en envíos hoy" (orange dollar icon) next to "Ingresos Hoy" only when `user.role === CLIENTE`.
+
+## Recipients directory + package requests (April 2026)
+
+- New tables (`lib/db/src/schema/`):
+  - `recipients` (`recipients.ts`): `id`, `customerId` FK→`customers.id`, `name`, `phone`, `allowMarketingSms`, `allowMarketingEmail`, `orderCount`, `lastUsedAt`, timestamps. Unique `(customerId, phone)`.
+  - `package_requests` (`package-requests.ts`): `id`, `userId`, `customerId`, `status` ∈ {`PENDIENTE`, `APROBADA`, `RECHAZADA`}, `requestedAt`, `processedAt`, `processedByUserId`, `processedNotes`. Has a **partial unique index** `package_requests_one_pending_per_user` on `(user_id) WHERE status='PENDIENTE'` so the "una sola solicitud pendiente por usuario" regla is enforced atómicamente por la base.
+  - `orders.recipientName` (varchar 255, nullable).
+- Order create flow (`routes/orders.ts`): for CLIENTE, `recipientName` + `recipientPhone` are required. The server upserts a `recipients` row keyed by (customerId, phone) — incrementing `orderCount`, refreshing `lastUsedAt`, and overriding the marketing consents with whatever the cliente sent on this order. The recipient name is also persisted on the order row itself.
+- Recipients endpoints (`routes/recipients.ts`):
+  - `GET /me/recipients?q=` — cliente's directory (top 50 by `lastUsedAt`).
+  - `GET /admin/recipients?q=` — admin/superuser, joined with customers + users.
+  - `GET /admin/recipients/export` — `.xlsx` via `exceljs`.
+- Package request endpoints (`routes/package-requests.ts`):
+  - `POST /me/package-requests` — cliente creates a request. La inserción depende del índice único parcial; si dos requests llegan en paralelo, el perdedor recibe HTTP 409 + `reason: PENDING_REQUEST_EXISTS` (mapeado desde el error PG `23505`, mirando `err.code` y `err.cause.code`).
+  - `GET /me/package-requests/active` — returns `{ pending: {...} | null }`.
+  - `GET /admin/package-requests?status=` — admin/superuser list with cliente info.
+  - `POST /admin/package-requests/:id/approve` — corre dentro de `db.transaction`: hace un `UPDATE ... WHERE id=? AND status='PENDIENTE' RETURNING id` para "claim" la solicitud y, **sólo si claim devuelve filas**, recarga +35 envíos en la última suscripción `ACTIVA`/`VENCIDA` con `monthly_deliveries = monthly_deliveries + 35` (SQL atómico) y la reactiva. Si dos admins aprueban en paralelo, sólo uno entra; el resto recibe 400 ("ya procesada"). Probado: 5 approves paralelos → delta neto = +35.
+  - `POST /admin/package-requests/:id/reject` — mismo patrón de transición condicional (`UPDATE ... WHERE id=? AND status='PENDIENTE'`); si no hay filas afectadas, distingue 404 (no existe) vs 400 (ya fue procesada).
+  - On creation, `notificationService.notifyAdminsPackageRequest` builds an admin/superuser notification list and logs the message body. There is no SMTP integration in the repo — the persisted `package_requests` row is the source of truth and the admin UI is the action surface.
+- Frontend:
+  - `pages/order-new.tsx` adds a required "Nombre del destinatario" field plus two optional checkboxes ("Acepta recibir SMS publicitarios", "Acepta recibir correos publicitarios"). Fetches `/api/me/recipients` once on mount; when the typed phone exactly matches a known recipient, autofills name + consents (only if the name field is empty or already equals the recipient's name, so manual edits are not clobbered). The order-create body now passes `recipientName`, `allowMarketingSms`, `allowMarketingEmail` (cast to `any` since the OpenAPI client has not yet been regenerated for these fields).
+  - `pages/wallet.tsx` adds a "Solicitar nuevo paquete de entregas" card for CLIENTE — disabled with an amber "En revisión" pill while the cliente has a pending request, otherwise a clickable cyan button.
+  - `pages/admin-destinatarios.tsx` (`/admin/destinatarios`, ADMIN+SUPERUSER): searchable table of (cliente, destinatario, teléfono, SMS, Email, envíos, último envío) with an "Descargar Excel" button.
+  - `pages/admin-package-requests.tsx` (`/admin/solicitudes-paquetes`, ADMIN+SUPERUSER): "Pendientes" table with Approve/Reject buttons + "Historial" table.
+  - Sidebar (`components/layout.tsx`) gains "Destinatarios" and "Solicitudes de paquete" entries for ADMIN (filtered nav also surfaces them to SUPERUSER).

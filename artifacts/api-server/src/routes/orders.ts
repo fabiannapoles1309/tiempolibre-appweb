@@ -10,6 +10,7 @@ import {
   walletsTable,
   walletTxTable,
   subscriptionsTable,
+  recipientsTable,
   type Order,
 } from "@workspace/db";
 import {
@@ -150,11 +151,12 @@ router.post(
     // (customers.pickupAddress) y no puede ser modificado al crear el envío.
     // Cargamos su perfil acá para usarlo más abajo (pickup forzado y zona).
     let myCustomerRow:
-      | { zone: number | null; pickupAddress: string | null }
+      | { id: number; zone: number | null; pickupAddress: string | null }
       | null = null;
     if (req.user!.role === "CLIENTE") {
       const [row] = await db
         .select({
+          id: customersTable.id,
           zone: customersTable.zone,
           pickupAddress: customersTable.pickupAddress,
         })
@@ -162,6 +164,29 @@ router.post(
         .where(eq(customersTable.userId, req.user!.sub));
       myCustomerRow = row ?? null;
     }
+
+    // Para CLIENTE el destinatario (nombre + teléfono) es obligatorio porque
+    // alimentamos el directorio de DESTINATARIOS y se usa para autollenado
+    // en futuros pedidos.
+    const recipientNameRaw = (req.body?.recipientName ?? "").toString().trim();
+    if (req.user!.role === "CLIENTE") {
+      if (!recipientNameRaw) {
+        res.status(400).json({
+          error: "Captura el nombre del destinatario.",
+          reason: "RECIPIENT_NAME_REQUIRED",
+        });
+        return;
+      }
+      if (!parsed.data.recipientPhone || parsed.data.recipientPhone.length < 6) {
+        res.status(400).json({
+          error: "Captura el teléfono del destinatario.",
+          reason: "RECIPIENT_PHONE_REQUIRED",
+        });
+        return;
+      }
+    }
+    const allowMarketingSms = req.body?.allowMarketingSms === true;
+    const allowMarketingEmail = req.body?.allowMarketingEmail === true;
     const pickup =
       req.user!.role === "CLIENTE" && myCustomerRow?.pickupAddress
         ? myCustomerRow.pickupAddress
@@ -318,12 +343,51 @@ router.post(
             ? String(Math.max(0, Number(parsed.data.cashChange)))
             : null,
         notes: parsed.data.notes ?? null,
+        recipientName: recipientNameRaw || null,
         status: "PENDIENTE",
       })
       .returning();
     if (!order) {
       res.status(500).json({ error: "No se pudo crear el pedido" });
       return;
+    }
+
+    // Upsert del destinatario en el directorio del cliente. Sólo aplica para
+    // CLIENTE (los pedidos creados por ADMIN/SUPERUSER no tienen un cliente
+    // emisor en este flujo). Idempotente por (customer_id, phone).
+    if (
+      req.user!.role === "CLIENTE" &&
+      myCustomerRow &&
+      recipientNameRaw &&
+      parsed.data.recipientPhone
+    ) {
+      try {
+        await db
+          .insert(recipientsTable)
+          .values({
+            customerId: myCustomerRow.id,
+            name: recipientNameRaw,
+            phone: parsed.data.recipientPhone,
+            allowMarketingSms,
+            allowMarketingEmail,
+            orderCount: 1,
+            lastUsedAt: new Date(),
+          })
+          .onConflictDoUpdate({
+            target: [recipientsTable.customerId, recipientsTable.phone],
+            set: {
+              name: recipientNameRaw,
+              allowMarketingSms,
+              allowMarketingEmail,
+              orderCount: sql`${recipientsTable.orderCount} + 1`,
+              lastUsedAt: new Date(),
+            },
+          });
+      } catch (err) {
+        // No queremos abortar la creación del pedido por un fallo de upsert
+        // del directorio. Lo registramos para diagnóstico.
+        console.error("recipients upsert failed", err);
+      }
     }
 
     // Record income transaction

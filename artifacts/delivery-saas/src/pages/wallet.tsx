@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useGetWallet, useListWalletTransactions, useTopUpWallet, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,7 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Wallet, PlusCircle, ArrowUpRight, ArrowDownRight, RotateCcw, Loader2 } from "lucide-react";
+import { Wallet, PlusCircle, ArrowUpRight, ArrowDownRight, RotateCcw, Loader2, PackagePlus, Clock } from "lucide-react";
 
 const topUpSchema = z.object({
   amount: z.coerce.number().min(100, "El monto mínimo es de $100"),
@@ -44,6 +44,46 @@ export default function WalletPage() {
       method: PaymentMethod.TRANSFERENCIA,
     },
   });
+
+  // Solicitudes de paquete: el cliente sólo puede tener UNA pendiente a la vez.
+  // El admin la aprueba (recarga +35 envíos) o la rechaza desde su panel.
+  type PendingReq = { id: number; status: string; requestedAt: string } | null;
+  const { data: activeReqData, refetch: refetchActiveReq } = useQuery<{ pending: PendingReq }>({
+    enabled: isCliente,
+    queryKey: ["my-package-request-active"],
+    queryFn: async () => {
+      const r = await fetch("/api/me/package-requests/active", { credentials: "include" });
+      if (!r.ok) return { pending: null };
+      return r.json();
+    },
+    staleTime: 15_000,
+  });
+  const activeReq = activeReqData?.pending ?? null;
+  const [requesting, setRequesting] = useState(false);
+  const handleRequestPackage = async () => {
+    setRequesting(true);
+    try {
+      const r = await fetch("/api/me/package-requests", {
+        method: "POST",
+        credentials: "include",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      if (r.status === 409) {
+        toast.info("Ya tienes una solicitud pendiente.");
+      } else if (!r.ok) {
+        const err = await r.json().catch(() => ({}));
+        toast.error(err?.error || "No se pudo enviar la solicitud");
+      } else {
+        toast.success("Solicitud enviada. Tu administrador la revisará en breve.");
+      }
+      await refetchActiveReq();
+    } catch {
+      toast.error("Error al enviar la solicitud");
+    } finally {
+      setRequesting(false);
+    }
+  };
 
   const onSubmit = async (data: z.infer<typeof topUpSchema>) => {
     try {
@@ -95,6 +135,64 @@ export default function WalletPage() {
             </div>
           </CardContent>
         </Card>
+
+        {isCliente && (
+          <Card data-testid="card-request-package">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PackagePlus className="w-5 h-5 text-[#00B5E2]" />
+                Solicitar nuevo paquete de entregas
+              </CardTitle>
+              <CardDescription>
+                ¿Te quedaste sin envíos disponibles? Envía una solicitud y tu
+                administrador la revisará para recargar tu paquete mensual.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {activeReq ? (
+                <div
+                  className="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900"
+                  data-testid="alert-package-request-pending"
+                >
+                  <Clock className="w-4 h-4" />
+                  <div>
+                    <p className="font-medium">Solicitud en revisión</p>
+                    <p className="text-xs text-amber-800">
+                      Enviada el{" "}
+                      {format(new Date(activeReq.requestedAt), "dd MMM yyyy, HH:mm", { locale: es })}
+                      . Recibirás una confirmación cuando tu administrador la
+                      apruebe.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Al enviar la solicitud, notificaremos automáticamente al
+                  administrador y al equipo de soporte.
+                </p>
+              )}
+              <Button
+                type="button"
+                onClick={handleRequestPackage}
+                disabled={requesting || !!activeReq}
+                className="bg-[#00B5E2] hover:bg-[#0096BD] text-white"
+                data-testid="button-request-package"
+              >
+                {requesting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  <>
+                    <PackagePlus className="w-4 h-4 mr-2" />
+                    {activeReq ? "Solicitud enviada" : "Solicitar nuevo paquete"}
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {!isCliente && (
         <Card>

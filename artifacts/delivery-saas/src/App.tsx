@@ -28,6 +28,8 @@ import AdminCashByCustomerPage from "@/pages/admin-cash-by-customer";
 import AdminBenefitsConfigPage from "@/pages/admin-benefits-config";
 import AdminBenefitsTrackingPage from "@/pages/admin-benefits-tracking";
 import AdminClientesPage from "@/pages/admin-clientes";
+import AdminDestinatariosPage from "@/pages/admin-destinatarios";
+import AdminPackageRequestsPage from "@/pages/admin-package-requests";
 
 const queryClient = new QueryClient();
 
@@ -93,6 +95,8 @@ function Router() {
       <Route path="/admin/benefits-config" component={() => <ProtectedRoute component={AdminBenefitsConfigPage} roles={["ADMIN"]} />} />
       <Route path="/admin/benefits-tracking" component={() => <ProtectedRoute component={AdminBenefitsTrackingPage} roles={["ADMIN"]} />} />
       <Route path="/admin/clientes" component={() => <ProtectedRoute component={AdminClientesPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/destinatarios" component={() => <ProtectedRoute component={AdminDestinatariosPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/solicitudes-paquetes" component={() => <ProtectedRoute component={AdminPackageRequestsPage} roles={["ADMIN"]} />} />
       <Route component={NotFound} />
     </Switch>
   );

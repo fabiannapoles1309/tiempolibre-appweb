@@ -10,10 +10,12 @@ import { kml as kmlToGeoJson } from "@tmcw/togeojson";
 import { DOMParser as XmlDomParser } from "@xmldom/xmldom";
 import {
   useCreateOrder,
+  useGetMyCustomerProfile,
   PaymentMethod,
   getListOrdersQueryKey,
   getGetDashboardQueryKey,
 } from "@workspace/api-client-react";
+import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +32,32 @@ import {
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, AlertTriangle, MapPin, Check } from "lucide-react";
 
-const ALLOWED_PAYMENTS = [
+// Métodos de pago disponibles según el rol.
+// Para CLIENTE eliminamos BILLETERA porque la auto-recarga de saldo
+// fue retirada del flujo del cliente (ahora sólo solicita un paquete extra).
+const PAYMENTS_BY_ROLE: Record<string, readonly PaymentMethod[]> = {
+  ADMIN: [
+    PaymentMethod.EFECTIVO,
+    PaymentMethod.TRANSFERENCIA,
+    PaymentMethod.BILLETERA,
+    PaymentMethod.TARJETA,
+    PaymentMethod.CORTESIA,
+  ],
+  SUPERUSER: [
+    PaymentMethod.EFECTIVO,
+    PaymentMethod.TRANSFERENCIA,
+    PaymentMethod.BILLETERA,
+    PaymentMethod.TARJETA,
+    PaymentMethod.CORTESIA,
+  ],
+  CLIENTE: [
+    PaymentMethod.EFECTIVO,
+    PaymentMethod.TRANSFERENCIA,
+    PaymentMethod.TARJETA,
+    PaymentMethod.CORTESIA,
+  ],
+};
+const ALL_PAYMENTS = [
   PaymentMethod.EFECTIVO,
   PaymentMethod.TRANSFERENCIA,
   PaymentMethod.BILLETERA,
@@ -51,7 +78,7 @@ const orderSchema = z
     pickup: z.string().min(1, "La dirección de recolección es requerida"),
     delivery: z.string().min(1, "La dirección de entrega es requerida"),
     recipientPhone: z.string().min(6, "Ingresa el teléfono del destinatario"),
-    payment: z.enum(ALLOWED_PAYMENTS, {
+    payment: z.enum(ALL_PAYMENTS, {
       required_error: "Selecciona un método de pago",
     }),
     cashAmount: z.union([z.string(), z.number()]).optional(),
@@ -115,12 +142,21 @@ function bboxFromGeo(geo: Geo): [[number, number], [number, number]] | null {
   ];
 }
 
+// Canonicaliza el nombre de zona del KML a sólo el número (ej: "ZONA 1" -> "1").
+// Debe coincidir con el `customers.zone` (entero) que devuelve /me/customer
+// y con la normalización del backend en mapService.ts.
+function canonicalZoneName(raw: unknown): string {
+  const s = typeof raw === "string" ? raw : "";
+  const m = s.match(/\d+/);
+  return m ? m[0] : s.trim();
+}
+
 function pointInZones(geo: Geo, lng: number, lat: number): string | null {
   const pt = turf.point([lng, lat]);
   for (const f of geo.features) {
     try {
       if (turf.booleanPointInPolygon(pt, f as any)) {
-        return f.properties.name ?? "Zona";
+        return canonicalZoneName(f.properties.name) || "Zona";
       }
     } catch {
       // ignore
@@ -133,6 +169,23 @@ export default function NewOrder() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const createMutation = useCreateOrder();
+  const { user } = useAuth();
+  const role = user?.role ?? "CLIENTE";
+  const isCliente = role === "CLIENTE";
+
+  // Para CLIENTE consultamos su perfil para conocer la zona asignada y
+  // restringir el mapa. ADMIN/SUPERUSER no tienen restricción: la consulta
+  // siempre se ejecuta (el endpoint devuelve campos nulos para no-CLIENTE).
+  const { data: profile, isFetched: profileFetched } = useGetMyCustomerProfile();
+  const clienteZone =
+    isCliente && profile?.clienteZone != null ? String(profile.clienteZone) : null;
+  // El CLIENTE necesita una zona asignada para poder operar. Si la consulta
+  // ya terminó y no hay zona, mostramos un aviso en lugar de quedarnos en
+  // "Cargando zonas..." indefinidamente.
+  const noAssignedZone = isCliente && profileFetched && !clienteZone;
+
+  // Lista de métodos de pago visibles según rol (CLIENTE no ve BILLETERA).
+  const allowedPayments = PAYMENTS_BY_ROLE[role] ?? PAYMENTS_BY_ROLE.CLIENTE;
 
   const mapRef = useRef<MapLibreMap | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -159,8 +212,12 @@ export default function NewOrder() {
   const payment = form.watch("payment");
 
   // Cargar zonas.kml y parsear a GeoJSON.
+  // Para CLIENTE filtramos los polígonos al de su zona asignada, así sólo
+  // puede seleccionar puntos dentro del área autorizada. Esperamos a que
+  // `clienteZone` esté disponible antes de inicializar el mapa.
   useEffect(() => {
     let cancelled = false;
+    if (isCliente && clienteZone === null) return; // aún cargando perfil
     (async () => {
       try {
         const base = import.meta.env.BASE_URL ?? "/";
@@ -169,14 +226,17 @@ export default function NewOrder() {
         const text = await res.text();
         const doc = new XmlDomParser().parseFromString(text, "text/xml") as unknown as Document;
         const fc = kmlToGeoJson(doc) as unknown as Geo;
-        const filtered: Geo = {
-          type: "FeatureCollection",
-          features: fc.features.filter(
-            (f) =>
-              f.geometry &&
-              (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon"),
-          ),
-        };
+        let features = fc.features.filter(
+          (f) =>
+            f.geometry &&
+            (f.geometry.type === "Polygon" || f.geometry.type === "MultiPolygon"),
+        );
+        if (isCliente && clienteZone) {
+          features = features.filter(
+            (f) => canonicalZoneName(f.properties.name) === clienteZone,
+          );
+        }
+        const filtered: Geo = { type: "FeatureCollection", features };
         if (!cancelled) setGeo(filtered);
       } catch (err) {
         console.error("No se pudo cargar zonas.kml", err);
@@ -185,7 +245,7 @@ export default function NewOrder() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isCliente, clienteZone]);
 
   // Init map una sola vez cuando geo + container están listos.
   useEffect(() => {
@@ -264,13 +324,29 @@ export default function NewOrder() {
       setSelectedPoint({ lat, lng });
       form.setValue("deliveryLat", lat);
       form.setValue("deliveryLng", lng);
-      if (matched) {
-        setMatchedZone(matched);
-        setZoneError(null);
-      } else {
+      if (!matched) {
         setMatchedZone(null);
-        setZoneError("Envío fuera de la zona delimitada. Elige un punto dentro de un polígono.");
+        if (isCliente && clienteZone) {
+          setZoneError(
+            `Tu zona registrada es la Zona ${clienteZone}. Sólo puedes elegir un punto dentro de esa zona.`,
+          );
+        } else {
+          setZoneError(
+            "Envío fuera de la zona delimitada. Elige un punto dentro de un polígono.",
+          );
+        }
+        return;
       }
+      // Para CLIENTE además debe coincidir con su zona asignada.
+      if (isCliente && clienteZone && matched !== clienteZone) {
+        setMatchedZone(null);
+        setZoneError(
+          `Tu zona registrada es la Zona ${clienteZone}. El punto elegido cae en la Zona ${matched}.`,
+        );
+        return;
+      }
+      setMatchedZone(matched);
+      setZoneError(null);
     });
 
     return () => {
@@ -389,8 +465,21 @@ export default function NewOrder() {
                 <strong>{matchedZone}</strong>
               </div>
             )}
-            {!geo && (
-              <p className="text-xs text-muted-foreground">Cargando zonas...</p>
+            {noAssignedZone ? (
+              <div
+                className="flex items-start gap-2 text-sm text-amber-800 bg-amber-50 border border-amber-300 rounded-md p-3"
+                data-testid="alert-no-zone"
+              >
+                <AlertTriangle className="w-4 h-4 mt-0.5" />
+                <span>
+                  Tu cuenta aún no tiene una zona asignada. Contacta a tu
+                  administrador para activarla.
+                </span>
+              </div>
+            ) : (
+              !geo && (
+                <p className="text-xs text-muted-foreground">Cargando zonas...</p>
+              )
             )}
           </CardContent>
         </Card>
@@ -465,7 +554,7 @@ export default function NewOrder() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {ALLOWED_PAYMENTS.map((p) => (
+                          {allowedPayments.map((p) => (
                             <SelectItem key={p} value={p}>
                               {PAYMENT_LABELS[p] ?? p}
                             </SelectItem>

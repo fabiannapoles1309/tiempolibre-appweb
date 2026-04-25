@@ -69,7 +69,7 @@ export default function DriverRankingPage() {
                           {isMe ? <span className="ml-2 text-xs text-[#0096BD]">(vos)</span> : null}
                         </td>
                         <td className="py-2 pr-4 text-right">{r.deliveries}</td>
-                        <td className="py-2 text-right">$ {Number(r.revenue).toLocaleString("es-AR")}</td>
+                        <td className="py-2 text-right">$ {Number(r.revenue).toLocaleString("es-MX")}</td>
                       </tr>
                     );
                   })}

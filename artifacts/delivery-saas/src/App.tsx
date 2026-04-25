@@ -21,6 +21,7 @@ import DriverBenefits from "@/pages/driver-benefits";
 import DriverRankingPage from "@/pages/driver-ranking";
 import IncidentsPage from "@/pages/incidents";
 import AdminSubscriptionsPage from "@/pages/admin-subscriptions";
+import SubscriptionPage from "@/pages/subscription";
 import AdminUsersPage from "@/pages/admin-users";
 import AdminCustomerDeliveriesPage from "@/pages/admin-customer-deliveries";
 import AdminCashByCustomerPage from "@/pages/admin-cash-by-customer";
@@ -77,12 +78,15 @@ function Router() {
       <Route path="/map" component={() => <ProtectedRoute component={MapPage} roles={["ADMIN"]} />} />
       <Route path="/reports" component={() => <ProtectedRoute component={Reports} roles={["ADMIN"]} />} />
       <Route path="/finance" component={() => <ProtectedRoute component={Finance} roles={["ADMIN"]} />} />
-      <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["CLIENTE", "ADMIN"]} />} />
+      {/* /wallet sigue disponible para ADMIN (visualización contable);
+          se retiró el acceso del CLIENTE al cancelar la auto-recarga de saldo. */}
+      <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["ADMIN"]} />} />
       <Route path="/driver/benefits" component={() => <ProtectedRoute component={DriverBenefits} roles={["DRIVER"]} />} />
       <Route path="/driver/ranking" component={() => <ProtectedRoute component={DriverRankingPage} roles={["DRIVER", "ADMIN"]} />} />
       <Route path="/driver/incidents" component={() => <ProtectedRoute component={IncidentsPage} roles={["DRIVER"]} />} />
       <Route path="/admin/incidents" component={() => <ProtectedRoute component={IncidentsPage} roles={["ADMIN"]} />} />
       <Route path="/admin/subscriptions" component={() => <ProtectedRoute component={AdminSubscriptionsPage} roles={["ADMIN"]} />} />
+      <Route path="/subscription" component={() => <ProtectedRoute component={SubscriptionPage} roles={["CLIENTE"]} />} />
       <Route path="/admin/users" component={() => <ProtectedRoute component={AdminUsersPage} roles={["ADMIN"]} />} />
       <Route path="/admin/customer-deliveries" component={() => <ProtectedRoute component={AdminCustomerDeliveriesPage} roles={["ADMIN"]} />} />
       <Route path="/admin/cash-by-customer" component={() => <ProtectedRoute component={AdminCashByCustomerPage} roles={["ADMIN"]} />} />

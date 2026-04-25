@@ -34,8 +34,16 @@ function findKmlPath(): string | null {
   return null;
 }
 
+// Canonicalizamos el nombre de la zona a su número (ej: "ZONA 1" -> "1",
+// "Zona 12" -> "12"). Esto debe coincidir con `customers.zone` (entero
+// almacenado como string) usado en el chequeo server-side de CLIENTE.
+// Si no podemos extraer un dígito caemos al índice 1-based.
 function normalizeName(raw: unknown, idx: number): string {
-  if (typeof raw === "string" && raw.trim().length > 0) return raw.trim();
+  if (typeof raw === "string" && raw.trim().length > 0) {
+    const m = raw.match(/\d+/);
+    if (m) return m[0];
+    return raw.trim();
+  }
   return String(idx + 1);
 }
 

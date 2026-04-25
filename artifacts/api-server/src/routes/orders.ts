@@ -5,6 +5,7 @@ import {
   ordersTable,
   driversTable,
   usersTable,
+  customersTable,
   transactionsTable,
   walletsTable,
   walletTxTable,
@@ -181,6 +182,34 @@ router.post(
     // El cliente debe tener una suscripción ACTIVA con envíos restantes
     // para poder crear un pedido (excepto SUPERUSER).
     if (req.user!.role === "CLIENTE") {
+      // Restricción geográfica: el CLIENTE sólo puede crear envíos dentro
+      // de su zona registrada. La zona del cliente se almacena en
+      // customers.zone (entero) y los polígonos KML usan el nombre como
+      // string ("1".."9"...). Comparamos como string.
+      const [myCustomer] = await db
+        .select({ zone: customersTable.zone })
+        .from(customersTable)
+        .where(eq(customersTable.userId, req.user!.sub));
+      const assignedZone =
+        myCustomer?.zone != null ? String(myCustomer.zone) : null;
+      if (!assignedZone) {
+        res.status(400).json({
+          error:
+            "Tu cuenta no tiene una zona asignada. Contacta a tu administrador.",
+          reason: "NO_ASSIGNED_ZONE",
+        });
+        return;
+      }
+      if (computedZone !== assignedZone) {
+        res.status(400).json({
+          error: `Tu zona registrada es la Zona ${assignedZone}. El destino debe estar dentro de esa zona (cae en Zona ${computedZone}).`,
+          reason: "FUERA_DE_ZONA_ASIGNADA",
+          assignedZone,
+          deliveryZone: computedZone,
+        });
+        return;
+      }
+
       const [activeSub] = await db
         .select()
         .from(subscriptionsTable)

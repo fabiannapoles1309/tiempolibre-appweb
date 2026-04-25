@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -35,7 +35,8 @@ const navItems: NavItem[] = [
   { title: "Seguimiento Beneficios", href: "/admin/benefits-tracking", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
-  { title: "Billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },
+  // Nota: la billetera/saldo recargable fue retirada del flujo del CLIENTE.
+  // El cliente ahora sólo puede solicitar un paquete extra desde "Mi suscripción".
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

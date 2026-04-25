@@ -22,7 +22,7 @@ const topUpSchema = z.object({
   method: z.nativeEnum(PaymentMethod).refine(m => m !== 'BILLETERA', "Método inválido para recarga"),
 });
 
-const formatMoney = (val: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(val);
+const formatMoney = (val: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
 
 export default function WalletPage() {
   const queryClient = useQueryClient();
@@ -99,7 +99,7 @@ export default function WalletPage() {
                   name="amount"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Monto a recargar (ARS)</FormLabel>
+                      <FormLabel>Monto a recargar (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>

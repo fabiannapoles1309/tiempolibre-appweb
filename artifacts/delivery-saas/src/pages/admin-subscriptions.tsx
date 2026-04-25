@@ -31,7 +31,7 @@ export default function AdminSubscriptionsPage() {
         <CardHeader className="flex-row items-center justify-between">
           <CardTitle className="text-lg">Recurrente activo</CardTitle>
           <span className="text-2xl font-bold text-[#0096BD]">
-            $ {totalMRR.toLocaleString("es-AR")}/mes
+            $ {totalMRR.toLocaleString("es-MX")}/mes
           </span>
         </CardHeader>
         <CardContent>
@@ -62,13 +62,13 @@ export default function AdminSubscriptionsPage() {
                       <td className="py-2 pr-4 font-medium">{s.userName}</td>
                       <td className="py-2 pr-4">{s.tier}</td>
                       <td className="py-2 pr-4 text-right">
-                        $ {Number(s.monthlyPrice).toLocaleString("es-AR")}
+                        $ {Number(s.monthlyPrice).toLocaleString("es-MX")}
                       </td>
                       <td className="py-2 pr-4 text-right">
                         {s.usedDeliveries} / {s.monthlyDeliveries}
                       </td>
                       <td className="py-2 pr-4 text-xs text-muted-foreground">
-                        {new Date(s.periodStart).toLocaleDateString("es-AR")}
+                        {new Date(s.periodStart).toLocaleDateString("es-MX")}
                       </td>
                       <td className="py-2">
                         <Badge variant="outline" className={STATUS_COLOR[s.status] ?? ""}>

@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Banknote } from "lucide-react";
 
 const formatMoney = (val: number) =>
-  new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" }).format(val);
+  new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(val);
 
 export default function AdminCashByCustomerPage() {
   const { data, isLoading } = useAdminCashByCustomer();

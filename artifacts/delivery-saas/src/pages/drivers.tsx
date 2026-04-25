@@ -352,7 +352,7 @@ export default function Drivers() {
                       ) : null}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="font-semibold">$ {Number(driver.cashPending ?? 0).toLocaleString("es-AR")}</div>
+                      <div className="font-semibold">$ {Number(driver.cashPending ?? 0).toLocaleString("es-MX")}</div>
                       {Number(driver.cashPending ?? 0) > 0 ? (
                         <Button
                           variant="link"

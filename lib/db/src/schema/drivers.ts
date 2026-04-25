@@ -19,7 +19,7 @@ export const driversTable = pgTable("drivers", {
   // EN_PAUSA = pausado, no recibe asignaciones
   // INACTIVO = fuera de turno
   status: varchar("status", { length: 16 }).notNull().default("ACTIVO"),
-  // Efectivo cobrado pendiente de liquidar al admin (ARS)
+  // Efectivo cobrado pendiente de liquidar al admin (MXN)
   cashPending: numeric("cash_pending", { precision: 12, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })

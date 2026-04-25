@@ -61,7 +61,7 @@ export function DriverStatusCard() {
           ))}
         </div>
         <div className="text-xs text-muted-foreground border-t pt-3">
-          Efectivo a rendir: <span className="font-bold text-foreground">$ {driver.cashPending.toLocaleString("es-AR")}</span>
+          Efectivo a rendir: <span className="font-bold text-foreground">$ {driver.cashPending.toLocaleString("es-MX")}</span>
         </div>
       </CardContent>
     </Card>

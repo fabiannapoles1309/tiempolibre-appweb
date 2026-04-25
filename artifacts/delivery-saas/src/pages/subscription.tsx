@@ -109,10 +109,10 @@ export default function SubscriptionPage() {
   const handleRecharge = async () => {
     try {
       await recharge.mutateAsync();
-      toast.success("Recarga aplicada: +35 envíos");
+      toast.success("Solicitud enviada: +35 envíos en tu paquete extra");
       qc.invalidateQueries({ queryKey: getGetMySubscriptionQueryKey() });
     } catch {
-      toast.error("No se pudo procesar la recarga");
+      toast.error("No se pudo procesar la solicitud de paquete extra");
     }
   };
 
@@ -170,8 +170,8 @@ export default function SubscriptionPage() {
             >
               <AlertTriangle className="w-5 h-5" />
               ¡Atención! Te quedan{" "}
-              <span className="font-bold">{sub.remainingDeliveries}</span> envíos. Solicita una
-              recarga para no quedarte sin servicio.
+              <span className="font-bold">{sub.remainingDeliveries}</span> envíos. Solicita un
+              paquete extra para no quedarte sin servicio.
             </div>
           )}
 
@@ -223,7 +223,7 @@ export default function SubscriptionPage() {
                   ) : (
                     <Plus className="w-4 h-4 mr-2" />
                   )}
-                  Solicitar recarga (+35 envíos)
+                  Solicitar paquete extra (+35 envíos)
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   Periodo iniciado: {new Date(sub.periodStart).toLocaleDateString("es-MX")}

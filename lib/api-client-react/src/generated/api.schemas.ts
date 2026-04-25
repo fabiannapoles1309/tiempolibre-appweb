@@ -444,6 +444,21 @@ export interface WalletTx {
   createdAt: string;
 }
 
+export interface PricingSettings {
+  estandarPrice: number;
+  optimoPrice: number;
+  extraPackagePrice: number;
+}
+
+export interface UpdatePricingSettingsBody {
+  /** @minimum 0 */
+  estandarPrice: number;
+  /** @minimum 0 */
+  optimoPrice: number;
+  /** @minimum 0 */
+  extraPackagePrice: number;
+}
+
 export interface DeliveriesPoint {
   date: string;
   count: number;

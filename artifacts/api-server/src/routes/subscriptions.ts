@@ -3,12 +3,16 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { db, subscriptionsTable, usersTable, customersTable } from "@workspace/db";
 import { SubscribeBody } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
+import { getPricing } from "./pricing-settings";
 
 const router: IRouter = Router();
 
-const TIERS = {
-  ESTANDAR: { monthlyPrice: 15000, monthlyDeliveries: 35 },
-  OPTIMO: { monthlyPrice: 25000, monthlyDeliveries: 35 },
+// Cantidad de envíos incluidos por tier. El precio se lee dinámicamente
+// desde `pricing_settings` para que el ADMIN pueda actualizarlo sin
+// redeploy. La cantidad de envíos es estructural y se mantiene fija.
+const TIER_DELIVERIES = {
+  ESTANDAR: 35,
+  OPTIMO: 35,
 } as const;
 
 function serializeSubscription(s: typeof subscriptionsTable.$inferSelect, userName: string) {
@@ -98,11 +102,15 @@ router.post(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
-    const tierCfg = TIERS[parsed.data.tier as keyof typeof TIERS];
-    if (!tierCfg) {
+    const tier = parsed.data.tier as keyof typeof TIER_DELIVERIES;
+    const monthlyDeliveries = TIER_DELIVERIES[tier];
+    if (monthlyDeliveries == null) {
       res.status(400).json({ error: "Tier inválido" });
       return;
     }
+    const pricing = await getPricing();
+    const monthlyPrice =
+      tier === "ESTANDAR" ? pricing.estandarPrice : pricing.optimoPrice;
 
     // Cancelar suscripciones activas previas
     await db
@@ -120,8 +128,8 @@ router.post(
       .values({
         userId: req.user.sub,
         tier: parsed.data.tier,
-        monthlyPrice: tierCfg.monthlyPrice.toFixed(2),
-        monthlyDeliveries: tierCfg.monthlyDeliveries,
+        monthlyPrice: monthlyPrice.toFixed(2),
+        monthlyDeliveries,
         usedDeliveries: 0,
         status: "ACTIVA",
       })

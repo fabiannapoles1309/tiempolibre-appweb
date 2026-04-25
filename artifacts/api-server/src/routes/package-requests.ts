@@ -6,12 +6,15 @@ import {
   customersTable,
   usersTable,
   subscriptionsTable,
+  walletsTable,
+  walletTxTable,
 } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import {
   notifyAdminsPackageRequest,
   resolveAppUrl,
 } from "../services/notificationService";
+import { getPricing } from "./pricing-settings";
 
 const router: IRouter = Router();
 const RECHARGE_BLOCK = 35;
@@ -212,6 +215,10 @@ router.post(
       return;
     }
     const notes = (req.body?.notes as string | undefined) ?? null;
+    // Leemos el precio del paquete extra antes de la transacción: es un
+    // valor configurable global, no específico del cliente.
+    const pricing = await getPricing();
+    const extraPrice = pricing.extraPackagePrice;
     // Toda la operación corre en una sola transacción; las transiciones de
     // estado son condicionales (`status='PENDIENTE'`) para que dos admins
     // que aprueben/rechacen al mismo tiempo no puedan duplicar la recarga.
@@ -275,7 +282,29 @@ router.post(
         })
         .where(eq(subscriptionsTable.id, latest.id));
 
-      return { kind: "ok" as const };
+      // Cargar el costo del paquete extra a la billetera del cliente.
+      // Aseguramos un row de wallet (UPSERT) y descontamos en SQL atómico
+      // para soportar saldo negativo sin race conditions. El movimiento
+      // queda registrado como `PAGO` en el ledger para que se vea en la
+      // historia de transacciones del cliente.
+      await tx
+        .insert(walletsTable)
+        .values({ userId: pending.userId, balance: "0" })
+        .onConflictDoNothing({ target: walletsTable.userId });
+      await tx
+        .update(walletsTable)
+        .set({
+          balance: sql`${walletsTable.balance} - ${extraPrice.toFixed(2)}`,
+        })
+        .where(eq(walletsTable.userId, pending.userId));
+      await tx.insert(walletTxTable).values({
+        userId: pending.userId,
+        amount: extraPrice.toFixed(2),
+        type: "PAGO",
+        description: `Cargo por paquete extra de ${RECHARGE_BLOCK} envíos`,
+      });
+
+      return { kind: "ok" as const, extraPrice };
     });
 
     if (result.kind === "not_found") {

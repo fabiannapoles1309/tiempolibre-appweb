@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetWallet, useListWalletTransactions, useTopUpWallet, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
+import { useGetWallet, useListWalletTransactions, useTopUpWallet, useGetMySubscription, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -16,7 +16,47 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { Wallet, PlusCircle, ArrowUpRight, ArrowDownRight, RotateCcw, Loader2, PackagePlus, Clock } from "lucide-react";
+import { Wallet, PlusCircle, ArrowUpRight, ArrowDownRight, RotateCcw, Loader2, PackagePlus, Clock, Truck } from "lucide-react";
+
+const BLOCK_SIZE = 35;
+
+function BlockOf35({ remaining, monthly }: { remaining: number; monthly: number }) {
+  const used = Math.max(0, monthly - remaining);
+  const blockTotal = Math.min(BLOCK_SIZE, monthly || BLOCK_SIZE);
+  const blockRemaining = Math.min(remaining, blockTotal);
+  const blockUsed = blockTotal - blockRemaining;
+  const cells = Array.from({ length: blockTotal }, (_, i) => i < blockRemaining);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between">
+        <div className="text-sm font-semibold">
+          Bloque actual: <span className="text-[#0096BD]">{blockRemaining}/{blockTotal} restantes</span>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          Total del periodo: {used}/{monthly} usados
+        </div>
+      </div>
+      <div
+        className="grid gap-1"
+        style={{ gridTemplateColumns: `repeat(${Math.min(blockTotal, 35)}, minmax(0, 1fr))` }}
+        data-testid="wallet-block-35-grid"
+      >
+        {cells.map((isRemaining, i) => (
+          <div
+            key={i}
+            className={`h-3 rounded-sm transition-colors ${isRemaining ? "bg-[#00B5E2]" : "bg-muted-foreground/20"}`}
+            title={isRemaining ? "Disponible" : "Usado"}
+          />
+        ))}
+      </div>
+      {blockUsed > 0 && (
+        <div className="text-xs text-muted-foreground">
+          {blockUsed} {blockUsed === 1 ? "envío usado" : "envíos usados"} de este bloque.
+        </div>
+      )}
+    </div>
+  );
+}
 
 const topUpSchema = z.object({
   amount: z.coerce.number().min(100, "El monto mínimo es de $100"),
@@ -36,6 +76,16 @@ export default function WalletPage() {
   const { data: wallet, isLoading: loadingWallet } = useGetWallet();
   const { data: transactions, isLoading: loadingTx } = useListWalletTransactions();
   const topUpMutation = useTopUpWallet();
+  // Envíos del periodo: visible sólo para CLIENTE. Replicamos los counters
+  // que ya existen en /subscription para que el cliente pueda consultarlos
+  // junto con su saldo cobrado sin cambiar de pantalla.
+  const { data: subData, isLoading: loadingSub } = useGetMySubscription({
+    query: {
+      enabled: isCliente,
+      queryKey: ["wallet-my-subscription"],
+    },
+  });
+  const sub = subData?.subscription ?? null;
 
   const form = useForm<z.infer<typeof topUpSchema>>({
     resolver: zodResolver(topUpSchema),
@@ -108,7 +158,7 @@ export default function WalletPage() {
         </p>
       </div>
 
-      <div className={`grid grid-cols-1 ${isCliente ? "" : "lg:grid-cols-3"} gap-6`}>
+      <div className={`grid grid-cols-1 ${isCliente ? "lg:grid-cols-2" : "lg:grid-cols-3"} gap-6`}>
         <Card className={`${isCliente ? "" : "lg:col-span-2"} relative overflow-hidden border-none shadow-lg`}>
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-orange-600 opacity-90"></div>
           <div className="absolute top-0 right-0 p-12 opacity-10">
@@ -135,6 +185,68 @@ export default function WalletPage() {
             </div>
           </CardContent>
         </Card>
+
+        {isCliente && (
+          <Card data-testid="card-envios-counters">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Truck className="w-5 h-5 text-[#00B5E2]" />
+                Envíos del periodo
+              </CardTitle>
+              <CardDescription>
+                Resumen de tu paquete de envíos contratado.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {loadingSub ? (
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Cargando…
+                </div>
+              ) : !sub ? (
+                <div className="text-sm text-muted-foreground">
+                  Aún no tienes un plan activo. Visita "Mi suscripción" para
+                  contratar uno.
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="border rounded-lg p-3">
+                      <div className="text-xs text-muted-foreground">Totales</div>
+                      <div
+                        className="text-2xl font-bold"
+                        data-testid="value-wallet-envios-totales"
+                      >
+                        {sub.monthlyDeliveries}
+                      </div>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <div className="text-xs text-muted-foreground">Solicitados</div>
+                      <div
+                        className="text-2xl font-bold"
+                        data-testid="value-wallet-envios-solicitados"
+                      >
+                        {sub.usedDeliveries}
+                      </div>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <div className="text-xs text-muted-foreground">Restantes</div>
+                      <div
+                        className={`text-2xl font-bold ${sub.remainingDeliveries <= 5 ? "text-red-600" : "text-[#0096BD]"}`}
+                        data-testid="value-wallet-envios-restantes"
+                      >
+                        {sub.remainingDeliveries}
+                      </div>
+                    </div>
+                  </div>
+                  <BlockOf35
+                    remaining={sub.remainingDeliveries}
+                    monthly={sub.monthlyDeliveries}
+                  />
+                </>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {isCliente && (
           <Card data-testid="card-request-package">

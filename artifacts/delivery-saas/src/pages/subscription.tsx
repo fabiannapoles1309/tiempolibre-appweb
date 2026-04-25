@@ -3,6 +3,7 @@ import {
   useSubscribe,
   useRechargeSubscription,
   useGetMyCustomerProfile,
+  useGetPricingSettings,
   SubscriptionTier,
   getGetMySubscriptionQueryKey,
 } from "@workspace/api-client-react";
@@ -12,11 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Crown, Check, AlertTriangle, Loader2, Plus, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
-const PLANS = [
+// Los precios y la cantidad de envíos por plan se construyen dinámicamente
+// con `useGetPricingSettings`, para que el ADMIN/SUPERUSER pueda ajustar
+// los precios desde el panel de Configuración de Precios sin redeploy.
+const PLAN_TEMPLATES = [
   {
     tier: SubscriptionTier.ESTANDAR,
     name: "Estándar",
-    price: 15000,
     deliveries: 35,
     perks: ["35 envíos mensuales incluidos", "Soporte por email", "Reportes básicos"],
     highlight: false,
@@ -24,10 +27,9 @@ const PLANS = [
   {
     tier: SubscriptionTier.OPTIMO,
     name: "Óptimo",
-    price: 25000,
-    deliveries: 70,
+    deliveries: 35,
     perks: [
-      "70 envíos mensuales incluidos",
+      "35 envíos mensuales incluidos",
       "Soporte prioritario",
       "Reportes avanzados",
       "Asignación con prioridad",
@@ -91,10 +93,18 @@ function BlockOf35({
 export default function SubscriptionPage() {
   const { data, isLoading } = useGetMySubscription();
   const { data: profile } = useGetMyCustomerProfile();
+  const { data: pricing } = useGetPricingSettings();
   const subscribe = useSubscribe();
   const recharge = useRechargeSubscription();
   const qc = useQueryClient();
   const sub = data?.subscription ?? null;
+  const PLANS = PLAN_TEMPLATES.map((p) => ({
+    ...p,
+    price:
+      p.tier === SubscriptionTier.ESTANDAR
+        ? pricing?.estandarPrice ?? 0
+        : pricing?.optimoPrice ?? 0,
+  }));
 
   const handleSubscribe = async (tier: SubscriptionTier) => {
     try {

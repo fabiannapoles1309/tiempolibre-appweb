@@ -58,6 +58,7 @@ import type {
   MeResponse,
   MySubscriptionResponse,
   Order,
+  PricingSettings,
   PutBenefitsConfigBody,
   RegisterBody,
   SetBenefitClaim200,
@@ -73,6 +74,7 @@ import type {
   UpdateDriverStatusBody,
   UpdateIncidentBody,
   UpdateOrderBody,
+  UpdatePricingSettingsBody,
   Wallet,
   WalletTx,
   Zone,
@@ -4441,6 +4443,168 @@ export function useListWalletTransactions<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * @summary Read editable pricing for plans and the extra-package add-on
+ */
+export const getGetPricingSettingsUrl = () => {
+  return `/api/pricing-settings`;
+};
+
+export const getPricingSettings = async (
+  options?: RequestInit,
+): Promise<PricingSettings> => {
+  return customFetch<PricingSettings>(getGetPricingSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPricingSettingsQueryKey = () => {
+  return [`/api/pricing-settings`] as const;
+};
+
+export const getGetPricingSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPricingSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPricingSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPricingSettingsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getPricingSettings>>
+  > = ({ signal }) => getPricingSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPricingSettings>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetPricingSettingsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPricingSettings>>
+>;
+export type GetPricingSettingsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Read editable pricing for plans and the extra-package add-on
+ */
+
+export function useGetPricingSettings<
+  TData = Awaited<ReturnType<typeof getPricingSettings>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getPricingSettings>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetPricingSettingsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update plan + extra-package prices (ADMIN/SUPERUSER)
+ */
+export const getUpdatePricingSettingsUrl = () => {
+  return `/api/admin/pricing-settings`;
+};
+
+export const updatePricingSettings = async (
+  updatePricingSettingsBody: UpdatePricingSettingsBody,
+  options?: RequestInit,
+): Promise<PricingSettings> => {
+  return customFetch<PricingSettings>(getUpdatePricingSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updatePricingSettingsBody),
+  });
+};
+
+export const getUpdatePricingSettingsMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePricingSettings>>,
+    TError,
+    { data: BodyType<UpdatePricingSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updatePricingSettings>>,
+  TError,
+  { data: BodyType<UpdatePricingSettingsBody> },
+  TContext
+> => {
+  const mutationKey = ["updatePricingSettings"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updatePricingSettings>>,
+    { data: BodyType<UpdatePricingSettingsBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updatePricingSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdatePricingSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updatePricingSettings>>
+>;
+export type UpdatePricingSettingsMutationBody =
+  BodyType<UpdatePricingSettingsBody>;
+export type UpdatePricingSettingsMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update plan + extra-package prices (ADMIN/SUPERUSER)
+ */
+export const useUpdatePricingSettings = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updatePricingSettings>>,
+    TError,
+    { data: BodyType<UpdatePricingSettingsBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updatePricingSettings>>,
+  TError,
+  { data: BodyType<UpdatePricingSettingsBody> },
+  TContext
+> => {
+  return useMutation(getUpdatePricingSettingsMutationOptions(options));
+};
 
 /**
  * @summary Deliveries grouped by day for a window

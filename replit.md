@@ -1,72 +1,10 @@
 # Rapidoo — SaaS de Entregas B2B
 
-A production-ready B2B last-mile delivery management platform built on the Replit pnpm monorepo template. UI in Spanish (Argentina); currency in ARS.
+## Overview
 
-## Architecture
+Rapidoo is a production-ready B2B last-mile delivery management platform designed to streamline and manage delivery operations. It offers a comprehensive solution for businesses requiring efficient last-mile logistics, with a focus on usability and robust backend services. The platform supports various user roles, including administrators, clients, and drivers, each with tailored functionalities. Key capabilities include order management, driver assignment, subscription handling, financial tracking, and incident reporting. The project aims to capture the market for B2B last-mile delivery services, providing a reliable and scalable SaaS solution.
 
-- **Monorepo (pnpm workspaces)** with two artifacts:
-  - `artifacts/api-server` — Express 5 + Drizzle (Postgres) JSON API at `/api/*`. Port: dynamic via `PORT`.
-  - `artifacts/delivery-saas` — React + Vite + Tailwind + shadcn UI. The end-user web app.
-- **Shared libraries:**
-  - `lib/api-spec` — Single source of truth for the API: OpenAPI 3.1 (`openapi.yaml`).
-  - `lib/api-zod` — Zod runtime schemas generated from the OpenAPI spec via Orval (used by both backend and frontend).
-  - `lib/api-client-react` — Typed React Query hooks generated from the same spec (consumed by the frontend).
-  - `lib/db` — Drizzle ORM schema + connection (`@workspace/db`). Migrations applied with `pnpm --filter @workspace/db run push`.
-
-## Domain model
-
-- **Users** (`users`): id, email, name, password_hash, role ∈ {`ADMIN`, `CLIENTE`, `DRIVER`}.
-- **Zones** (`zones`): Norte, Sur, Este, Oeste.
-- **Drivers** (`drivers`): name, phone, vehicle, zones[], active, userId, licensePlate, circulationCard, circulationCardExpiry, status ∈ {ACTIVO, EN_ENTREGA, EN_PAUSA, INACTIVO}, cashPending (efectivo a rendir).
-- **Orders** (`orders`): customerId, pickup, delivery, zone, payment ∈ {EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA, CORTESIA}, amount, status ∈ {PENDIENTE, ASIGNADO, EN_RUTA, ENTREGADO, CANCELADO}, driverId, notes. CORTESIA is server-forced to amount=0 but still consumes one envío from the customer's monthly 35-block on transition to ENTREGADO.
-- **Transactions** (`transactions`): platform-wide INGRESO/GASTO ledger linked to orders.
-- **Wallet** (`wallets` + `wallet_tx`): per-user prepaid balance with TOPUP/PAGO/REEMBOLSO movements.
-- **Incidents** (`incidents`): driverId, orderId?, type ∈ {ACCIDENTE, ROBO, DEMORA, CLIENTE_AUSENTE, VEHICULO, OTRO}, description, status ∈ {ABIERTO, EN_REVISION, RESUELTO}, adminNotes.
-- **Subscriptions** (`subscriptions`): userId, tier ∈ {ESTANDAR ($15.000/35 envíos), OPTIMO ($25.000/70 envíos)}, monthlyPrice, monthlyDeliveries, usedDeliveries, periodStart, status ∈ {ACTIVA, CANCELADA, VENCIDA}.
-
-## Side-effects on order delivery
-
-When a `PATCH /api/orders/:id` transitions an order to `ENTREGADO`, the following happen atomically inside a single DB transaction:
-1. If `payment === "EFECTIVO"` and a driver is assigned, `drivers.cashPending` is incremented by the order amount.
-2. If the customer has an `ACTIVA` subscription, `usedDeliveries` is incremented by 1; if it reaches `monthlyDeliveries`, status flips to `VENCIDA`.
-
-Cash is later cleared via `POST /api/drivers/:id/cash-settle` (admin-only).
-
-## Authentication
-
-- JWT (HS256) signed with `SESSION_SECRET`, stored in an httpOnly `rapidoo_session` cookie (7-day TTL). `cookie-parser` middleware extracts it; `attachUser` middleware decodes and sets `req.user`.
-- Passwords hashed with `bcryptjs` (cost 10).
-- `requireAuth` and `requireRole(...roles)` middlewares guard every protected route.
-
-## Auto-assignment
-
-`POST /api/orders/assign-auto` (ADMIN only) finds all PENDIENTE orders and assigns each to the active driver covering that order's zone with the lowest current load (count of ASIGNADO + EN_RUTA orders). Manual assignment via `POST /api/orders/:id/assign-manual`.
-
-## Demo credentials (seeded)
-
-- ADMIN: `admin@rapidoo.com` / `admin123`
-- CLIENTE: `cliente@rapidoo.com` / `cliente123` (starts with $150 wallet balance)
-- DRIVER: `driver@rapidoo.com` / `driver123`
-
-Demo accounts (TiempoLibre brand, current):
-- ADMIN: `admin@tiempolibre.com` / `admin123`
-- CLIENTE: `cliente@tiempolibre.com` / `cliente123`
-- DRIVER: `driver@tiempolibre.com` / `driver123` (linked to driver "Carlos Gómez" via `drivers.userId`)
-
-Plus 3 drivers and 8 sample orders distributed across numeric zones 1–8.
-
-Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
-
-## Development workflow
-
-1. Edit the OpenAPI spec in `lib/api-spec/openapi.yaml`.
-2. Regenerate clients: `pnpm --filter @workspace/api-spec run codegen`.
-3. Implement the route in `artifacts/api-server/src/routes/*.ts` (validate body with Zod schemas from `@workspace/api-zod`).
-4. Use the React Query hooks from `@workspace/api-client-react` in the frontend.
-5. Typecheck the workspace: `pnpm -w run typecheck`.
-6. DB schema changes: edit `lib/db/src/schema/*.ts` and run `pnpm --filter @workspace/db run push`.
-
-## User preferences
+## User Preferences
 
 - Spanish UI throughout. Spanish error messages.
 - Brand: TiempoLibre, light theme, cyan #00B5E2 primary. Slogan "SOMOS TU SISTEMA DE REPARTO". No emojis in the UI.
@@ -82,9 +20,6 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 - `GET /api/drivers` is admin-only; drivers consult their own profile via `GET /api/me/driver`.
 - `lib/api-zod/src/index.ts` re-exports zod schemas only (`export * from "./generated/api"`); TS interfaces come from `@workspace/api-client-react` to avoid duplicate-symbol errors.
 - Currency formatted as ARS via `Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })`.
-
-## Latest spec extensions (April 2026)
-
 - Order payment methods now include `EFECTIVO`, `TRANSFERENCIA`, `BILLETERA`, `TARJETA`, `CORTESIA`. `cashAmount`/`cashChange` are persisted only when `payment === EFECTIVO` (server forces null otherwise). The /finance donut chart always renders all 5 canonical methods with stable colors and Spanish labels (Cortesía visible even at $0). The accounting Excel export includes a "Por método de pago" sheet that always lists all 5 methods plus a TOTAL row.
 - Order create accepts optional `deliveryLat`/`deliveryLng`. When provided, the server runs point-in-polygon validation against `zonas.kml` (`mapService.validarPunto`) and rejects out-of-zone points with HTTP 400 `FUERA_DE_ZONA`. When absent, falls back to address geocoding via `validarZona`.
 - Cliente order creation requires an active subscription with `remainingDeliveries > 0` (HTTP 402 `NO_SUBSCRIPTION` / `NO_DELIVERIES_LEFT`).
@@ -95,20 +30,6 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 - Order-new uses an embedded MapLibre map loading `public/zonas.kml` for click-to-pick delivery point with client-side `turf` validation. If the browser lacks WebGL the page degrades gracefully (amber alert), and the server still validates the zone from the address.
 - Dates formatted with `date-fns` + Spanish locale (`import { es } from 'date-fns/locale'`).
 - Driver welcome SMS: `services/notificationService.ts` exposes `buildDriverWelcomeMessage({name,email,password,appUrl})` (uses `PUBLIC_APP_URL` → `REPLIT_DOMAINS` → fallback) ending with the slogan `"Confianza y seguridad en cada kilometro"`. `POST /admin/users` returns the schema `AdminCreatedUser` with an optional `welcomeMessage` populated only when `role === DRIVER`. The admin UI (`admin-users.tsx`) opens a modal with the message and a "Copiar al portapapeles" button (uses `navigator.clipboard` with a `document.execCommand('copy')` fallback).
-
-## Benefits tracking (April 2026)
-
-- New tables `benefit_items` (level, name, icon, description) and `benefit_claims` (driverId, benefitItemId, year, month, deliveredAt, deliveredByUserId — unique on the four-key combo).
-- Route file `routes/benefits-tracking.ts` exposes:
-  - `GET/POST /admin/benefit-items` and `DELETE /admin/benefit-items/:id` for the catalog.
-  - `GET /admin/benefits-tracking?year=&month=` returns per-driver rows with monthly deliveries (orders.status='ENTREGADO' AND updatedAt within month), current level (max benefits_config.level whose deliveriesRequired ≤ deliveries), progress%, and the unlocked benefits with `POR_RECLAMAR | ENTREGADO` status.
-  - `POST /admin/benefits-tracking/claim` toggles claim state. Validates the benefit is actually unlocked before persisting and uses `ON CONFLICT DO NOTHING` for idempotency.
-  - `GET /admin/benefits-tracking/export` returns an `.xlsx` with winners + pending benefits (exceljs).
-- Admin page `pages/admin-benefits-tracking.tsx` (`/admin/benefits-tracking`) with month/year filters, progress bars, per-benefit toggle buttons (amber "Por reclamar" → secondary "Entregado"), Excel export, and an inline catalog editor mapping icon keys (`fuel`, `wrench`, `stethoscope`, `shield`, `coffee`, `truck`, `crown`, `star`, `zap`, `gift`) to lucide icons.
-- Sidebar entry "Seguimiento Beneficios" (ADMIN role) added in `components/layout.tsx`.
-
-## Cliente cash-collection wallet, locked pickup, expense KPI (April 2026)
-
 - Cliente "Mi Billetera" is read-only and represents accumulated cash collected by drivers on the cliente's deliveries:
   - On `PATCH /orders/:id` when an order transitions into `ENTREGADO` and `payment === 'EFECTIVO'`, the server credits the cliente's wallet by `cashAmount` (fallback `amount`) and inserts a `wallet_tx` row of type `TOPUP` with description `"Cobranza en efectivo - Pedido #N"`. Guarded by `becameDelivered` so it cannot double-credit on subsequent edits.
   - `POST /wallet/topup` rejects CLIENTE with HTTP 403 + `reason: WALLET_READONLY_FOR_CLIENTE`. ADMIN can still top up.
@@ -120,18 +41,7 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 - Dashboard KPI for CLIENTE:
   - `routes/reports.ts /reports/dashboard` now returns `kpis.todayDeliveryExpense` = sum of today's non-`CANCELADO` orders' `amount` for the requesting cliente.
   - `pages/dashboard.tsx` renders a sixth card "Gasto en envíos hoy" (orange dollar icon) next to "Ingresos Hoy" only when `user.role === CLIENTE`.
-
-## Recipients directory + package requests (April 2026)
-
-- New tables (`lib/db/src/schema/`):
-  - `recipients` (`recipients.ts`): `id`, `customerId` FK→`customers.id`, `name`, `phone`, `allowMarketingSms`, `allowMarketingEmail`, `orderCount`, `lastUsedAt`, timestamps. Unique `(customerId, phone)`.
-  - `package_requests` (`package-requests.ts`): `id`, `userId`, `customerId`, `status` ∈ {`PENDIENTE`, `APROBADA`, `RECHAZADA`}, `requestedAt`, `processedAt`, `processedByUserId`, `processedNotes`. Has a **partial unique index** `package_requests_one_pending_per_user` on `(user_id) WHERE status='PENDIENTE'` so the "una sola solicitud pendiente por usuario" regla is enforced atómicamente por la base.
-  - `orders.recipientName` (varchar 255, nullable).
 - Order create flow (`routes/orders.ts`): for CLIENTE, `recipientName` + `recipientPhone` are required. The server upserts a `recipients` row keyed by (customerId, phone) — incrementing `orderCount`, refreshing `lastUsedAt`, and overriding the marketing consents with whatever the cliente sent on this order. The recipient name is also persisted on the order row itself.
-- Recipients endpoints (`routes/recipients.ts`):
-  - `GET /me/recipients?q=` — cliente's directory (top 50 by `lastUsedAt`).
-  - `GET /admin/recipients?q=` — admin/superuser, joined with customers + users.
-  - `GET /admin/recipients/export` — `.xlsx` via `exceljs`.
 - Package request endpoints (`routes/package-requests.ts`):
   - `POST /me/package-requests` — cliente creates a request. La inserción depende del índice único parcial; si dos requests llegan en paralelo, el perdedor recibe HTTP 409 + `reason: PENDING_REQUEST_EXISTS` (mapeado desde el error PG `23505`, mirando `err.code` y `err.cause.code`).
   - `GET /me/package-requests/active` — returns `{ pending: {...} | null }`.
@@ -143,5 +53,41 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
   - `pages/order-new.tsx` adds a required "Nombre del destinatario" field plus two optional checkboxes ("Acepta recibir SMS publicitarios", "Acepta recibir correos publicitarios"). Fetches `/api/me/recipients` once on mount; when the typed phone exactly matches a known recipient, autofills name + consents (only if the name field is empty or already equals the recipient's name, so manual edits are not clobbered). The order-create body now passes `recipientName`, `allowMarketingSms`, `allowMarketingEmail` (cast to `any` since the OpenAPI client has not yet been regenerated for these fields).
   - `pages/wallet.tsx` adds a "Solicitar nuevo paquete de entregas" card for CLIENTE — disabled with an amber "En revisión" pill while the cliente has a pending request, otherwise a clickable cyan button.
   - `pages/admin-destinatarios.tsx` (`/admin/destinatarios`, ADMIN+SUPERUSER): searchable table of (cliente, destinatario, teléfono, SMS, Email, envíos, último envío) with an "Descargar Excel" button.
-  - `pages/admin-package-requests.tsx` (`/admin/solicitudes-paquetes`, ADMIN+SUPERUSER): "Pendientes" table with Approve/Reject buttons + "Historial" table.
+  - `pages/admin-solicitudes-paquetes.tsx` (`/admin/solicitudes-paquetes`, ADMIN+SUPERUSER): "Pendientes" table with Approve/Reject buttons + "Historial" table.
   - Sidebar (`components/layout.tsx`) gains "Destinatarios" and "Solicitudes de paquete" entries for ADMIN (filtered nav also surfaces them to SUPERUSER).
+- Pricing settings (configurable plan & extra-package prices):
+  - New `pricing_settings` table (key/value, `numeric(12,2)`) with seeded keys `ESTANDAR_PRICE=15000`, `OPTIMO_PRICE=25000`, `EXTRA_PACKAGE_PRICE=15000`. Seed lives in `artifacts/api-server/src/seed.ts` using `PRICING_KEYS`/`PRICING_DEFAULTS` from `@workspace/db` (idempotent `onConflictDoNothing`).
+  - `routes/pricing-settings.ts` exposes `GET /pricing-settings` (any authed) and `PUT /admin/pricing-settings` (ADMIN/SUPERUSER). Manual body validation enforces `>=0`, max value `9_999_999_999.99` (numeric(12,2) bound), and ≤2 decimals — invalid inputs return HTTP 400 in Spanish. Helper `getPricing()` falls back to `PRICING_DEFAULTS` if a row is missing so checkout/approve never crash.
+  - `routes/subscriptions.ts` `subscribe` now reads `estandarPrice`/`optimoPrice` from `getPricing()` instead of hardcoded TIERS (deliveries=35 stays hardcoded by design).
+  - `routes/package-requests.ts` approve transaction also UPSERTS the cliente's wallet row, deducts `extraPackagePrice` via atomic `balance = balance - X` SQL, and inserts a `wallet_tx` PAGO with description `"Cargo por paquete extra de 35 envíos"`. Negative balance is allowed by design (B2B accounts; cliente owes platform).
+  - Frontend: new `pages/admin-pricing-settings.tsx` (route `/admin/pricing-settings`, ADMIN; SUPERUSER auto-allowed via `ProtectedRoute`) with 3 inputs + Guardar; nav entry "Configuración de precios". `pages/subscription.tsx` reads PLAN prices from `useGetPricingSettings`. `pages/wallet.tsx` adds an "Envíos del periodo" card for CLIENTE (totales/solicitados/restantes + BlockOf35 grid) sourced from `useGetMySubscription`.
+
+## System Architecture
+
+The project is structured as a monorepo using `pnpm workspaces`, consisting of two primary artifacts: `artifacts/api-server` (an Express 5 + Drizzle (Postgres) JSON API) and `artifacts/delivery-saas` (a React + Vite + Tailwind + shadcn UI frontend). Shared libraries (`lib/api-spec`, `lib/api-zod`, `lib/api-client-react`, `lib/db`) ensure a single source of truth for API definitions, Zod schemas, and typed React Query hooks, promoting consistency between frontend and backend.
+
+**Core Features:**
+
+-   **Domain Model:** Includes Users, Zones, Drivers, Orders, Transactions, Wallet (with `wallets` and `wallet_tx`), Incidents, and Subscriptions.
+-   **Authentication:** JWT (HS256) based, stored in an httpOnly cookie, with bcryptjs for password hashing and role-based access control (RBAC) middleware for route protection.
+-   **Order Management:** Supports automatic assignment of orders to drivers based on zone and load, manual assignment, and atomic state transitions for order delivery, triggering financial updates and subscription usage.
+-   **Financial Tracking:** Integrates a platform-wide ledger, per-user prepaid wallets, and detailed financial reports including expenses and split revenue.
+-   **Benefit Tracking:** Manages driver benefits with `benefit_items` and `benefit_claims` tables, allowing admins to track monthly deliveries, progress towards benefits, and claim status.
+-   **Recipient Management:** `recipients` table for storing delivery recipient details, including marketing consents and usage statistics. This supports client-side autofill and server-side upsert logic during order creation.
+-   **Package Requests:** `package_requests` table and associated endpoints allow clients to request new delivery blocks, with an atomic approval/rejection process for administrators.
+-   **UI/UX:** Designed with Tailwind CSS and shadcn UI, adhering to a light theme with cyan as the primary color. The UI is localized for Spanish (Argentina) with specific branding (TiempoLibre) and role-based widget visibility.
+-   **Geospatial Features:** Utilizes client-side MapLibre with `public/zonas.kml` and `turf` for interactive delivery point selection and client-side zone validation. Server-side validation handles point-in-polygon checks and address geocoding.
+-   **Notification System:** Includes a `notificationService` for building driver welcome messages and admin notifications for package requests (logging only, no external SMTP).
+
+## External Dependencies
+
+-   **PostgreSQL:** Primary database managed with Drizzle ORM.
+-   **Express 5:** Backend API framework.
+-   **React + Vite:** Frontend development stack.
+-   **Tailwind CSS + shadcn UI:** Frontend styling and component library.
+-   **Orval:** Used for generating Zod runtime schemas and typed React Query hooks from OpenAPI specifications.
+-   **bcryptjs:** For password hashing.
+-   **date-fns:** For date formatting with Spanish locale.
+-   **MapLibre:** Embedded map library for interactive delivery point selection.
+-   **turf.js:** Client-side geospatial analysis for zone validation.
+-   **exceljs:** For generating Excel reports (e.g., benefits tracking export, recipients export).

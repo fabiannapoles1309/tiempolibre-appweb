@@ -12,3 +12,4 @@ export * from "./benefit-items";
 export * from "./benefit-claims";
 export * from "./recipients";
 export * from "./package-requests";
+export * from "./pricing-settings";

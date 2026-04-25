@@ -15,6 +15,7 @@ import benefitsTrackingRouter from "./benefits-tracking";
 import adminRouter from "./admin";
 import recipientsRouter from "./recipients";
 import packageRequestsRouter from "./package-requests";
+import pricingSettingsRouter from "./pricing-settings";
 
 const router: IRouter = Router();
 
@@ -34,5 +35,6 @@ router.use(benefitsTrackingRouter);
 router.use(adminRouter);
 router.use(recipientsRouter);
 router.use(packageRequestsRouter);
+router.use(pricingSettingsRouter);
 
 export default router;

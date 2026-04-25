@@ -30,6 +30,7 @@ import AdminBenefitsTrackingPage from "@/pages/admin-benefits-tracking";
 import AdminClientesPage from "@/pages/admin-clientes";
 import AdminDestinatariosPage from "@/pages/admin-destinatarios";
 import AdminPackageRequestsPage from "@/pages/admin-package-requests";
+import AdminPricingSettingsPage from "@/pages/admin-pricing-settings";
 
 const queryClient = new QueryClient();
 
@@ -97,6 +98,7 @@ function Router() {
       <Route path="/admin/clientes" component={() => <ProtectedRoute component={AdminClientesPage} roles={["ADMIN"]} />} />
       <Route path="/admin/destinatarios" component={() => <ProtectedRoute component={AdminDestinatariosPage} roles={["ADMIN"]} />} />
       <Route path="/admin/solicitudes-paquetes" component={() => <ProtectedRoute component={AdminPackageRequestsPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/pricing-settings" component={() => <ProtectedRoute component={AdminPricingSettingsPage} roles={["ADMIN"]} />} />
       <Route component={NotFound} />
     </Switch>
   );

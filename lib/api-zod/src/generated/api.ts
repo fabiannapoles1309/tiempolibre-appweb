@@ -1169,6 +1169,38 @@ export const ListWalletTransactionsResponse = zod.array(
 );
 
 /**
+ * @summary Read editable pricing for plans and the extra-package add-on
+ */
+export const GetPricingSettingsResponse = zod.object({
+  estandarPrice: zod.number(),
+  optimoPrice: zod.number(),
+  extraPackagePrice: zod.number(),
+});
+
+/**
+ * @summary Update plan + extra-package prices (ADMIN/SUPERUSER)
+ */
+export const updatePricingSettingsBodyEstandarPriceMin = 0;
+
+export const updatePricingSettingsBodyOptimoPriceMin = 0;
+
+export const updatePricingSettingsBodyExtraPackagePriceMin = 0;
+
+export const UpdatePricingSettingsBody = zod.object({
+  estandarPrice: zod.number().min(updatePricingSettingsBodyEstandarPriceMin),
+  optimoPrice: zod.number().min(updatePricingSettingsBodyOptimoPriceMin),
+  extraPackagePrice: zod
+    .number()
+    .min(updatePricingSettingsBodyExtraPackagePriceMin),
+});
+
+export const UpdatePricingSettingsResponse = zod.object({
+  estandarPrice: zod.number(),
+  optimoPrice: zod.number(),
+  extraPackagePrice: zod.number(),
+});
+
+/**
  * @summary Deliveries grouped by day for a window
  */
 export const GetDeliveriesReportQueryParams = zod.object({

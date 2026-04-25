@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -31,6 +31,7 @@ const navItems: NavItem[] = [
   { title: "Clientes", href: "/admin/clientes", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Destinatarios", href: "/admin/destinatarios", icon: BookUser, roles: [UserRole.ADMIN] },
   { title: "Solicitudes de paquete", href: "/admin/solicitudes-paquetes", icon: PackagePlus, roles: [UserRole.ADMIN] },
+  { title: "Configuración de precios", href: "/admin/pricing-settings", icon: Settings2, roles: [UserRole.ADMIN] },
   { title: "Suscripciones", href: "/admin/subscriptions", icon: Crown, roles: [UserRole.ADMIN] },
   { title: "Envíos por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
   { title: "Cash por cliente", href: "/admin/cash-by-customer", icon: Banknote, roles: [UserRole.ADMIN] },

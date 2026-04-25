@@ -1,4 +1,4 @@
-import { db, usersTable, zonesTable, driversTable, ordersTable, walletsTable, transactionsTable } from "@workspace/db";
+import { db, usersTable, zonesTable, driversTable, ordersTable, walletsTable, transactionsTable, pricingSettingsTable, PRICING_KEYS, PRICING_DEFAULTS } from "@workspace/db";
 import { hashPassword } from "./lib/auth";
 import { eq } from "drizzle-orm";
 
@@ -9,6 +9,19 @@ async function main() {
   const zoneNames = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
   for (const name of zoneNames) {
     await db.insert(zonesTable).values({ name }).onConflictDoNothing();
+  }
+
+  // Pricing settings — defaults editables desde /admin/pricing-settings
+  const pricingSeeds: Array<[string, number]> = [
+    [PRICING_KEYS.ESTANDAR_PRICE, PRICING_DEFAULTS.ESTANDAR_PRICE],
+    [PRICING_KEYS.OPTIMO_PRICE, PRICING_DEFAULTS.OPTIMO_PRICE],
+    [PRICING_KEYS.EXTRA_PACKAGE_PRICE, PRICING_DEFAULTS.EXTRA_PACKAGE_PRICE],
+  ];
+  for (const [key, value] of pricingSeeds) {
+    await db
+      .insert(pricingSettingsTable)
+      .values({ key, value: value.toFixed(2) })
+      .onConflictDoNothing();
   }
 
   // Users

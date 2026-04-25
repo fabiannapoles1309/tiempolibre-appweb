@@ -8,6 +8,7 @@ import {
   ZoneName,
   SubscriptionTier,
 } from "@workspace/api-client-react";
+import { VEHICLE_TYPES, VEHICLE_TYPE_SET } from "@/lib/vehicle-types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,7 +53,13 @@ const schema = z.object({
   // Driver + Cliente
   phone: z.string().optional(),
   // Driver
-  vehicle: z.string().optional(),
+  vehicle: z
+    .string()
+    .optional()
+    .refine(
+      (v) => v === undefined || v === "" || VEHICLE_TYPE_SET.has(v),
+      "Selecciona un tipo de vehículo válido",
+    ),
   zones: z.array(z.nativeEnum(ZoneName)).optional(),
   licensePlate: z.string().optional(),
   circulationCard: z.string().optional(),
@@ -386,10 +393,24 @@ export default function AdminUsersPage() {
                       name="vehicle"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Vehículo</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Moto Honda Wave" {...field} />
-                          </FormControl>
+                          <FormLabel>Tipo de vehículo</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value ?? ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-vehicle-type">
+                                <SelectValue placeholder="Selecciona el vehículo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {VEHICLE_TYPES.map((v) => (
+                                <SelectItem key={v} value={v}>
+                                  {v}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

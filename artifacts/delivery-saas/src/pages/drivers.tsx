@@ -9,8 +9,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { VEHICLE_TYPES, VEHICLE_TYPE_SET } from "@/lib/vehicle-types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -21,7 +29,10 @@ import { Users, Plus, Pencil, Trash2, Loader2, CheckCircle2, XCircle } from "luc
 const driverSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
   phone: z.string().min(1, "El teléfono es requerido"),
-  vehicle: z.string().min(1, "El vehículo es requerido"),
+  vehicle: z
+    .string()
+    .min(1, "El vehículo es requerido")
+    .refine((v) => VEHICLE_TYPE_SET.has(v), "Selecciona un tipo de vehículo válido"),
   zones: z.array(z.nativeEnum(ZoneName)).min(1, "Selecciona al menos una zona"),
   active: z.boolean().default(true),
   licensePlate: z.string().optional(),
@@ -177,10 +188,24 @@ export default function Drivers() {
                   name="vehicle"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Vehículo</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Ej. Moto Honda 150" {...field} />
-                      </FormControl>
+                      <FormLabel>Tipo de vehículo</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value ?? ""}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-driver-vehicle">
+                            <SelectValue placeholder="Selecciona el vehículo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {VEHICLE_TYPES.map((v) => (
+                            <SelectItem key={v} value={v}>
+                              {v}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

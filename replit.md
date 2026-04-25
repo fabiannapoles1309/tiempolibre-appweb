@@ -49,6 +49,10 @@ Rapidoo is a production-ready B2B last-mile delivery management platform designe
   - `POST /admin/package-requests/:id/approve` — corre dentro de `db.transaction`: hace un `UPDATE ... WHERE id=? AND status='PENDIENTE' RETURNING id` para "claim" la solicitud y, **sólo si claim devuelve filas**, recarga +35 envíos en la última suscripción `ACTIVA`/`VENCIDA` con `monthly_deliveries = monthly_deliveries + 35` (SQL atómico) y la reactiva. Si dos admins aprueban en paralelo, sólo uno entra; el resto recibe 400 ("ya procesada"). Probado: 5 approves paralelos → delta neto = +35.
   - `POST /admin/package-requests/:id/reject` — mismo patrón de transición condicional (`UPDATE ... WHERE id=? AND status='PENDIENTE'`); si no hay filas afectadas, distingue 404 (no existe) vs 400 (ya fue procesada).
   - On creation, `notificationService.notifyAdminsPackageRequest` builds an admin/superuser notification list and logs the message body. There is no SMTP integration in the repo — the persisted `package_requests` row is the source of truth and the admin UI is the action surface.
+- Tipos de vehículo (drivers):
+  - Lista canónica en `artifacts/delivery-saas/src/lib/vehicle-types.ts`: `["Moto", "Bicicleta eléctrica", "Moto taxi", "Carro"]`. Cualquier nuevo tipo se agrega aquí.
+  - Tanto el alta de driver desde `/admin/users` (admin/superuser → role=DRIVER) como el CRUD dedicado de `/drivers` usan un `<Select>` con esas 4 opciones (data-testid `select-vehicle-type` y `select-driver-vehicle`). Hay validación zod (`refine` contra el set canónico) en ambos formularios.
+  - DB: la columna `drivers.vehicle` sigue siendo `varchar(64)` libre (sin enum) para no romper datos existentes y dejar margen al admin si en el futuro hace falta otro tipo. Los registros viejos fueron normalizados (Honda/Yamaha → Moto, Furgoneta → Carro, vacío → Moto) para que la pantalla de edición no marque error.
 - Personal interno (admin/superuser directory):
   - `GET /api/admin/staff-users` returns ADMIN+SUPERUSER users (id, name, email, role, createdAt) ordered by role then name. Used by `/admin/staff` page to surface the emails that receive package-request and feedback notifications.
 - Reporte combinado (Excel):
@@ -56,9 +60,10 @@ Rapidoo is a production-ready B2B last-mile delivery management platform designe
   - SQL aggregates orders by `date_trunc(period, created_at)` × `customer_id`. Excludes `status='CANCELADO'` from envíos/costo; cash sum only counts `payment='EFECTIVO' AND status='ENTREGADO'` (only delivered cash is "money on hand"). `from`/`to` are validated against `^\d{4}-\d{2}-\d{2}$` and applied as `created_at >= from` / `created_at < to + 1 day`.
   - Frontend page `/admin/reports-combined` exposes a period selector, two date pickers and a "Descargar Excel" button (auth via fetch with credentials).
 - Email service + Sendgrid:
-  - `services/emailService.ts` exports `sendEmail({to, subject, text, html?})`. Calls Sendgrid via the Replit Connectors REST endpoint (`/api/v2/connection?include_secrets=true&connector_names=sendgrid`) to fetch an `api_key`, then sends with `@sendgrid/mail`. If no token / no key / send fails, it logs `[email-fallback]` and returns `{sent:false, reason}` — never throws.
+  - `services/emailService.ts` exports `sendEmail({to, subject, text, html?})`. Calls Sendgrid via the Replit Connectors REST endpoint (`/api/v2/connection?include_secrets=true&connector_names=sendgrid`) to fetch an `api_key`, then sends with `@sendgrid/mail`. If no token / no key / send fails, it logs `[email-fallback] recipients=N subject="…" bodyChars=N` (metadata only, no body to avoid PII leaks) and returns `{sent:false, reason}` — never throws.
   - `notifyAdminsPackageRequest` was refactored to call `sendEmail` instead of `console.log`, so package-request notifications now go to admin emails the moment Sendgrid is connected (until then, the same console fallback works).
   - `RAPIDOO_EMAIL_FROM` env var overrides the default `no-reply@rapidoo.app` From address.
+  - **Status**: the user dismissed the Sendgrid Replit integration on 2026-04-25, so the fallback is the only path live right now. To enable real email later: either retry the Sendgrid connector proposal, or ask the user for a Sendgrid API key and store it as a secret + adapt `getSendgridClient()` to read it.
 - Quejas y sugerencias (feedback):
   - DB: `feedback` table (`id`, `user_id` int, `type` varchar QUEJA|SUGERENCIA, `subject` varchar(255), `message` text, `created_at` timestamptz).
   - `POST /api/me/feedback` (any logged-in user): validates type ∈ {QUEJA, SUGERENCIA}, subject 1..255 chars, message 1..4000 chars; persists then asynchronously emails all ADMIN+SUPERUSER addresses via `sendEmail` (subject `[Queja|Sugerencia] {user}: {subject}`, body includes user identity, full message and a deep-link to `/admin/feedback`). Notification failure never blocks the 201 response.
@@ -112,3 +117,4 @@ The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts
 -   **MapLibre:** Embedded maps.
 -   **turf.js:** Client-side geospatial analysis.
 -   **exceljs:** Excel report generation.
+-   **Sendgrid:** Email service for notifications (via Replit Connectors).

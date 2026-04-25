@@ -81,6 +81,13 @@ const orderSchema = z
     delivery: z.string().min(1, "La dirección de entrega es requerida"),
     recipientName: z.string().min(2, "Captura el nombre del destinatario"),
     recipientPhone: z.string().min(6, "Ingresa el teléfono del destinatario"),
+    recipientEmail: z
+      .string()
+      .trim()
+      .max(255, "El correo es demasiado largo")
+      .email("El correo no tiene un formato válido")
+      .optional()
+      .or(z.literal("")),
     allowMarketingSms: z.boolean().optional().default(false),
     allowMarketingEmail: z.boolean().optional().default(false),
     payment: z.enum(ALL_PAYMENTS, {
@@ -209,6 +216,7 @@ export default function NewOrder() {
       delivery: "",
       recipientName: "",
       recipientPhone: "",
+      recipientEmail: "",
       allowMarketingSms: false,
       allowMarketingEmail: false,
       notes: "",
@@ -227,6 +235,7 @@ export default function NewOrder() {
     id: number;
     name: string;
     phone: string;
+    email: string | null;
     allowMarketingSms: boolean;
     allowMarketingEmail: boolean;
     orderCount: number;
@@ -260,6 +269,12 @@ export default function NewOrder() {
       form.setValue("recipientName", match.name, { shouldValidate: true });
       form.setValue("allowMarketingSms", match.allowMarketingSms);
       form.setValue("allowMarketingEmail", match.allowMarketingEmail);
+      // Sólo autollenamos el email si el campo está vacío (no clobereamos
+      // un correo que el cliente esté tipeando para este envío).
+      const currentEmail = (form.getValues("recipientEmail") ?? "").trim();
+      if (!currentEmail && match.email) {
+        form.setValue("recipientEmail", match.email, { shouldValidate: true });
+      }
     }
   }, [isCliente, recipientPhoneVal, phoneIndex, form]);
 
@@ -440,6 +455,7 @@ export default function NewOrder() {
           notes: data.notes ?? null,
           recipientPhone: data.recipientPhone,
           recipientName: data.recipientName,
+          recipientEmail: (data.recipientEmail ?? "").trim() || null,
           allowMarketingSms: !!data.allowMarketingSms,
           allowMarketingEmail: !!data.allowMarketingEmail,
           cashAmount:
@@ -635,6 +651,32 @@ export default function NewOrder() {
                           placeholder="+52 ..."
                           data-testid="input-recipient-phone"
                           {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="recipientEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>
+                        Correo electrónico del destinatario{" "}
+                        <span className="text-xs font-normal text-muted-foreground">
+                          (opcional)
+                        </span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          autoComplete="email"
+                          placeholder="destinatario@ejemplo.com"
+                          data-testid="input-recipient-email"
+                          {...field}
+                          value={field.value ?? ""}
                         />
                       </FormControl>
                       <FormMessage />

@@ -1599,6 +1599,8 @@ components:
           type: ["string", "null"]
         recipientPhone:
           type: ["string", "null"]
+        recipientEmail:
+          type: ["string", "null"]
         cashAmount:
           type: ["number", "null"]
         cashChange:
@@ -1650,6 +1652,8 @@ components:
         notes:
           type: ["string", "null"]
         recipientPhone:
+          type: ["string", "null"]
+        recipientEmail:
           type: ["string", "null"]
         cashAmount:
           type: ["number", "null"]

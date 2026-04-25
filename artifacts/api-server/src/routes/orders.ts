@@ -187,6 +187,31 @@ router.post(
     }
     const allowMarketingSms = req.body?.allowMarketingSms === true;
     const allowMarketingEmail = req.body?.allowMarketingEmail === true;
+    // Email del destinatario (opcional). Si viene, validamos formato básico
+    // y normalizamos en minúsculas para mantener el directorio limpio.
+    const recipientEmailRaw = (req.body?.recipientEmail ?? "")
+      .toString()
+      .trim()
+      .toLowerCase();
+    let recipientEmail: string | null = null;
+    if (recipientEmailRaw) {
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipientEmailRaw);
+      if (!emailOk) {
+        res.status(400).json({
+          error: "El correo del destinatario no tiene un formato válido.",
+          reason: "RECIPIENT_EMAIL_INVALID",
+        });
+        return;
+      }
+      if (recipientEmailRaw.length > 255) {
+        res.status(400).json({
+          error: "El correo del destinatario es demasiado largo.",
+          reason: "RECIPIENT_EMAIL_TOO_LONG",
+        });
+        return;
+      }
+      recipientEmail = recipientEmailRaw;
+    }
     const pickup =
       req.user!.role === "CLIENTE" && myCustomerRow?.pickupAddress
         ? myCustomerRow.pickupAddress
@@ -332,6 +357,7 @@ router.post(
         deliveryLat,
         deliveryLng,
         recipientPhone: parsed.data.recipientPhone ?? null,
+        recipientEmail,
         // Solo persistimos cashAmount/cashChange cuando el método es EFECTIVO.
         // Para otros métodos los forzamos a null aunque el cliente los envíe.
         cashAmount:
@@ -368,6 +394,7 @@ router.post(
             customerId: myCustomerRow.id,
             name: recipientNameRaw,
             phone: parsed.data.recipientPhone,
+            email: recipientEmail,
             allowMarketingSms,
             allowMarketingEmail,
             orderCount: 1,
@@ -377,6 +404,10 @@ router.post(
             target: [recipientsTable.customerId, recipientsTable.phone],
             set: {
               name: recipientNameRaw,
+              // Si llegó un email nuevo lo guardamos; si vino vacío conservamos
+              // el valor previo (no sobrescribimos con null para no perder
+              // emails ya capturados en envíos anteriores).
+              ...(recipientEmail ? { email: recipientEmail } : {}),
               allowMarketingSms,
               allowMarketingEmail,
               orderCount: sql`${recipientsTable.orderCount} + 1`,

@@ -22,6 +22,7 @@ type AdminRecipient = {
   id: number;
   name: string;
   phone: string;
+  email: string | null;
   allowMarketingSms: boolean;
   allowMarketingEmail: boolean;
   orderCount: number;
@@ -121,6 +122,7 @@ export default function AdminDestinatariosPage() {
                   <TableHead>Cliente</TableHead>
                   <TableHead>Destinatario</TableHead>
                   <TableHead>Teléfono</TableHead>
+                  <TableHead>Correo</TableHead>
                   <TableHead className="text-center">SMS</TableHead>
                   <TableHead className="text-center">Email</TableHead>
                   <TableHead className="text-right">Envíos</TableHead>
@@ -140,7 +142,7 @@ export default function AdminDestinatariosPage() {
                   ))
                 ) : data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                       Aún no hay destinatarios registrados.
                     </TableCell>
                   </TableRow>
@@ -159,6 +161,13 @@ export default function AdminDestinatariosPage() {
                       </TableCell>
                       <TableCell className="font-medium">{r.name}</TableCell>
                       <TableCell className="font-mono text-sm">{r.phone}</TableCell>
+                      <TableCell className="text-sm" data-testid={`text-recipient-email-${r.id}`}>
+                        {r.email ? (
+                          <span className="break-all">{r.email}</span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-center">
                         {r.allowMarketingSms ? (
                           <Check className="inline w-4 h-4 text-green-600" />

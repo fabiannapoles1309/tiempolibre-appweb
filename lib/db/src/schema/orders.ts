@@ -23,6 +23,7 @@ export const ordersTable = pgTable("orders", {
   // Datos de contacto y cobro adicionales
   recipientName: varchar("recipient_name", { length: 255 }),
   recipientPhone: varchar("recipient_phone", { length: 64 }),
+  recipientEmail: varchar("recipient_email", { length: 255 }),
   cashAmount: numeric("cash_amount", { precision: 12, scale: 2 }),
   cashChange: numeric("cash_change", { precision: 12, scale: 2 }),
   notes: text("notes"),

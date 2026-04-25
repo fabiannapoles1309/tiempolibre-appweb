@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rapidoo is a production-ready B2B last-mile delivery management platform designed to streamline and manage delivery operations. It offers a comprehensive solution for businesses requiring efficient last-mile logistics, with a focus on usability and robust backend services. The platform supports various user roles, including administrators, clients, and drivers, each with tailored functionalities. Key capabilities include order management, driver assignment, subscription handling, financial tracking, and incident reporting. The project aims to capture the market for B2B last-mile delivery services, providing a reliable and scalable SaaS solution.
+Rapidoo is a production-ready B2B last-mile delivery management platform designed to streamline and manage delivery operations. It provides a comprehensive solution for businesses requiring efficient last-mile logistics, supporting various user roles like administrators, clients, and drivers. Key capabilities include order management, driver assignment, subscription handling, financial tracking, and incident reporting. The project aims to capture the B2B last-mile delivery market with a reliable and scalable SaaS offering.
 
 ## User Preferences
 
@@ -49,6 +49,11 @@ Rapidoo is a production-ready B2B last-mile delivery management platform designe
   - `POST /admin/package-requests/:id/approve` — corre dentro de `db.transaction`: hace un `UPDATE ... WHERE id=? AND status='PENDIENTE' RETURNING id` para "claim" la solicitud y, **sólo si claim devuelve filas**, recarga +35 envíos en la última suscripción `ACTIVA`/`VENCIDA` con `monthly_deliveries = monthly_deliveries + 35` (SQL atómico) y la reactiva. Si dos admins aprueban en paralelo, sólo uno entra; el resto recibe 400 ("ya procesada"). Probado: 5 approves paralelos → delta neto = +35.
   - `POST /admin/package-requests/:id/reject` — mismo patrón de transición condicional (`UPDATE ... WHERE id=? AND status='PENDIENTE'`); si no hay filas afectadas, distingue 404 (no existe) vs 400 (ya fue procesada).
   - On creation, `notificationService.notifyAdminsPackageRequest` builds an admin/superuser notification list and logs the message body. There is no SMTP integration in the repo — the persisted `package_requests` row is the source of truth and the admin UI is the action surface.
+- Recipient email capture (envío):
+  - DB: `recipients` gains a nullable `email` column; `orders` gains a nullable `recipient_email` column. OpenAPI extends `Order` and `CreateOrderBody` with optional `recipientEmail`.
+  - `routes/orders.ts` accepts `recipientEmail`, normalizes it to lowercase + trims, validates a basic regex (`/^[^\s@]+@[^\s@]+\.[^\s@]+$/`) and max 255 chars; rejects invalid input with HTTP 400 (`RECIPIENT_EMAIL_INVALID` / `RECIPIENT_EMAIL_TOO_LONG`). Persists on the order row and includes it in the recipients upsert. On conflict, updates `email` only when a new value is provided so existing emails are not wiped by an order without an email.
+  - `routes/recipients.ts`: `/me/recipients`, `/admin/recipients`, and the Excel export include the recipient `email` column.
+  - Frontend: `pages/order-new.tsx` adds an optional "Correo electrónico del destinatario" input (zod-validated email, trimmed, max 255 chars; submission allowed when blank). Phone-based autofill from `/me/recipients` also fills the email field, but only when the field is empty so manual entries are never clobbered. `pages/admin-destinatarios.tsx` displays a new "Correo" column (showing "—" when null).
 - Frontend:
   - `pages/order-new.tsx` adds a required "Nombre del destinatario" field plus two optional checkboxes ("Acepta recibir SMS publicitarios", "Acepta recibir correos publicitarios"). Fetches `/api/me/recipients` once on mount; when the typed phone exactly matches a known recipient, autofills name + consents (only if the name field is empty or already equals the recipient's name, so manual edits are not clobbered). The order-create body now passes `recipientName`, `allowMarketingSms`, `allowMarketingEmail` (cast to `any` since the OpenAPI client has not yet been regenerated for these fields).
   - `pages/wallet.tsx` adds a "Solicitar nuevo paquete de entregas" card for CLIENTE — disabled with an amber "En revisión" pill while the cliente has a pending request, otherwise a clickable cyan button.
@@ -64,30 +69,30 @@ Rapidoo is a production-ready B2B last-mile delivery management platform designe
 
 ## System Architecture
 
-The project is structured as a monorepo using `pnpm workspaces`, consisting of two primary artifacts: `artifacts/api-server` (an Express 5 + Drizzle (Postgres) JSON API) and `artifacts/delivery-saas` (a React + Vite + Tailwind + shadcn UI frontend). Shared libraries (`lib/api-spec`, `lib/api-zod`, `lib/api-client-react`, `lib/db`) ensure a single source of truth for API definitions, Zod schemas, and typed React Query hooks, promoting consistency between frontend and backend.
+The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts/api-server` (Express 5 + Drizzle ORM for Postgres) and an `artifacts/delivery-saas` (React + Vite + Tailwind + shadcn UI frontend). Shared libraries (`lib/api-spec`, `lib/api-zod`, `lib/api-client-react`, `lib/db`) ensure consistent API definitions and typed hooks.
 
 **Core Features:**
 
--   **Domain Model:** Includes Users, Zones, Drivers, Orders, Transactions, Wallet (with `wallets` and `wallet_tx`), Incidents, and Subscriptions.
--   **Authentication:** JWT (HS256) based, stored in an httpOnly cookie, with bcryptjs for password hashing and role-based access control (RBAC) middleware for route protection.
--   **Order Management:** Supports automatic assignment of orders to drivers based on zone and load, manual assignment, and atomic state transitions for order delivery, triggering financial updates and subscription usage.
--   **Financial Tracking:** Integrates a platform-wide ledger, per-user prepaid wallets, and detailed financial reports including expenses and split revenue.
--   **Benefit Tracking:** Manages driver benefits with `benefit_items` and `benefit_claims` tables, allowing admins to track monthly deliveries, progress towards benefits, and claim status.
--   **Recipient Management:** `recipients` table for storing delivery recipient details, including marketing consents and usage statistics. This supports client-side autofill and server-side upsert logic during order creation.
--   **Package Requests:** `package_requests` table and associated endpoints allow clients to request new delivery blocks, with an atomic approval/rejection process for administrators.
--   **UI/UX:** Designed with Tailwind CSS and shadcn UI, adhering to a light theme with cyan as the primary color. The UI is localized for Spanish (Argentina) with specific branding (TiempoLibre) and role-based widget visibility.
--   **Geospatial Features:** Utilizes client-side MapLibre with `public/zonas.kml` and `turf` for interactive delivery point selection and client-side zone validation. Server-side validation handles point-in-polygon checks and address geocoding.
--   **Notification System:** Includes a `notificationService` for building driver welcome messages and admin notifications for package requests (logging only, no external SMTP).
+-   **Domain Model:** Includes Users, Zones, Drivers, Orders, Transactions, Wallet (with `wallets` and `wallet_tx`), Incidents, Subscriptions, Recipients, and Package Requests.
+-   **Authentication:** JWT (HS256) via httpOnly cookies, bcryptjs for password hashing, and RBAC middleware for route protection.
+-   **Order Management:** Supports automatic and manual driver assignment, with atomic state transitions for order delivery that trigger financial and subscription updates.
+-   **Financial Tracking:** Comprehensive ledger, user-specific prepaid wallets, and detailed financial reporting.
+-   **Benefit Tracking:** Manages driver benefits, tracking progress and claims.
+-   **Recipient Management:** Stores recipient details, including marketing consents, supporting autofill and server-side upsert logic.
+-   **Package Requests:** Allows clients to request new delivery blocks, with an atomic approval/rejection process for administrators.
+-   **UI/UX:** Light theme with cyan primary color, localized for Spanish (Argentina), with role-based widget visibility. Uses Tailwind CSS and shadcn UI.
+-   **Geospatial Features:** Interactive delivery point selection using client-side MapLibre with `public/zonas.kml` and `turf` for zone validation. Server-side validation handles point-in-polygon checks and geocoding.
+-   **Notification System:** `notificationService` for driver welcome messages and admin package request notifications (logging only).
 
 ## External Dependencies
 
--   **PostgreSQL:** Primary database managed with Drizzle ORM.
--   **Express 5:** Backend API framework.
--   **React + Vite:** Frontend development stack.
--   **Tailwind CSS + shadcn UI:** Frontend styling and component library.
--   **Orval:** Used for generating Zod runtime schemas and typed React Query hooks from OpenAPI specifications.
--   **bcryptjs:** For password hashing.
--   **date-fns:** For date formatting with Spanish locale.
--   **MapLibre:** Embedded map library for interactive delivery point selection.
--   **turf.js:** Client-side geospatial analysis for zone validation.
--   **exceljs:** For generating Excel reports (e.g., benefits tracking export, recipients export).
+-   **PostgreSQL:** Primary database.
+-   **Express 5:** Backend framework.
+-   **React + Vite:** Frontend stack.
+-   **Tailwind CSS + shadcn UI:** Styling and component library.
+-   **Orval:** Generates Zod schemas and React Query hooks from OpenAPI.
+-   **bcryptjs:** Password hashing.
+-   **date-fns:** Date formatting.
+-   **MapLibre:** Embedded maps.
+-   **turf.js:** Client-side geospatial analysis.
+-   **exceljs:** Excel report generation.

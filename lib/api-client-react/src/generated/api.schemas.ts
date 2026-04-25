@@ -315,6 +315,8 @@ export interface Order {
   /** @nullable */
   recipientPhone?: string | null;
   /** @nullable */
+  recipientEmail?: string | null;
+  /** @nullable */
   cashAmount?: number | null;
   /** @nullable */
   cashChange?: number | null;
@@ -339,6 +341,8 @@ export interface CreateOrderBody {
   notes?: string | null;
   /** @nullable */
   recipientPhone?: string | null;
+  /** @nullable */
+  recipientEmail?: string | null;
   /** @nullable */
   cashAmount?: number | null;
   /** @nullable */

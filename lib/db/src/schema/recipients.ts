@@ -29,6 +29,7 @@ export const recipientsTable = pgTable(
       .notNull(),
     name: varchar("name", { length: 255 }).notNull(),
     phone: varchar("phone", { length: 64 }).notNull(),
+    email: varchar("email", { length: 255 }),
     allowMarketingSms: boolean("allow_marketing_sms").notNull().default(false),
     allowMarketingEmail: boolean("allow_marketing_email")
       .notNull()

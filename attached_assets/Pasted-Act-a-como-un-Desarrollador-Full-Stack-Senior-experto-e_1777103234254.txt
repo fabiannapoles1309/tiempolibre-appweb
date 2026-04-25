@@ -1,0 +1,76 @@
+Actúa como un Desarrollador Full-Stack Senior experto en Node.js, Express, bases de datos (MongoDB/SQL) y Sistemas de Información Geográfica (GIS). Estamos desarrollando "Tiempo Libre", una plataforma web B2B de logística y entregas.
+
+Necesito realizar una actualización masiva del sistema dividida en 6 módulos. He subido a la raíz del proyecto un archivo llamado zonas.kml que contiene los polígonos de nuestras 9 zonas de cobertura. Por favor, genera el código necesario para implementar lo siguiente paso a paso:
+
+MÓDULO 1: Autenticación, Roles y Seguridad
+
+Eliminar Registro Público: Quita la opción de "Crear cuenta nueva" de la pantalla de inicio (Landing/Login).
+
+Creación Centralizada: Solo el rol Admin y el nuevo rol Superusuario pueden crear cuentas asignando el rol (Cliente, Driver o Admin).
+
+Nuevo Rol 'Soporte / Superusuario': Crea este rol con permisos absolutos de lectura, edición y eliminación sobre cualquier registro del sistema.
+
+MÓDULO 2: UI General y Diseño
+
+Sidebar Turquesa: Cambia el color de fondo de la barra de navegación lateral (donde están Dashboard, Mis Entregas, etc.) a color Turquesa. El fondo del resto de la aplicación (el área de contenido principal) debe mantenerse blanco.
+
+Copy de Inicio: Cambia el subtítulo principal de la plataforma por: "Confianza y seguridad en cada kilometro".
+
+MÓDULO 3: Vistas y Funciones del Repartidor (Driver)
+
+Alta de Repartidor: Añade los campos obligatorios "Tarjeta de circulación" y "Placas" al formulario de registro.
+
+Detalle de Entrega: El repartidor debe poder visualizar el número de teléfono del cliente final (receptor) en el detalle del pedido.
+
+Control de Estatus interactivo: Agrega botones para actualizar el progreso (ej. En camino, En el punto, Entregado). Esto debe reflejarse al Cliente.
+
+Reporte de Incidentes: Agrega un botón de "Reportar Incidente" en el pedido con un campo de texto para describir el problema.
+
+Finanzas del Driver: Muestra en su dashboard el "Monto en efectivo pendiente por entregar al establecimiento".
+
+Nuevas Pestañas (Sidebar): Añade "Mis Beneficios" y "Ranking de Mejores Repartidores".
+
+MÓDULO 4: Vistas y Funciones del Cliente (Restaurante)
+
+Suscripciones y Paquetes:
+
+El Cliente compra "Paquetes" de 35 envíos con vigencia de 1 mes exacto desde su activación.
+
+Muestra visualmente: Plan Activo (Estándar/Óptimo), Fecha de Vencimiento y Envíos Restantes.
+
+Alerta visual cuando queden 5 envíos o menos.
+
+Botón "Recargar Paquete" para sumar 35 envíos.
+
+Dashboard Financiero: Cambia "Ingresos hoy" por "Ingreso Mensual". Agrega una sumatoria del "Costo por envío" total para comparar ingresos vs gastos de logística.
+
+Formulario de Nuevo Envío: Agrega campos para "Monto a cobrar al cliente" y "Cambio necesario" (para pagos en efectivo).
+
+Formas de Pago: Actualiza las opciones a: "Pago con tarjeta", "Efectivo" y "Pago con Cortesía" (envío gratis). Elimina "Billetera".
+
+Restricciones UI: Oculta para este rol el filtro "Todas las zonas" y el campo de selección de "Zona" al crear un pedido (esto se calculará automáticamente).
+
+MÓDULO 5: Vistas y Funciones del Administrador
+
+Reporte de Efectivo Pendiente: Una vista que sume todo el efectivo que los repartidores no han entregado, desglosado por Cliente (Restaurante).
+
+Gestión de Suscripciones: Menú para activar manualmente los planes de los Clientes y ver vencimientos.
+
+Reporte de Ingresos B2B: Sumatoria de los ingresos de la plataforma por la venta de planes/suscripciones a los clientes.
+
+MÓDULO 6: Geolocalización y Validación de Zonas (GIS)
+
+Librerías requeridas: Instala e implementa @mapbox/togeojson (para leer KML), xmldom, @turf/turf (para cálculo matemático espacial) y @googlemaps/google-maps-services-js (para Geocoding).
+
+Servicio Backend (mapService.js):
+
+Lee zonas.kml usando fs y conviértelo a un objeto GeoJSON en memoria.
+
+Crea la función validarZona(direccion). Esta debe convertir la dirección del Cliente a Lat/Lng usando Geocoding, y luego usar turf.booleanPointInPolygon() para verificar si cae dentro de alguno de nuestros polígonos. Si está dentro, devuelve la zona; si no, devuelve false.
+
+Middleware de Nuevo Pedido: Integra validarZona() al crear un envío. Si es false, aborta la creación y devuelve HTTP 400: "Dirección fuera de zona de cobertura".
+
+Mapa del Administrador (Frontend): Crea una ruta (ej. /api/zonas) que sirva el GeoJSON. En la vista del Admin, carga la Google Maps JS API y usa map.data.loadGeoJson() para pintar los polígonos sobre el mapa de la ciudad.
+
+Instrucciones de entrega:
+Por favor, dame los comandos npm install necesarios y comienza dándome los Códigos de los Modelos de Base de Datos actualizados. Si te quedas sin espacio en tu respuesta, te pediré que continúes.

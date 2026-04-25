@@ -20,6 +20,7 @@ import type {
   AdminClienteRow,
   AdminCreateUserBody,
   AdminCreatedUser,
+  AdminFeedbackRow,
   AdminUpdateClienteBody,
   AssignManualBody,
   AuthSession,
@@ -32,18 +33,21 @@ import type {
   CashByCustomerRow,
   CashReport,
   CreateDriverBody,
+  CreateFeedbackBody,
   CreateIncidentBody,
   CreateOrderBody,
   CustomerDeliveriesRow,
   CustomerProfile,
   DashboardData,
   DeliveriesPoint,
+  DownloadCombinedReportParams,
   Driver,
   DriverBenefitsProgress,
   DriverPerformance,
   DriverRankingEntry,
   ErrorResponse,
   ExportBenefitsTrackingParams,
+  Feedback,
   FinanceExportExcelParams,
   FinanceSummary,
   GetBenefitsTrackingParams,
@@ -65,6 +69,7 @@ import type {
   SetBenefitClaimBody,
   SettleCashBody,
   SimpleOk,
+  StaffUser,
   SubscribeBody,
   Subscription,
   TodaySplit,
@@ -4870,6 +4875,342 @@ export function useGetDashboard<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetDashboardQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List ADMIN and SUPERUSER staff with their email addresses.
+ */
+export const getListStaffUsersUrl = () => {
+  return `/api/admin/staff-users`;
+};
+
+export const listStaffUsers = async (
+  options?: RequestInit,
+): Promise<StaffUser[]> => {
+  return customFetch<StaffUser[]>(getListStaffUsersUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListStaffUsersQueryKey = () => {
+  return [`/api/admin/staff-users`] as const;
+};
+
+export const getListStaffUsersQueryOptions = <
+  TData = Awaited<ReturnType<typeof listStaffUsers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listStaffUsers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListStaffUsersQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listStaffUsers>>> = ({
+    signal,
+  }) => listStaffUsers({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listStaffUsers>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListStaffUsersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listStaffUsers>>
+>;
+export type ListStaffUsersQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List ADMIN and SUPERUSER staff with their email addresses.
+ */
+
+export function useListStaffUsers<
+  TData = Awaited<ReturnType<typeof listStaffUsers>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listStaffUsers>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListStaffUsersQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Combined Excel report (envíos + cash) per cliente, grouped by period.
+ */
+export const getDownloadCombinedReportUrl = (
+  params: DownloadCombinedReportParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/reports/combined?${stringifiedParams}`
+    : `/api/admin/reports/combined`;
+};
+
+export const downloadCombinedReport = async (
+  params: DownloadCombinedReportParams,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getDownloadCombinedReportUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDownloadCombinedReportQueryKey = (
+  params?: DownloadCombinedReportParams,
+) => {
+  return [`/api/admin/reports/combined`, ...(params ? [params] : [])] as const;
+};
+
+export const getDownloadCombinedReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof downloadCombinedReport>>,
+  TError = ErrorType<unknown>,
+>(
+  params: DownloadCombinedReportParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadCombinedReport>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getDownloadCombinedReportQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof downloadCombinedReport>>
+  > = ({ signal }) =>
+    downloadCombinedReport(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof downloadCombinedReport>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type DownloadCombinedReportQueryResult = NonNullable<
+  Awaited<ReturnType<typeof downloadCombinedReport>>
+>;
+export type DownloadCombinedReportQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Combined Excel report (envíos + cash) per cliente, grouped by period.
+ */
+
+export function useDownloadCombinedReport<
+  TData = Awaited<ReturnType<typeof downloadCombinedReport>>,
+  TError = ErrorType<unknown>,
+>(
+  params: DownloadCombinedReportParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof downloadCombinedReport>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getDownloadCombinedReportQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Submit a complaint or suggestion. Notifies admins by email.
+ */
+export const getCreateMyFeedbackUrl = () => {
+  return `/api/me/feedback`;
+};
+
+export const createMyFeedback = async (
+  createFeedbackBody: CreateFeedbackBody,
+  options?: RequestInit,
+): Promise<Feedback> => {
+  return customFetch<Feedback>(getCreateMyFeedbackUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createFeedbackBody),
+  });
+};
+
+export const getCreateMyFeedbackMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMyFeedback>>,
+    TError,
+    { data: BodyType<CreateFeedbackBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createMyFeedback>>,
+  TError,
+  { data: BodyType<CreateFeedbackBody> },
+  TContext
+> => {
+  const mutationKey = ["createMyFeedback"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createMyFeedback>>,
+    { data: BodyType<CreateFeedbackBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createMyFeedback(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateMyFeedbackMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createMyFeedback>>
+>;
+export type CreateMyFeedbackMutationBody = BodyType<CreateFeedbackBody>;
+export type CreateMyFeedbackMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Submit a complaint or suggestion. Notifies admins by email.
+ */
+export const useCreateMyFeedback = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createMyFeedback>>,
+    TError,
+    { data: BodyType<CreateFeedbackBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createMyFeedback>>,
+  TError,
+  { data: BodyType<CreateFeedbackBody> },
+  TContext
+> => {
+  return useMutation(getCreateMyFeedbackMutationOptions(options));
+};
+
+/**
+ * @summary Admin list of all feedback (quejas + sugerencias).
+ */
+export const getListFeedbackUrl = () => {
+  return `/api/admin/feedback`;
+};
+
+export const listFeedback = async (
+  options?: RequestInit,
+): Promise<AdminFeedbackRow[]> => {
+  return customFetch<AdminFeedbackRow[]>(getListFeedbackUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListFeedbackQueryKey = () => {
+  return [`/api/admin/feedback`] as const;
+};
+
+export const getListFeedbackQueryOptions = <
+  TData = Awaited<ReturnType<typeof listFeedback>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listFeedback>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListFeedbackQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listFeedback>>> = ({
+    signal,
+  }) => listFeedback({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listFeedback>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListFeedbackQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listFeedback>>
+>;
+export type ListFeedbackQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Admin list of all feedback (quejas + sugerencias).
+ */
+
+export function useListFeedback<
+  TData = Awaited<ReturnType<typeof listFeedback>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listFeedback>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListFeedbackQueryOptions(options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

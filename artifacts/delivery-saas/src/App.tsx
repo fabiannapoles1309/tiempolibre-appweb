@@ -31,6 +31,10 @@ import AdminClientesPage from "@/pages/admin-clientes";
 import AdminDestinatariosPage from "@/pages/admin-destinatarios";
 import AdminPackageRequestsPage from "@/pages/admin-package-requests";
 import AdminPricingSettingsPage from "@/pages/admin-pricing-settings";
+import AdminStaffPage from "@/pages/admin-staff";
+import AdminReportsCombinedPage from "@/pages/admin-reports-combined";
+import AdminFeedbackPage from "@/pages/admin-feedback";
+import FeedbackPage from "@/pages/feedback";
 
 const queryClient = new QueryClient();
 
@@ -99,6 +103,10 @@ function Router() {
       <Route path="/admin/destinatarios" component={() => <ProtectedRoute component={AdminDestinatariosPage} roles={["ADMIN"]} />} />
       <Route path="/admin/solicitudes-paquetes" component={() => <ProtectedRoute component={AdminPackageRequestsPage} roles={["ADMIN"]} />} />
       <Route path="/admin/pricing-settings" component={() => <ProtectedRoute component={AdminPricingSettingsPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/staff" component={() => <ProtectedRoute component={AdminStaffPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/reports-combined" component={() => <ProtectedRoute component={AdminReportsCombinedPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/feedback" component={() => <ProtectedRoute component={AdminFeedbackPage} roles={["ADMIN"]} />} />
+      <Route path="/feedback" component={() => <ProtectedRoute component={FeedbackPage} roles={["CLIENTE", "DRIVER", "ADMIN"]} />} />
       <Route component={NotFound} />
     </Switch>
   );

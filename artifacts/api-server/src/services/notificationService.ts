@@ -1,7 +1,14 @@
 /**
  * Notification service: genera mensajes listos para enviar por SMS / WhatsApp.
  * Mantiene el copy en español rioplatense (voseo) y el branding TiempoLibre.
+ *
+ * Email delivery is delegated to `emailService.sendEmail`, which talks to
+ * Sendgrid when the Replit integration is connected, or falls back to a
+ * structured console log otherwise. So this module always succeeds — even if
+ * no email provider is wired up yet.
  */
+
+import { sendEmail } from "./emailService";
 
 export interface DriverWelcomeInput {
   name: string;
@@ -81,18 +88,21 @@ export async function notifyAdminsPackageRequest(
     .filter(Boolean)
     .join("\n");
 
-  // Si en el futuro se conecta un proveedor (SendGrid, SES, SMTP), inyectar
-  // el envío real acá. Por ahora dejamos rastro en el log estructurado.
-  for (const admin of admins) {
-    console.log(
-      `[notify] package-request#${requestId} → ${admin.email}: ${subject}`,
-    );
-  }
   if (admins.length === 0) {
     console.warn(
       `[notify] package-request#${requestId}: no hay ADMIN/SUPERUSER para notificar`,
     );
+    return;
   }
-  // Body se mantiene en el log para diagnóstico.
-  console.log(`[notify] package-request#${requestId} body:\n${body}`);
+  const recipients = admins.map((a) => a.email).filter(Boolean);
+  const result = await sendEmail({
+    to: recipients,
+    subject,
+    text: body,
+  });
+  console.log(
+    `[notify] package-request#${requestId} → ${recipients.join(",")} sent=${
+      result.sent
+    }${result.reason ? ` reason=${result.reason}` : ""}`,
+  );
 }

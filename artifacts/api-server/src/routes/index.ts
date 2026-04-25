@@ -16,6 +16,9 @@ import adminRouter from "./admin";
 import recipientsRouter from "./recipients";
 import packageRequestsRouter from "./package-requests";
 import pricingSettingsRouter from "./pricing-settings";
+import staffUsersRouter from "./staff-users";
+import combinedReportRouter from "./combined-report";
+import feedbackRouter from "./feedback";
 
 const router: IRouter = Router();
 
@@ -36,5 +39,8 @@ router.use(adminRouter);
 router.use(recipientsRouter);
 router.use(packageRequestsRouter);
 router.use(pricingSettingsRouter);
+router.use(staffUsersRouter);
+router.use(combinedReportRouter);
+router.use(feedbackRouter);
 
 export default router;

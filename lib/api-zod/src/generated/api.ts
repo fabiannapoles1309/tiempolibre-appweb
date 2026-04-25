@@ -1313,3 +1313,53 @@ export const GetDashboardResponse = zod.object({
     }),
   ),
 });
+
+/**
+ * @summary List ADMIN and SUPERUSER staff with their email addresses.
+ */
+export const ListStaffUsersResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  role: zod.enum(["ADMIN", "SUPERUSER"]),
+  createdAt: zod.coerce.date(),
+});
+export const ListStaffUsersResponse = zod.array(ListStaffUsersResponseItem);
+
+/**
+ * @summary Combined Excel report (envíos + cash) per cliente, grouped by period.
+ */
+export const DownloadCombinedReportQueryParams = zod.object({
+  period: zod.enum(["DAY", "WEEK", "MONTH", "YEAR"]),
+  from: zod.date().optional(),
+  to: zod.date().optional(),
+});
+
+/**
+ * @summary Submit a complaint or suggestion. Notifies admins by email.
+ */
+export const createMyFeedbackBodySubjectMax = 255;
+
+export const createMyFeedbackBodyMessageMax = 4000;
+
+export const CreateMyFeedbackBody = zod.object({
+  type: zod.enum(["QUEJA", "SUGERENCIA"]),
+  subject: zod.string().min(1).max(createMyFeedbackBodySubjectMax),
+  message: zod.string().min(1).max(createMyFeedbackBodyMessageMax),
+});
+
+/**
+ * @summary Admin list of all feedback (quejas + sugerencias).
+ */
+export const ListFeedbackResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  userName: zod.string(),
+  userEmail: zod.string(),
+  userRole: zod.enum(["SUPERUSER", "ADMIN", "CLIENTE", "DRIVER"]),
+  type: zod.enum(["QUEJA", "SUGERENCIA"]),
+  subject: zod.string(),
+  message: zod.string(),
+  createdAt: zod.coerce.date(),
+});
+export const ListFeedbackResponse = zod.array(ListFeedbackResponseItem);

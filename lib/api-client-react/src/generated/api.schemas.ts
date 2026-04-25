@@ -756,6 +756,62 @@ export interface DriverBenefitsProgress {
   benefits: BenefitsTrackingBenefit[];
 }
 
+export type StaffUserRole = (typeof StaffUserRole)[keyof typeof StaffUserRole];
+
+export const StaffUserRole = {
+  ADMIN: "ADMIN",
+  SUPERUSER: "SUPERUSER",
+} as const;
+
+export interface StaffUser {
+  id: number;
+  name: string;
+  email: string;
+  role: StaffUserRole;
+  createdAt: string;
+}
+
+export type FeedbackType = (typeof FeedbackType)[keyof typeof FeedbackType];
+
+export const FeedbackType = {
+  QUEJA: "QUEJA",
+  SUGERENCIA: "SUGERENCIA",
+} as const;
+
+export interface CreateFeedbackBody {
+  type: FeedbackType;
+  /**
+   * @minLength 1
+   * @maxLength 255
+   */
+  subject: string;
+  /**
+   * @minLength 1
+   * @maxLength 4000
+   */
+  message: string;
+}
+
+export interface Feedback {
+  id: number;
+  type: FeedbackType;
+  subject: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface AdminFeedbackRow {
+  id: number;
+  userId: number;
+  userName: string;
+  userEmail: string;
+  userRole: UserRole;
+  type: FeedbackType;
+  subject: string;
+  message: string;
+  createdAt: string;
+}
+
 export type ListOrdersParams = {
   status?: OrderStatus;
   zone?: ZoneName;
@@ -881,4 +937,20 @@ export const GetDriversReportRange = {
   day: "day",
   week: "week",
   month: "month",
+} as const;
+
+export type DownloadCombinedReportParams = {
+  period: DownloadCombinedReportPeriod;
+  from?: string;
+  to?: string;
+};
+
+export type DownloadCombinedReportPeriod =
+  (typeof DownloadCombinedReportPeriod)[keyof typeof DownloadCombinedReportPeriod];
+
+export const DownloadCombinedReportPeriod = {
+  DAY: "DAY",
+  WEEK: "WEEK",
+  MONTH: "MONTH",
+  YEAR: "YEAR",
 } as const;

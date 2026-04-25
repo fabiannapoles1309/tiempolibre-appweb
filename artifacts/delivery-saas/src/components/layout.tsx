@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2 } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2, ShieldCheck, FileSpreadsheet, MessageSquareWarning, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -38,7 +38,12 @@ const navItems: NavItem[] = [
   { title: "Beneficios", href: "/admin/benefits-config", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Seguimiento Beneficios", href: "/admin/benefits-tracking", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
+  { title: "Personal interno", href: "/admin/staff", icon: ShieldCheck, roles: [UserRole.ADMIN] },
+  { title: "Reporte combinado", href: "/admin/reports-combined", icon: FileSpreadsheet, roles: [UserRole.ADMIN] },
+  { title: "Buzón de quejas", href: "/admin/feedback", icon: Inbox, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
+  // Quejas y sugerencias accesible a cualquier usuario logueado (cliente / driver / admin).
+  { title: "Quejas y sugerencias", href: "/feedback", icon: MessageSquareWarning, roles: [UserRole.CLIENTE, UserRole.DRIVER] },
   // El CLIENTE accede a "Mi billetera" para ver el saldo acumulado por
   // cobros en efectivo que los repartidores hacen al entregar sus envíos.
   // No puede recargar ni gastar saldo: es sólo visualización de cobranza.

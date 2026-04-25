@@ -17,6 +17,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { serializeOrder } from "../lib/serializers";
+import { validarZona } from "../lib/mapService";
 
 const router: IRouter = Router();
 
@@ -132,6 +133,23 @@ router.post(
 
     const amount = parsed.data.amount ?? 0;
 
+    // Validación geográfica: la dirección de entrega debe caer dentro de algún polígono KML.
+    const validation = await validarZona(parsed.data.delivery);
+    if (!validation.ok) {
+      const reason = validation.reason ?? "FUERA_DE_ZONA";
+      const message =
+        reason === "ZONAS_NO_CARGADAS"
+          ? "El servicio de zonas no está disponible. Contactá a soporte."
+          : reason === "DIRECCION_NO_GEOCODIFICADA"
+          ? "No pudimos ubicar la dirección de entrega. Verificá que esté completa."
+          : "Dirección fuera de zona de cobertura";
+      res.status(400).json({ error: message, reason });
+      return;
+    }
+    const computedZone = validation.zone;
+    const deliveryLat = validation.point ? String(validation.point.lat) : null;
+    const deliveryLng = validation.point ? String(validation.point.lng) : null;
+
     // Wallet payment: deduct balance now
     if (parsed.data.payment === "BILLETERA") {
       const [wallet] = await db
@@ -161,9 +179,11 @@ router.post(
         customerId: req.user!.sub,
         pickup: parsed.data.pickup,
         delivery: parsed.data.delivery,
-        zone: parsed.data.zone ?? null,
+        zone: computedZone,
         payment: parsed.data.payment,
         amount: String(amount),
+        deliveryLat,
+        deliveryLng,
         notes: parsed.data.notes ?? null,
         status: "PENDIENTE",
       })
@@ -286,14 +306,20 @@ router.post(
       if (row.driverId != null) loadMap.set(row.driverId, row.count);
     }
 
-    const details: { orderId: number; driverId: number | null; zone: string; status: string }[] = [];
+    const details: { orderId: number; driverId: number | null; zone: string | null; status: string }[] = [];
     let assigned = 0;
     let skipped = 0;
 
     for (const order of pending) {
-      const candidates = drivers.filter((d) => d.zones.includes(order.zone));
+      if (!order.zone) {
+        details.push({ orderId: order.id, driverId: null, zone: null, status: "sin_zona" });
+        skipped++;
+        continue;
+      }
+      const orderZone = order.zone;
+      const candidates = drivers.filter((d) => d.zones.includes(orderZone));
       if (candidates.length === 0) {
-        details.push({ orderId: order.id, driverId: null, zone: order.zone, status: "sin_drivers" });
+        details.push({ orderId: order.id, driverId: null, zone: orderZone, status: "sin_drivers" });
         skipped++;
         continue;
       }
@@ -306,7 +332,7 @@ router.post(
         .set({ driverId: chosen.id, status: "ASIGNADO" })
         .where(eq(ordersTable.id, order.id));
       loadMap.set(chosen.id, (loadMap.get(chosen.id) ?? 0) + 1);
-      details.push({ orderId: order.id, driverId: chosen.id, zone: order.zone, status: "asignado" });
+      details.push({ orderId: order.id, driverId: chosen.id, zone: orderZone, status: "asignado" });
       assigned++;
     }
 

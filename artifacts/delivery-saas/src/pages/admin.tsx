@@ -155,8 +155,9 @@ export default function AdminDispatch() {
   }
 
   const groupedOrders = pendingOrders?.reduce((acc, order) => {
-    if (!acc[order.zone]) acc[order.zone] = [];
-    acc[order.zone].push(order);
+    const key = order.zone ?? "sin_zona";
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(order);
     return acc;
   }, {} as Record<string, typeof pendingOrders>) || {};
 

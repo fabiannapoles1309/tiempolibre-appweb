@@ -78,7 +78,7 @@ export default function OrderDetail() {
 
   if (!order) return <div>Pedido no encontrado</div>;
 
-  const validDrivers = drivers?.filter(d => d.active && d.zones.includes(order.zone)) || [];
+  const validDrivers = drivers?.filter(d => d.active && (order.zone ? d.zones.includes(order.zone) : true)) || [];
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">

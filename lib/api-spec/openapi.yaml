@@ -548,7 +548,7 @@ components:
 
     UserRole:
       type: string
-      enum: [ADMIN, CLIENTE, DRIVER]
+      enum: [SUPERUSER, ADMIN, CLIENTE, DRIVER]
 
     OrderStatus:
       type: string

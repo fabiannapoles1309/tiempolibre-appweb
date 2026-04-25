@@ -7,7 +7,6 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { Layout } from "@/components/layout";
 
 import Login from "@/pages/login";
-import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import OrdersList from "@/pages/orders";
 import NewOrder from "@/pages/order-new";
@@ -31,7 +30,8 @@ function ProtectedRoute({ component: Component, roles }: { component: React.Comp
     );
   }
   if (!user) return <Redirect to="/login" />;
-  if (roles && !roles.includes(user.role)) return <Redirect to="/" />;
+  // SUPERUSER tiene acceso transversal a cualquier ruta protegida.
+  if (roles && user.role !== "SUPERUSER" && !roles.includes(user.role)) return <Redirect to="/" />;
   return (
     <Layout>
       <Component />
@@ -56,7 +56,8 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={() => <PublicRoute component={Login} />} />
-      <Route path="/register" component={() => <PublicRoute component={Register} />} />
+      {/* Registro público deshabilitado: las cuentas se crean desde el panel de admin. */}
+      <Route path="/register" component={() => <Redirect to="/login" />} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/orders" component={() => <ProtectedRoute component={OrdersList} />} />
       <Route path="/orders/new" component={() => <ProtectedRoute component={NewOrder} roles={["CLIENTE", "ADMIN"]} />} />

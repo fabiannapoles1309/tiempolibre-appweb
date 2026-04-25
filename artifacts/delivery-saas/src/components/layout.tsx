@@ -44,7 +44,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const filteredNav = navItems.filter((item) => item.roles.includes(user.role));
+  // SUPERUSER ve todo el menú; cualquier otro rol se filtra por su rol.
+  const filteredNav =
+    user.role === "SUPERUSER"
+      ? navItems
+      : navItems.filter((item) => item.roles.includes(user.role));
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">

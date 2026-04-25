@@ -1,6 +1,6 @@
 import { useParams } from "wouter";
 import { useGetOrder, getGetOrderQueryKey, useUpdateOrder, useAssignOrderManual, useListDrivers, getListDriversQueryKey, OrderStatus, UserRole, getListOrdersQueryKey, getGetDashboardQueryKey } from "@workspace/api-client-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isAdmin } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -34,7 +34,7 @@ export default function OrderDetail() {
   });
 
   const { data: drivers, isLoading: loadingDrivers } = useListDrivers({
-    query: { enabled: user?.role === UserRole.ADMIN, queryKey: getListDriversQueryKey() }
+    query: { enabled: isAdmin(user), queryKey: getListDriversQueryKey() }
   });
 
   const updateMutation = useUpdateOrder();
@@ -102,7 +102,7 @@ export default function OrderDetail() {
           </div>
         </div>
 
-        {user?.role === UserRole.ADMIN && (
+        {isAdmin(user) && (
           <Select onValueChange={(v) => handleStatusChange(v as OrderStatus)} value={order.status}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Cambiar estado" />
@@ -226,7 +226,7 @@ export default function OrderDetail() {
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">Sin asignar</p>
                   
-                  {user?.role === UserRole.ADMIN && order.status === OrderStatus.PENDIENTE && (
+                  {isAdmin(user) && order.status === OrderStatus.PENDIENTE && (
                     <div className="space-y-3 pt-2 border-t border-border">
                       <p className="text-sm font-medium">Asignación manual</p>
                       {loadingDrivers ? (

@@ -32,6 +32,11 @@ export function requireRole(...roles: Role[]) {
       res.status(401).json({ error: "No autenticado" });
       return;
     }
+    // SUPERUSER siempre tiene acceso, salvo que se exija explícitamente otro rol concreto.
+    if (req.user.role === "SUPERUSER") {
+      next();
+      return;
+    }
     if (!roles.includes(req.user.role)) {
       res.status(403).json({ error: "No autorizado" });
       return;

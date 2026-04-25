@@ -10,6 +10,7 @@ import {
   verifyPassword,
   type Role,
 } from "../lib/auth";
+import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
@@ -31,7 +32,8 @@ function publicUser(u: { id: number; email: string; name: string; role: string; 
   };
 }
 
-router.post("/auth/register", async (req, res): Promise<void> => {
+// El alta de usuarios deja de ser pública: solo ADMIN/SUPERUSER puede crear cuentas.
+router.post("/auth/register", requireAuth, requireRole("ADMIN", "SUPERUSER"), async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: "Datos inválidos: " + parsed.error.message });
@@ -43,7 +45,13 @@ router.post("/auth/register", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Ese email ya está registrado" });
     return;
   }
-  const finalRole: Role = (role as Role | undefined) ?? "CLIENTE";
+  const requestedRole = (role as Role | undefined) ?? "CLIENTE";
+  // Solo un SUPERUSER puede crear otro SUPERUSER; un ADMIN no puede escalar privilegios.
+  if (requestedRole === "SUPERUSER" && req.user?.role !== "SUPERUSER") {
+    res.status(403).json({ error: "Solo un SUPERUSER puede crear otro SUPERUSER" });
+    return;
+  }
+  const finalRole: Role = requestedRole;
   const passwordHash = await hashPassword(password);
   const [user] = await db
     .insert(usersTable)
@@ -62,9 +70,8 @@ router.post("/auth/register", async (req, res): Promise<void> => {
       .onConflictDoNothing();
   }
 
-  const token = signToken({ sub: user.id, email: user.email, role: finalRole });
-  res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
-  res.status(201).json({ user: publicUser(user), token });
+  // No iniciamos sesión como el usuario recién creado: el admin sigue siendo el actor.
+  res.status(201).json({ user: publicUser(user) });
 });
 
 router.post("/auth/login", async (req, res): Promise<void> => {

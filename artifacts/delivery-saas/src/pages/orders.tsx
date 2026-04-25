@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
 import { useListOrders, OrderStatus, ZoneName, UserRole } from "@workspace/api-client-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isAdmin } from "@/lib/auth";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,7 +64,7 @@ export default function OrdersList() {
                   ))}
                 </SelectContent>
               </Select>
-              {user?.role === UserRole.ADMIN && (
+              {isAdmin(user) && (
                 <Select value={zoneFilter} onValueChange={setZoneFilter}>
                   <SelectTrigger className="w-full sm:w-[180px]">
                     <SelectValue placeholder="Zona" />
@@ -98,7 +98,7 @@ export default function OrdersList() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    {user?.role === UserRole.ADMIN && <TableHead>Cliente</TableHead>}
+                    {isAdmin(user) && <TableHead>Cliente</TableHead>}
                     <TableHead>Ruta</TableHead>
                     <TableHead>Zona</TableHead>
                     <TableHead>Monto</TableHead>
@@ -111,7 +111,7 @@ export default function OrdersList() {
                   {orders.map((order) => (
                     <TableRow key={order.id}>
                       <TableCell className="font-medium">#{order.id}</TableCell>
-                      {user?.role === UserRole.ADMIN && <TableCell>{order.customerName}</TableCell>}
+                      {isAdmin(user) && <TableCell>{order.customerName}</TableCell>}
                       <TableCell>
                         <div className="flex flex-col text-sm">
                           <span className="truncate max-w-[200px]" title={order.pickup}>Origen: {order.pickup}</span>

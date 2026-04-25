@@ -20,6 +20,7 @@ export interface ErrorResponse {
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
 export const UserRole = {
+  SUPERUSER: "SUPERUSER",
   ADMIN: "ADMIN",
   CLIENTE: "CLIENTE",
   DRIVER: "DRIVER",

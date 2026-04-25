@@ -1,5 +1,5 @@
 import { useGetDashboard, OrderStatus, UserRole } from "@workspace/api-client-react";
-import { useAuth } from "@/lib/auth";
+import { useAuth, isAdmin } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Package, Truck, CheckCircle2, DollarSign, Clock, Users, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -119,7 +119,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold">{ARS.format(kpis.todayRevenue)}</div>
           </CardContent>
         </Card>
-        {user?.role === UserRole.ADMIN && (
+        {isAdmin(user) && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Repartidores</CardTitle>
@@ -133,7 +133,7 @@ export default function Dashboard() {
         )}
       </div>
 
-      <div className={`grid grid-cols-1 ${user?.role === UserRole.ADMIN ? "lg:grid-cols-2" : ""} gap-6`}>
+      <div className={`grid grid-cols-1 ${isAdmin(user) ? "lg:grid-cols-2" : ""} gap-6`}>
         <Card>
           <CardHeader>
             <CardTitle>Pedidos por Estado</CardTitle>
@@ -167,7 +167,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {user?.role === UserRole.ADMIN && (
+        {isAdmin(user) && (
           <Card>
             <CardHeader>
               <CardTitle>Pedidos por Zona</CardTitle>

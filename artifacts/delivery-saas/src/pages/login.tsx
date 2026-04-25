@@ -1,4 +1,4 @@
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -18,6 +18,7 @@ const loginSchema = z.object({
 });
 
 const DEMO_ACCOUNTS = [
+  { role: "SUPERUSER", email: "super@tiempolibre.com", password: "super123" },
   { role: "ADMIN", email: "admin@tiempolibre.com", password: "admin123" },
   { role: "CLIENTE", email: "cliente@tiempolibre.com", password: "cliente123" },
   { role: "DRIVER", email: "driver@tiempolibre.com", password: "driver123" },
@@ -63,10 +64,7 @@ export default function Login() {
             Iniciar sesión
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            ¿Aún no tenés cuenta?{" "}
-            <Link href="/register" className="font-medium text-primary hover:text-primary/80">
-              Crear una cuenta nueva
-            </Link>
+            Plataforma exclusiva para clientes y operadores autorizados de TiempoLibre.
           </p>
 
           <div className="mt-8">

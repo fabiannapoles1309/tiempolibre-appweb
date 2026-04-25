@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
+import { User, UserRole, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+
+/**
+ * Devuelve true si el usuario tiene capacidades de administrador.
+ * SUPERUSER hereda todos los permisos de ADMIN.
+ */
+export function isAdmin(user: { role: string } | null | undefined): boolean {
+  if (!user) return false;
+  return user.role === UserRole.ADMIN || user.role === UserRole.SUPERUSER;
+}
 
 interface AuthContextType {
   user: User | null;

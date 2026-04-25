@@ -106,3 +106,17 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
   - `GET /admin/benefits-tracking/export` returns an `.xlsx` with winners + pending benefits (exceljs).
 - Admin page `pages/admin-benefits-tracking.tsx` (`/admin/benefits-tracking`) with month/year filters, progress bars, per-benefit toggle buttons (amber "Por reclamar" → secondary "Entregado"), Excel export, and an inline catalog editor mapping icon keys (`fuel`, `wrench`, `stethoscope`, `shield`, `coffee`, `truck`, `crown`, `star`, `zap`, `gift`) to lucide icons.
 - Sidebar entry "Seguimiento Beneficios" (ADMIN role) added in `components/layout.tsx`.
+
+## Cliente cash-collection wallet, locked pickup, expense KPI (April 2026)
+
+- Cliente "Mi Billetera" is read-only and represents accumulated cash collected by drivers on the cliente's deliveries:
+  - On `PATCH /orders/:id` when an order transitions into `ENTREGADO` and `payment === 'EFECTIVO'`, the server credits the cliente's wallet by `cashAmount` (fallback `amount`) and inserts a `wallet_tx` row of type `TOPUP` with description `"Cobranza en efectivo - Pedido #N"`. Guarded by `becameDelivered` so it cannot double-credit on subsequent edits.
+  - `POST /wallet/topup` rejects CLIENTE with HTTP 403 + `reason: WALLET_READONLY_FOR_CLIENTE`. ADMIN can still top up.
+  - `POST /orders` rejects `payment === 'BILLETERA'` for CLIENTE with HTTP 400 + `reason: BILLETERA_NOT_ALLOWED_FOR_CLIENTE` so a tampered client cannot spend the wallet.
+  - Frontend (`pages/wallet.tsx`) hides the "Recargar Saldo" card and changes the label to "Saldo cobrado" with explanatory copy when `user.role === CLIENTE`. `/wallet` route allows `["CLIENTE","ADMIN"]` and the cliente sidebar exposes "Mi billetera".
+- Pickup address lock for CLIENTE:
+  - `POST /orders` overrides any client-supplied `pickup` with `customers.pickupAddress` for CLIENTE before persistence (server-side enforcement).
+  - `pages/order-new.tsx` pre-fills the field from `/me/customer.pickupAddress` via `form.setValue` (guarded against re-renders), and renders the input as `readOnly` + muted, with a help message ("Este es tu domicilio de recolección registrado…"). ADMIN keeps the editable field.
+- Dashboard KPI for CLIENTE:
+  - `routes/reports.ts /reports/dashboard` now returns `kpis.todayDeliveryExpense` = sum of today's non-`CANCELADO` orders' `amount` for the requesting cliente.
+  - `pages/dashboard.tsx` renders a sixth card "Gasto en envíos hoy" (orange dollar icon) next to "Ingresos Hoy" only when `user.role === CLIENTE`.

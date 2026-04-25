@@ -211,6 +211,17 @@ export default function NewOrder() {
 
   const payment = form.watch("payment");
 
+  // Para CLIENTE el domicilio de recolección está fijado en su perfil y se
+  // pre-llena automáticamente cuando llega `/me/customer`. El campo del
+  // formulario queda en sólo-lectura. ADMIN puede editar libremente.
+  const lockedPickup =
+    isCliente && profile?.pickupAddress ? profile.pickupAddress : "";
+  useEffect(() => {
+    if (lockedPickup && form.getValues("pickup") !== lockedPickup) {
+      form.setValue("pickup", lockedPickup, { shouldValidate: true });
+    }
+  }, [lockedPickup, form]);
+
   // Cargar zonas.kml y parsear a GeoJSON.
   // Para CLIENTE filtramos los polígonos al de su zona asignada, así sólo
   // puede seleccionar puntos dentro del área autorizada. Esperamos a que
@@ -501,8 +512,22 @@ export default function NewOrder() {
                     <FormItem>
                       <FormLabel>Dirección de recolección</FormLabel>
                       <FormControl>
-                        <Input placeholder="Av. Principal 123" {...field} />
+                        <Input
+                          placeholder="Av. Principal 123"
+                          {...field}
+                          readOnly={isCliente}
+                          disabled={isCliente && !lockedPickup}
+                          className={isCliente ? "bg-muted cursor-not-allowed" : undefined}
+                          data-testid="input-pickup"
+                        />
                       </FormControl>
+                      {isCliente && (
+                        <p className="text-xs text-muted-foreground" data-testid="text-pickup-locked">
+                          Este es tu domicilio de recolección registrado y no se
+                          puede modificar. Si necesitas cambiarlo, contacta a tu
+                          administrador.
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}

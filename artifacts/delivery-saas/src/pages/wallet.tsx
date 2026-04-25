@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGetWallet, useListWalletTransactions, useTopUpWallet, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
+import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -26,6 +27,11 @@ const formatMoney = (val: number) => new Intl.NumberFormat('es-MX', { style: 'cu
 
 export default function WalletPage() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  // El CLIENTE sólo visualiza su saldo: representa la cobranza acumulada
+  // de los envíos pagados en EFECTIVO al momento de la entrega. No puede
+  // recargar saldo ni gastarlo (no se usa como medio de pago).
+  const isCliente = user?.role === "CLIENTE";
 
   const { data: wallet, isLoading: loadingWallet } = useGetWallet();
   const { data: transactions, isLoading: loadingTx } = useListWalletTransactions();
@@ -55,22 +61,28 @@ export default function WalletPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Mi Billetera</h1>
-        <p className="text-muted-foreground mt-1">Gestioná tu saldo prepago para agilizar tus envíos.</p>
+        <p className="text-muted-foreground mt-1">
+          {isCliente
+            ? "Saldo acumulado por las cobranzas en efectivo que tus repartidores realizan al entregar tus envíos."
+            : "Gestiona el saldo prepago para agilizar tus envíos."}
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 relative overflow-hidden border-none shadow-lg">
+      <div className={`grid grid-cols-1 ${isCliente ? "" : "lg:grid-cols-3"} gap-6`}>
+        <Card className={`${isCliente ? "" : "lg:col-span-2"} relative overflow-hidden border-none shadow-lg`}>
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-orange-600 opacity-90"></div>
           <div className="absolute top-0 right-0 p-12 opacity-10">
             <Wallet className="w-48 h-48 text-white rotate-12" />
           </div>
           <CardContent className="relative z-10 p-8 sm:p-12 flex flex-col justify-between h-full min-h-[250px]">
             <div>
-              <p className="text-white/80 font-medium tracking-wide uppercase text-sm mb-2">Saldo Disponible</p>
+              <p className="text-white/80 font-medium tracking-wide uppercase text-sm mb-2" data-testid="text-wallet-balance-label">
+                {isCliente ? "Saldo cobrado" : "Saldo Disponible"}
+              </p>
               {loadingWallet ? (
                 <Skeleton className="h-16 w-64 bg-white/20" />
               ) : (
-                <h2 className="text-5xl sm:text-7xl font-extrabold text-white tracking-tighter">
+                <h2 className="text-5xl sm:text-7xl font-extrabold text-white tracking-tighter" data-testid="text-wallet-balance">
                   {formatMoney(wallet?.balance || 0)}
                 </h2>
               )}
@@ -84,6 +96,7 @@ export default function WalletPage() {
           </CardContent>
         </Card>
 
+        {!isCliente && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -140,6 +153,7 @@ export default function WalletPage() {
             </Form>
           </CardContent>
         </Card>
+        )}
       </div>
 
       <Card>

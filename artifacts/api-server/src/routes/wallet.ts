@@ -26,6 +26,16 @@ router.get("/wallet", requireAuth, async (req, res): Promise<void> => {
 });
 
 router.post("/wallet/topup", requireAuth, async (req, res): Promise<void> => {
+  // La billetera del CLIENTE es de sólo lectura: representa la cobranza
+  // acumulada por sus envíos en efectivo. No puede recargarla manualmente.
+  if (req.user!.role === "CLIENTE") {
+    res.status(403).json({
+      error:
+        "Tu billetera es sólo informativa: refleja la cobranza de tus envíos en efectivo.",
+      reason: "WALLET_READONLY_FOR_CLIENTE",
+    });
+    return;
+  }
   const parsed = TopUpBody.safeParse(req.body);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });

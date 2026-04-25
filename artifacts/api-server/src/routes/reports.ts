@@ -137,6 +137,12 @@ router.get(
     const inRoute = allOrders.filter((o) => o.status === "EN_RUTA");
     const deliveredToday = todayOrders.filter((o) => o.status === "ENTREGADO");
     const todayRevenue = deliveredToday.reduce((acc, o) => acc + Number(o.amount), 0);
+    // Gasto total del día en envíos: suma del valor de TODOS los pedidos
+    // creados hoy (no sólo entregados). Útil para que el cliente vea cuánto
+    // está gastando hoy en su operación de logística.
+    const todayDeliveryExpense = todayOrders
+      .filter((o) => o.status !== "CANCELADO")
+      .reduce((acc, o) => acc + Number(o.amount), 0);
     const drivers = await db.select().from(driversTable);
     const activeDrivers = drivers.filter((d) => d.active).length;
 
@@ -199,6 +205,7 @@ router.get(
         inRouteOrders: inRoute.length,
         deliveredToday: deliveredToday.length,
         todayRevenue,
+        todayDeliveryExpense,
         activeDrivers,
       },
       ordersByStatus,

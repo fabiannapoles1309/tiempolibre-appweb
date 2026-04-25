@@ -116,9 +116,23 @@ export default function Dashboard() {
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{ARS.format(kpis.todayRevenue)}</div>
+            <div className="text-2xl font-bold" data-testid="text-today-revenue">{ARS.format(kpis.todayRevenue)}</div>
           </CardContent>
         </Card>
+        {user?.role === UserRole.CLIENTE && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Gasto en envíos hoy</CardTitle>
+              <DollarSign className="h-4 w-4 text-orange-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" data-testid="text-today-expense">
+                {ARS.format(Number((kpis as { todayDeliveryExpense?: number }).todayDeliveryExpense ?? 0))}
+              </div>
+              <p className="text-xs text-muted-foreground">Suma del valor de los envíos creados hoy</p>
+            </CardContent>
+          </Card>
+        )}
         {isAdmin(user) && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">

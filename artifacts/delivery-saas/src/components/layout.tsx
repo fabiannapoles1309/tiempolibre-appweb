@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard, roles: [UserRole.ADMIN, UserRole.CLIENTE, UserRole.DRIVER] },
   { title: "Mis envíos", href: "/orders", icon: Package, roles: [UserRole.CLIENTE] },
   { title: "Crear envío", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
+  { title: "Mi billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },
   { title: "Repartos", href: "/orders", icon: Package, roles: [UserRole.ADMIN] },
   { title: "Asignación", href: "/admin", icon: Settings, roles: [UserRole.ADMIN] },
   { title: "Mapa de zonas", href: "/map", icon: MapIcon, roles: [UserRole.ADMIN] },
@@ -35,8 +36,9 @@ const navItems: NavItem[] = [
   { title: "Seguimiento Beneficios", href: "/admin/benefits-tracking", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
-  // Nota: la billetera/saldo recargable fue retirada del flujo del CLIENTE.
-  // El cliente ahora sólo puede solicitar un paquete extra desde "Mi suscripción".
+  // El CLIENTE accede a "Mi billetera" para ver el saldo acumulado por
+  // cobros en efectivo que los repartidores hacen al entregar sus envíos.
+  // No puede recargar ni gastar saldo: es sólo visualización de cobranza.
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

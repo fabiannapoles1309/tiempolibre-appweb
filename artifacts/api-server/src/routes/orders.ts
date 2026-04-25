@@ -133,7 +133,39 @@ router.post(
       return;
     }
 
+    // BILLETERA dejó de ser un método válido para el CLIENTE: su billetera
+    // es de sólo lectura (cobranza). Bloqueamos el método server-side por
+    // si el cliente del navegador es manipulado.
+    if (req.user!.role === "CLIENTE" && parsed.data.payment === "BILLETERA") {
+      res.status(400).json({
+        error:
+          "El método Billetera no está disponible. Usá Efectivo, Transferencia, Tarjeta o Cortesía.",
+        reason: "BILLETERA_NOT_ALLOWED_FOR_CLIENTE",
+      });
+      return;
+    }
+
     let amount = parsed.data.amount ?? 0;
+    // Para CLIENTE el domicilio de recolección está fijado en su registro
+    // (customers.pickupAddress) y no puede ser modificado al crear el envío.
+    // Cargamos su perfil acá para usarlo más abajo (pickup forzado y zona).
+    let myCustomerRow:
+      | { zone: number | null; pickupAddress: string | null }
+      | null = null;
+    if (req.user!.role === "CLIENTE") {
+      const [row] = await db
+        .select({
+          zone: customersTable.zone,
+          pickupAddress: customersTable.pickupAddress,
+        })
+        .from(customersTable)
+        .where(eq(customersTable.userId, req.user!.sub));
+      myCustomerRow = row ?? null;
+    }
+    const pickup =
+      req.user!.role === "CLIENTE" && myCustomerRow?.pickupAddress
+        ? myCustomerRow.pickupAddress
+        : parsed.data.pickup;
 
     // Validación geográfica:
     // Si el cliente envió un punto explícito (pickeado en el mapa), validamos ese punto
@@ -186,12 +218,8 @@ router.post(
       // de su zona registrada. La zona del cliente se almacena en
       // customers.zone (entero) y los polígonos KML usan el nombre como
       // string ("1".."9"...). Comparamos como string.
-      const [myCustomer] = await db
-        .select({ zone: customersTable.zone })
-        .from(customersTable)
-        .where(eq(customersTable.userId, req.user!.sub));
       const assignedZone =
-        myCustomer?.zone != null ? String(myCustomer.zone) : null;
+        myCustomerRow?.zone != null ? String(myCustomerRow.zone) : null;
       if (!assignedZone) {
         res.status(400).json({
           error:
@@ -271,7 +299,7 @@ router.post(
       .insert(ordersTable)
       .values({
         customerId: req.user!.sub,
-        pickup: parsed.data.pickup,
+        pickup,
         delivery: parsed.data.delivery,
         zone: computedZone,
         payment: parsed.data.payment,
@@ -392,6 +420,40 @@ router.patch(
               .update(driversTable)
               .set({ cashPending: newCash.toFixed(2) })
               .where(eq(driversTable.id, drv.id));
+          }
+        }
+        // Cobranza acumulada del CLIENTE: cuando el repartidor entrega un
+        // envío en EFECTIVO, el dinero recibido del destinatario se acredita
+        // en la billetera del cliente que generó el envío. Esto le permite
+        // ver su saldo cobrado y la liquidación pendiente con la plataforma.
+        if (
+          u.customerId != null &&
+          u.payment === "EFECTIVO"
+        ) {
+          const credit =
+            u.cashAmount != null ? Number(u.cashAmount) : Number(u.amount);
+          if (credit > 0) {
+            const [existingWallet] = await tx
+              .select()
+              .from(walletsTable)
+              .where(eq(walletsTable.userId, u.customerId));
+            if (existingWallet) {
+              const newBal = Number(existingWallet.balance) + credit;
+              await tx
+                .update(walletsTable)
+                .set({ balance: newBal.toFixed(2) })
+                .where(eq(walletsTable.userId, u.customerId));
+            } else {
+              await tx
+                .insert(walletsTable)
+                .values({ userId: u.customerId, balance: credit.toFixed(2) });
+            }
+            await tx.insert(walletTxTable).values({
+              userId: u.customerId,
+              amount: credit.toFixed(2),
+              type: "TOPUP",
+              description: `Cobranza en efectivo - Pedido #${u.id}`,
+            });
           }
         }
         if (u.customerId != null) {

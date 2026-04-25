@@ -78,9 +78,9 @@ function Router() {
       <Route path="/map" component={() => <ProtectedRoute component={MapPage} roles={["ADMIN"]} />} />
       <Route path="/reports" component={() => <ProtectedRoute component={Reports} roles={["ADMIN"]} />} />
       <Route path="/finance" component={() => <ProtectedRoute component={Finance} roles={["ADMIN"]} />} />
-      {/* /wallet sigue disponible para ADMIN (visualización contable);
-          se retiró el acceso del CLIENTE al cancelar la auto-recarga de saldo. */}
-      <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["ADMIN"]} />} />
+      {/* CLIENTE puede ver su saldo de cobranza en efectivo acumulado por las
+          entregas de sus envíos. ADMIN mantiene el acceso para visualización. */}
+      <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["CLIENTE", "ADMIN"]} />} />
       <Route path="/driver/benefits" component={() => <ProtectedRoute component={DriverBenefits} roles={["DRIVER"]} />} />
       <Route path="/driver/ranking" component={() => <ProtectedRoute component={DriverRankingPage} roles={["DRIVER", "ADMIN"]} />} />
       <Route path="/driver/incidents" component={() => <ProtectedRoute component={IncidentsPage} roles={["DRIVER"]} />} />

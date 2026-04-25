@@ -132,7 +132,7 @@ router.post(
       return;
     }
 
-    const amount = parsed.data.amount ?? 0;
+    let amount = parsed.data.amount ?? 0;
 
     // Validación geográfica:
     // Si el cliente envió un punto explícito (pickeado en el mapa), validamos ese punto
@@ -206,6 +206,13 @@ router.post(
         });
         return;
       }
+    }
+
+    // Cortesía: el envío no genera ingreso. El monto se fuerza a 0 aunque el
+    // cliente envíe otro valor. Igualmente sigue contando como un envío del
+    // bloque mensual cuando se entregue (lógica en PATCH /orders/:id).
+    if (parsed.data.payment === "CORTESIA") {
+      amount = 0;
     }
 
     // Wallet payment: deduct balance now

@@ -32,7 +32,31 @@ const EXPORT_LABELS: Record<ExportType, string> = {
   accounting: "Reporte contable",
 };
 
-const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6'];
+// Mapeo determinístico color/etiqueta por método. Los 5 métodos soportados
+// son EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA y CORTESIA. Si el backend
+// devuelve otro valor (legacy/desconocido) cae a un color neutro.
+const METHOD_LABELS: Record<string, string> = {
+  EFECTIVO: 'Efectivo',
+  TRANSFERENCIA: 'Transferencia',
+  BILLETERA: 'Billetera',
+  TARJETA: 'Tarjeta',
+  CORTESIA: 'Cortesía',
+};
+const METHOD_COLORS: Record<string, string> = {
+  EFECTIVO: '#f97316',       // naranja
+  TRANSFERENCIA: '#3b82f6',  // azul
+  BILLETERA: '#10b981',      // verde
+  TARJETA: '#8b5cf6',        // morado
+  CORTESIA: '#a3a3a3',       // gris neutro
+};
+const METHOD_ORDER = ['EFECTIVO', 'TRANSFERENCIA', 'BILLETERA', 'TARJETA', 'CORTESIA'] as const;
+
+function methodLabel(m: string): string {
+  return METHOD_LABELS[m] ?? m;
+}
+function methodColor(m: string): string {
+  return METHOD_COLORS[m] ?? '#d4d4d8';
+}
 
 export default function Finance() {
   const [range, setRange] = useState<GetFinanceSummaryRange>("week");
@@ -307,30 +331,88 @@ export default function Finance() {
             <CardDescription>Distribución de ingresos por canal</CardDescription>
           </CardHeader>
           <CardContent className="h-[350px]">
-            {loadingSummary ? <Skeleton className="h-full w-full" /> : summary?.byMethod.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-muted-foreground">Sin pagos registrados</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={summary?.byMethod}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={90}
-                    paddingAngle={5}
-                    dataKey="total"
-                    nameKey="method"
-                  >
-                    {summary?.byMethod.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip formatter={(val: number) => formatMoney(val)} contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }} />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
+            {(() => {
+              if (loadingSummary) return <Skeleton className="h-full w-full" />;
+              const raw = summary?.byMethod ?? [];
+              // Ordenamos en el orden canónico y traducimos las claves a etiquetas
+              // legibles. Cortesía siempre se muestra aunque su monto sea $0,
+              // porque cuenta como servicio prestado.
+              // Siempre mostramos los 5 métodos canónicos (Efectivo, Transferencia,
+              // Billetera, Tarjeta, Cortesía) aunque alguno no tenga actividad,
+              // para que la leyenda y los colores sean estables y para que la
+              // Cortesía permanezca visible aun con $0 de ingreso.
+              const data = METHOD_ORDER.map((m) => {
+                const found = raw.find((r) => r.method === m);
+                return {
+                  method: m,
+                  label: methodLabel(m),
+                  total: found ? Number(found.total) : 0,
+                  count: found ? found.count : 0,
+                };
+              });
+              // Métodos legacy que no estén en METHOD_ORDER se anexan al final
+              // (sólo si tuvieron actividad, para no contaminar la leyenda).
+              for (const r of raw) {
+                if (
+                  !METHOD_ORDER.includes(r.method as typeof METHOD_ORDER[number]) &&
+                  (Number(r.total) > 0 || r.count > 0)
+                ) {
+                  data.push({
+                    method: r.method,
+                    label: methodLabel(r.method),
+                    total: Number(r.total),
+                    count: r.count,
+                  });
+                }
+              }
+              const hasAnyActivity = data.some((d) => d.total > 0 || d.count > 0);
+              if (!hasAnyActivity) {
+                return (
+                  <div className="h-full flex items-center justify-center text-muted-foreground">
+                    Sin pagos registrados
+                  </div>
+                );
+              }
+              // Para el área del pie usamos `Math.max(total, 0)` para que las
+              // cortesías ($0 ingreso) sigan apareciendo en la leyenda con un
+              // área mínima y un color identificable.
+              const pieData = data.map((d) => ({
+                ...d,
+                slice: d.total > 0 ? d.total : Math.max(1, d.count),
+              }));
+              return (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={4}
+                      dataKey="slice"
+                      nameKey="label"
+                    >
+                      {pieData.map((entry) => (
+                        <Cell key={`cell-${entry.method}`} fill={methodColor(entry.method)} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      formatter={(_v, _n, p: { payload?: { total: number; count: number; label: string } }) => {
+                        const d = p?.payload;
+                        if (!d) return ['', ''];
+                        return [
+                          `${formatMoney(d.total)} · ${d.count} servicio${d.count === 1 ? '' : 's'}`,
+                          d.label,
+                        ];
+                      }}
+                      contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))' }}
+                    />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              );
+            })()}
           </CardContent>
         </Card>
       </div>

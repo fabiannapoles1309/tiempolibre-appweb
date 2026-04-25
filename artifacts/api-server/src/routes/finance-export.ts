@@ -196,6 +196,98 @@ router.get(
         ? txsAll.filter((t) => t.orderId !== null && allowedOrderIds!.has(t.orderId))
         : txsAll;
 
+      // Resumen general (hoja 1) ----------------------------------------
+      let income = 0;
+      let expense = 0;
+
+      // Desglose por método (hoja 2) — incluye los 5 métodos vigentes
+      // (EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA, CORTESIA) aunque no
+      // tengan transacciones, para que el contador siempre vea las columnas.
+      const ALL_METHODS = [
+        "EFECTIVO",
+        "TRANSFERENCIA",
+        "BILLETERA",
+        "TARJETA",
+        "CORTESIA",
+      ] as const;
+      const methodTotals = new Map<
+        string,
+        { ingresos: number; gastos: number; servicios: number }
+      >();
+      for (const m of ALL_METHODS) {
+        methodTotals.set(m, { ingresos: 0, gastos: 0, servicios: 0 });
+      }
+
+      for (const t of txs) {
+        const amt = Number(t.amount);
+        if (t.type === "INGRESO") income += amt;
+        else expense += amt;
+        const key = methodTotals.has(t.method) ? t.method : "OTRO";
+        if (!methodTotals.has(key)) {
+          methodTotals.set(key, { ingresos: 0, gastos: 0, servicios: 0 });
+        }
+        const bucket = methodTotals.get(key)!;
+        if (t.type === "INGRESO") bucket.ingresos += amt;
+        else bucket.gastos += amt;
+        if (t.orderId !== null) bucket.servicios += 1;
+      }
+
+      // Hoja 1: Resumen contable
+      const front = wb.addWorksheet("Resumen contable");
+      front.columns = [
+        { header: "Concepto", key: "concept", width: 32 },
+        { header: "Monto", key: "amount", width: 18 },
+      ];
+      front.getRow(1).font = { bold: true };
+      front.addRow({ concept: `Ingresos (${label})`, amount: income });
+      front.addRow({ concept: `Gastos (${label})`, amount: expense });
+      const netRow = front.addRow({
+        concept: "Resultado neto",
+        amount: income - expense,
+      });
+      netRow.font = { bold: true };
+      front.getColumn("amount").numFmt = '"$"#,##0.00';
+      front.addRow({});
+      front.addRow({ concept: "Generado", amount: new Date().toISOString() });
+
+      // Hoja 2: Desglose por método de pago — pedido explícito por contabilidad
+      const breakdown = wb.addWorksheet("Por método de pago");
+      breakdown.columns = [
+        { header: "Método", key: "method", width: 18 },
+        { header: "Servicios", key: "servicios", width: 14 },
+        { header: "Ingresos", key: "ingresos", width: 16 },
+        { header: "Gastos", key: "gastos", width: 16 },
+        { header: "Neto", key: "neto", width: 16 },
+      ];
+      breakdown.getRow(1).font = { bold: true };
+      let tIng = 0;
+      let tGas = 0;
+      let tSrv = 0;
+      for (const [method, v] of methodTotals.entries()) {
+        breakdown.addRow({
+          method,
+          servicios: v.servicios,
+          ingresos: v.ingresos,
+          gastos: v.gastos,
+          neto: v.ingresos - v.gastos,
+        });
+        tIng += v.ingresos;
+        tGas += v.gastos;
+        tSrv += v.servicios;
+      }
+      const totalRow = breakdown.addRow({
+        method: "TOTAL",
+        servicios: tSrv,
+        ingresos: tIng,
+        gastos: tGas,
+        neto: tIng - tGas,
+      });
+      totalRow.font = { bold: true };
+      breakdown.getColumn("ingresos").numFmt = '"$"#,##0.00';
+      breakdown.getColumn("gastos").numFmt = '"$"#,##0.00';
+      breakdown.getColumn("neto").numFmt = '"$"#,##0.00';
+
+      // Hoja 3: Detalle de transacciones
       const ws = wb.addWorksheet("Detalle");
       ws.columns = [
         { header: "Fecha", key: "fecha", width: 20 },
@@ -205,46 +297,17 @@ router.get(
         { header: "Monto", key: "amount", width: 14 },
       ];
       ws.getRow(1).font = { bold: true };
-      let income = 0;
-      let expense = 0;
       for (const t of txs) {
-        const amt = Number(t.amount);
-        if (t.type === "INGRESO") income += amt;
-        else expense += amt;
         ws.addRow({
           fecha: t.createdAt.toISOString().slice(0, 19).replace("T", " "),
           type: t.type,
           desc: t.description,
           method: t.method,
-          amount: amt,
+          amount: Number(t.amount),
         });
       }
       ws.getColumn("amount").numFmt = '"$"#,##0.00';
 
-      const summary = wb.addWorksheet("Resumen contable");
-      summary.columns = [
-        { header: "Concepto", key: "concept", width: 32 },
-        { header: "Monto", key: "amount", width: 18 },
-      ];
-      summary.getRow(1).font = { bold: true };
-      summary.addRow({ concept: `Ingresos (${label})`, amount: income });
-      summary.addRow({ concept: `Gastos (${label})`, amount: expense });
-      const netRow = summary.addRow({ concept: "Resultado neto", amount: income - expense });
-      netRow.font = { bold: true };
-      summary.getColumn("amount").numFmt = '"$"#,##0.00';
-      summary.addRow({});
-      summary.addRow({ concept: "Generado", amount: new Date().toISOString() });
-      // mover Resumen al frente
-      wb.removeWorksheet(summary.id);
-      const front = wb.addWorksheet("Resumen contable");
-      front.columns = summary.columns;
-      front.addRow({ concept: `Ingresos (${label})`, amount: income });
-      front.addRow({ concept: `Gastos (${label})`, amount: expense });
-      const f = front.addRow({ concept: "Resultado neto", amount: income - expense });
-      f.font = { bold: true };
-      front.getColumn("amount").numFmt = '"$"#,##0.00';
-      front.getRow(1).font = { bold: true };
-      // referencia al detalle queda en la otra hoja (ws)
       void formatMoneyMx; // referencia para evitar warning si no se usa
     }
 

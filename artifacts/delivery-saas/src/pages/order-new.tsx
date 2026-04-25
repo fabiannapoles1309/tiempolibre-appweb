@@ -33,9 +33,18 @@ import { Loader2, ArrowLeft, AlertTriangle, MapPin, Check } from "lucide-react";
 const ALLOWED_PAYMENTS = [
   PaymentMethod.EFECTIVO,
   PaymentMethod.TRANSFERENCIA,
+  PaymentMethod.BILLETERA,
   PaymentMethod.TARJETA,
   PaymentMethod.CORTESIA,
 ] as const;
+
+const PAYMENT_LABELS: Record<string, string> = {
+  EFECTIVO: "Efectivo",
+  TRANSFERENCIA: "Transferencia",
+  BILLETERA: "Billetera",
+  TARJETA: "Tarjeta",
+  CORTESIA: "Cortesía (sin costo)",
+};
 
 const orderSchema = z
   .object({
@@ -458,7 +467,7 @@ export default function NewOrder() {
                         <SelectContent>
                           {ALLOWED_PAYMENTS.map((p) => (
                             <SelectItem key={p} value={p}>
-                              {p}
+                              {PAYMENT_LABELS[p] ?? p}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -467,6 +476,17 @@ export default function NewOrder() {
                     </FormItem>
                   )}
                 />
+
+                {payment === PaymentMethod.CORTESIA && (
+                  <div
+                    className="rounded-md border border-amber-300 bg-amber-50 text-amber-900 px-3 py-2 text-sm"
+                    data-testid="cortesia-notice"
+                  >
+                    Servicio de cortesía: el costo del envío es <strong>$0.00</strong>,
+                    pero <strong>sí descuenta un envío del bloque mensual</strong> del
+                    cliente.
+                  </div>
+                )}
 
                 {payment === PaymentMethod.EFECTIVO && (
                   <div className="grid grid-cols-2 gap-3">

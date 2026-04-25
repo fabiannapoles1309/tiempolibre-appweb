@@ -73,6 +73,10 @@ async function main() {
         { pickup: "Av. Pueyrredón 800, CABA", delivery: "Av. Independencia 2200, CABA", zone: "3", payment: "EFECTIVO", amount: "2600", status: "ENTREGADO", driverId: drivers[2]?.id ?? null, daysAgo: 3 },
         { pickup: "Av. Cordoba 4500, CABA", delivery: "Honduras 5000, Palermo", zone: "1", payment: "BILLETERA", amount: "4800", status: "ENTREGADO", driverId: drivers[0]?.id ?? null, daysAgo: 4 },
         { pickup: "Av. La Plata 1200, CABA", delivery: "Av. Directorio 2000, CABA", zone: "6", payment: "EFECTIVO", amount: "3900", status: "ENTREGADO", driverId: drivers[2]?.id ?? null, daysAgo: 5 },
+        { pickup: "Av. Reforma 100, CDMX", delivery: "Polanco 50, CDMX", zone: "1", payment: "TARJETA", amount: "4500", status: "ENTREGADO", driverId: drivers[0]?.id ?? null, daysAgo: 1 },
+        { pickup: "Av. Insurgentes 800, CDMX", delivery: "Roma Norte 300, CDMX", zone: "2", payment: "TARJETA", amount: "3700", status: "ENTREGADO", driverId: drivers[1]?.id ?? null, daysAgo: 2 },
+        { pickup: "Centro 100, CDMX", delivery: "Condesa 200, CDMX", zone: "3", payment: "CORTESIA", amount: "0", status: "ENTREGADO", driverId: drivers[2]?.id ?? null, daysAgo: 1 },
+        { pickup: "Coyoacán 50, CDMX", delivery: "San Ángel 150, CDMX", zone: "4", payment: "CORTESIA", amount: "0", status: "ENTREGADO", driverId: drivers[0]?.id ?? null, daysAgo: 3 },
       ];
       for (const s of samples) {
         const created = new Date();

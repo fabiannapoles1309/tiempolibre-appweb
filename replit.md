@@ -18,7 +18,7 @@ A production-ready B2B last-mile delivery management platform built on the Repli
 - **Users** (`users`): id, email, name, password_hash, role ∈ {`ADMIN`, `CLIENTE`, `DRIVER`}.
 - **Zones** (`zones`): Norte, Sur, Este, Oeste.
 - **Drivers** (`drivers`): name, phone, vehicle, zones[], active, userId, licensePlate, circulationCard, circulationCardExpiry, status ∈ {ACTIVO, EN_ENTREGA, EN_PAUSA, INACTIVO}, cashPending (efectivo a rendir).
-- **Orders** (`orders`): customerId, pickup, delivery, zone, payment ∈ {EFECTIVO, TRANSFERENCIA, BILLETERA}, amount, status ∈ {PENDIENTE, ASIGNADO, EN_RUTA, ENTREGADO, CANCELADO}, driverId, notes.
+- **Orders** (`orders`): customerId, pickup, delivery, zone, payment ∈ {EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA, CORTESIA}, amount, status ∈ {PENDIENTE, ASIGNADO, EN_RUTA, ENTREGADO, CANCELADO}, driverId, notes. CORTESIA is server-forced to amount=0 but still consumes one envío from the customer's monthly 35-block on transition to ENTREGADO.
 - **Transactions** (`transactions`): platform-wide INGRESO/GASTO ledger linked to orders.
 - **Wallet** (`wallets` + `wallet_tx`): per-user prepaid balance with TOPUP/PAGO/REEMBOLSO movements.
 - **Incidents** (`incidents`): driverId, orderId?, type ∈ {ACCIDENTE, ROBO, DEMORA, CLIENTE_AUSENTE, VEHICULO, OTRO}, description, status ∈ {ABIERTO, EN_REVISION, RESUELTO}, adminNotes.
@@ -85,7 +85,7 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 
 ## Latest spec extensions (April 2026)
 
-- Order payment methods now include `EFECTIVO`, `TRANSFERENCIA`, `TARJETA`, `CORTESIA`. `cashAmount`/`cashChange` are persisted only when `payment === EFECTIVO` (server forces null otherwise).
+- Order payment methods now include `EFECTIVO`, `TRANSFERENCIA`, `BILLETERA`, `TARJETA`, `CORTESIA`. `cashAmount`/`cashChange` are persisted only when `payment === EFECTIVO` (server forces null otherwise). The /finance donut chart always renders all 5 canonical methods with stable colors and Spanish labels (Cortesía visible even at $0). The accounting Excel export includes a "Por método de pago" sheet that always lists all 5 methods plus a TOTAL row.
 - Order create accepts optional `deliveryLat`/`deliveryLng`. When provided, the server runs point-in-polygon validation against `zonas.kml` (`mapService.validarPunto`) and rejects out-of-zone points with HTTP 400 `FUERA_DE_ZONA`. When absent, falls back to address geocoding via `validarZona`.
 - Cliente order creation requires an active subscription with `remainingDeliveries > 0` (HTTP 402 `NO_SUBSCRIPTION` / `NO_DELIVERIES_LEFT`).
 - `POST /me/subscription/recharge` adds a 35-envíos block to the latest subscription regardless of whether it is `ACTIVA` or `VENCIDA`, and reactivates it.

@@ -46,10 +46,14 @@ export const PaymentMethod = {
 export type ZoneName = (typeof ZoneName)[keyof typeof ZoneName];
 
 export const ZoneName = {
-  Norte: "Norte",
-  Sur: "Sur",
-  Este: "Este",
-  Oeste: "Oeste",
+  NUMBER_1: "1",
+  NUMBER_2: "2",
+  NUMBER_3: "3",
+  NUMBER_4: "4",
+  NUMBER_5: "5",
+  NUMBER_6: "6",
+  NUMBER_7: "7",
+  NUMBER_8: "8",
 } as const;
 
 export interface User {
@@ -90,6 +94,8 @@ export interface Zone {
 
 export interface Driver {
   id: number;
+  /** @nullable */
+  userId: number | null;
   name: string;
   phone: string;
   vehicle: string;
@@ -124,7 +130,7 @@ export interface Order {
   customerName: string;
   pickup: string;
   delivery: string;
-  zone: ZoneName;
+  zone: ZoneName | null;
   payment: PaymentMethod;
   amount: number;
   status: OrderStatus;
@@ -143,10 +149,10 @@ export interface CreateOrderBody {
   pickup: string;
   /** @minLength 1 */
   delivery: string;
-  zone: ZoneName;
+  zone?: ZoneName | null;
   payment: PaymentMethod;
-  /** @exclusiveMinimum 0 */
-  amount: number;
+  /** @minimum 0 */
+  amount?: number;
   /** @nullable */
   notes?: string | null;
 }
@@ -165,7 +171,7 @@ export type AutoAssignResultDetailsItem = {
   orderId: number;
   /** @nullable */
   driverId: number | null;
-  zone: ZoneName;
+  zone: ZoneName | null;
   status: string;
 };
 
@@ -276,7 +282,7 @@ export type DashboardDataOrdersByStatusItem = {
 };
 
 export type DashboardDataOrdersByZoneItem = {
-  zone: ZoneName;
+  zone: ZoneName | null;
   count: number;
   revenue: number;
 };

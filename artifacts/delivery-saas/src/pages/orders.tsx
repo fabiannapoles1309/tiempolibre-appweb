@@ -64,17 +64,19 @@ export default function OrdersList() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={zoneFilter} onValueChange={setZoneFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Zona" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">Todas las zonas</SelectItem>
-                  {Object.values(ZoneName).map((z) => (
-                    <SelectItem key={z} value={z}>{z}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {user?.role === UserRole.ADMIN && (
+                <Select value={zoneFilter} onValueChange={setZoneFilter}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Zona" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todas las zonas</SelectItem>
+                    {Object.values(ZoneName).map((z) => (
+                      <SelectItem key={z} value={z}>Zona {z}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -116,7 +118,7 @@ export default function OrdersList() {
                           <span className="truncate max-w-[200px]" title={order.delivery}>Destino: {order.delivery}</span>
                         </div>
                       </TableCell>
-                      <TableCell>{order.zone}</TableCell>
+                      <TableCell>{order.zone ? `Zona ${order.zone}` : <span className="text-muted-foreground italic">sin zona</span>}</TableCell>
                       <TableCell>${order.amount.toFixed(2)}</TableCell>
                       <TableCell>{format(new Date(order.createdAt), "dd/MM/yyyy HH:mm")}</TableCell>
                       <TableCell>

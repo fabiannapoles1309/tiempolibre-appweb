@@ -1,0 +1,28 @@
+Actúa como un desarrollador experto en Node.js, Express y diseño frontend. Estamos trabajando en mi aplicación web de logística B2B llamada "Tiempo Libre".
+​Necesito implementar Control de Acceso Basado en Roles (RBAC) y modificar la interfaz de usuario dependiendo de si la sesión activa es de un Admin, un Cliente (restaurante) o un Repartidor. Además, necesito un cambio en el copy de la página de inicio.
+​Tarea 1: Actualización del Texto Inicial (Landing/Home)
+​Cambia el texto principal o subtítulo que actualmente dice: "Gestiona tus entregas, despacha a tus repartidores y controla tus finanzas desde una sola plataforma".
+​Reemplázalo exactamente por: "Confianza y seguridad en cada kilometro".
+​Tarea 2: Restricciones y UI para el rol "Repartidor"
+​Lógica de Base de Datos: Los repartidores SOLO deben poder consultar los pedidos asignados a su propio ID de usuario.
+​Modificaciones en la Interfaz (Ocultar/Eliminar):
+​Quita la vista o pestaña de "Pedidos por zona".
+​Elimina el botón de "Crear nuevo pedido" en la vista de drivers.
+​Oculta la sección de "Repartidores activos".
+​Dentro del apartado "Mis entregas", elimina el filtro o vista de "Todas las zonas".
+​Tarea 3: Restricciones y UI para el rol "Cliente" (Restaurante)
+​Modificaciones en la Interfaz (Ocultar/Eliminar):
+​Quita la sección de "Todas las zonas" (esta debe ser exclusiva del Admin).
+​Elimina el apartado de "Monto a cobrar".
+​En la sección de "Método de pago", elimina la opción "Billetera" (wallet).
+​Elimina por completo el campo o apartado de "Zona" para este usuario.
+​Tarea 4: Modificaciones para el rol "Admin" (Zonas)
+​Modifica la lógica y las opciones de selección de "Zona". En lugar de usar los valores anteriores (Norte, Sur, Este, Oeste), cámbialo para que las zonas sean únicamente números del 1 al 8.
+​Asegúrate de que el Admin sea el único rol que tenga acceso al filtro/apartado "Todas las zonas".
+​Requerimientos técnicos:
+​Genera el código necesario para las rutas (endpoints) en Express mostrando cómo harías la validación del rol (ej. if (req.user.role === 'repartidor')).
+​Muéstrame un ejemplo de cómo aplicar condicionales en mi motor de plantillas (EJS, Pug, o HTML/JS) para ocultar los botones y secciones según el rol.
+​Asegúrate de que la seguridad sea desde el backend (que un repartidor no pueda acceder a "todas las zonas" aunque intente forzar la URL).
+​¿Por qué está estructurado así el prompt?
+​Seguridad real (Backend): Le pido a Replit que no solo "oculte" los botones en la pantalla, sino que bloquee las rutas desde el servidor. Si solo ocultas el botón, un repartidor curioso podría escribir la URL directa de "todas las zonas" y ver la información. Con este prompt, Replit asegurará ambos candados.
+​Claridad de Enum: Al cambiar las zonas a números (1 al 8), Replit sabrá que debe actualizar la estructura de tu base de datos para que no acepte letras en ese campo.

@@ -37,7 +37,13 @@ A production-ready B2B last-mile delivery management platform built on the Repli
 - ADMIN: `admin@rapidoo.com` / `admin123`
 - CLIENTE: `cliente@rapidoo.com` / `cliente123` (starts with $150 wallet balance)
 - DRIVER: `driver@rapidoo.com` / `driver123`
-- Plus 3 drivers and 8 sample orders across all zones and statuses.
+
+Demo accounts (TiempoLibre brand, current):
+- ADMIN: `admin@tiempolibre.com` / `admin123`
+- CLIENTE: `cliente@tiempolibre.com` / `cliente123`
+- DRIVER: `driver@tiempolibre.com` / `driver123` (linked to driver "Carlos Gómez" via `drivers.userId`)
+
+Plus 3 drivers and 8 sample orders distributed across numeric zones 1–8.
 
 Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 
@@ -53,6 +59,15 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 ## User preferences
 
 - Spanish UI throughout. Spanish error messages.
-- Brand: orange (#f97316) on dark slate. No emojis in the UI.
+- Brand: TiempoLibre, light theme, cyan #00B5E2 primary. Slogan "SOMOS TU SISTEMA DE REPARTO". No emojis in the UI.
+- Spanish (voseo argentino).
+- Zones are numeric strings "1".."8" (no compass names).
+- Order payment methods exposed in the create-order form: EFECTIVO and TRANSFERENCIA only (BILLETERA may exist in legacy/seed data but is not user-selectable).
+- RBAC scoping (enforced server-side in `routes/orders.ts` and `routes/reports.ts`):
+  - ADMIN: sees all orders, may filter by zone/customerId/driverId, sees all KPIs and zone chart.
+  - CLIENTE: sees only their own orders (`customerId = session.userId`); only role allowed to create orders.
+  - DRIVER: sees only orders assigned to them (`drivers.userId = session.userId` → `orders.driverId`).
+- UI hides ADMIN-only widgets ("Repartidores" KPI, "Pedidos por Zona" chart, zone filter on /orders) and CLIENTE-only CTAs ("Crear Nuevo Pedido") based on role.
+- `lib/api-zod/src/index.ts` re-exports zod schemas only (`export * from "./generated/api"`); TS interfaces come from `@workspace/api-client-react` to avoid duplicate-symbol errors.
 - Currency formatted as ARS via `Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })`.
 - Dates formatted with `date-fns` + Spanish locale (`import { es } from 'date-fns/locale'`).

@@ -8,7 +8,7 @@
 import type { ZoneName } from "./zoneName";
 
 export type DashboardDataOrdersByZoneItem = {
-  zone: ZoneName;
+  zone: ZoneName | null;
   count: number;
   revenue: number;
 };

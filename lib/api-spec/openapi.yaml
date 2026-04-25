@@ -560,7 +560,7 @@ components:
 
     ZoneName:
       type: string
-      enum: [Norte, Sur, Este, Oeste]
+      enum: ["1", "2", "3", "4", "5", "6", "7", "8"]
 
     User:
       type: object
@@ -636,6 +636,8 @@ components:
       properties:
         id:
           type: integer
+        userId:
+          type: ["integer", "null"]
         name:
           type: string
         phone:
@@ -651,7 +653,7 @@ components:
         createdAt:
           type: string
           format: date-time
-      required: [id, name, phone, vehicle, zones, active, createdAt]
+      required: [id, userId, name, phone, vehicle, zones, active, createdAt]
 
     CreateDriverBody:
       type: object
@@ -704,7 +706,9 @@ components:
         delivery:
           type: string
         zone:
-          $ref: "#/components/schemas/ZoneName"
+          oneOf:
+            - $ref: "#/components/schemas/ZoneName"
+            - type: "null"
         payment:
           $ref: "#/components/schemas/PaymentMethod"
         amount:
@@ -749,15 +753,17 @@ components:
           type: string
           minLength: 1
         zone:
-          $ref: "#/components/schemas/ZoneName"
+          oneOf:
+            - $ref: "#/components/schemas/ZoneName"
+            - type: "null"
         payment:
           $ref: "#/components/schemas/PaymentMethod"
         amount:
           type: number
-          exclusiveMinimum: 0
+          minimum: 0
         notes:
           type: ["string", "null"]
-      required: [pickup, delivery, zone, payment, amount]
+      required: [pickup, delivery, payment]
 
     UpdateOrderBody:
       type: object
@@ -791,7 +797,9 @@ components:
               driverId:
                 type: ["integer", "null"]
               zone:
-                $ref: "#/components/schemas/ZoneName"
+                oneOf:
+                  - $ref: "#/components/schemas/ZoneName"
+                  - type: "null"
               status:
                 type: string
             required: [orderId, driverId, zone, status]
@@ -965,7 +973,9 @@ components:
             type: object
             properties:
               zone:
-                $ref: "#/components/schemas/ZoneName"
+                oneOf:
+                  - $ref: "#/components/schemas/ZoneName"
+                  - type: "null"
               count:
                 type: integer
               revenue:

@@ -1,4 +1,4 @@
-import { useGetDashboard, OrderStatus } from "@workspace/api-client-react";
+import { useGetDashboard, OrderStatus, UserRole } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Package, Truck, CheckCircle2, DollarSign, Clock, Users, Plus } from "lucide-react";
@@ -63,12 +63,14 @@ export default function Dashboard() {
           </h1>
           <p className="text-muted-foreground mt-2">Resumen en tiempo real de tu operación.</p>
         </div>
-        <Link href="/orders/new">
-          <Button size="lg" className="h-11 text-base font-semibold shadow-sm">
-            <Plus className="w-5 h-5 mr-2" />
-            Crear Nuevo Pedido
-          </Button>
-        </Link>
+        {user?.role === UserRole.CLIENTE && (
+          <Link href="/orders/new">
+            <Button size="lg" className="h-11 text-base font-semibold shadow-sm">
+              <Plus className="w-5 h-5 mr-2" />
+              Crear Nuevo Pedido
+            </Button>
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -117,19 +119,21 @@ export default function Dashboard() {
             <div className="text-2xl font-bold">{ARS.format(kpis.todayRevenue)}</div>
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Repartidores</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kpis.activeDrivers}</div>
-            <p className="text-xs text-muted-foreground">activos hoy</p>
-          </CardContent>
-        </Card>
+        {user?.role === UserRole.ADMIN && (
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Repartidores</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpis.activeDrivers}</div>
+              <p className="text-xs text-muted-foreground">activos hoy</p>
+            </CardContent>
+          </Card>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 ${user?.role === UserRole.ADMIN ? "lg:grid-cols-2" : ""} gap-6`}>
         <Card>
           <CardHeader>
             <CardTitle>Pedidos por Estado</CardTitle>
@@ -163,26 +167,28 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Pedidos por Zona</CardTitle>
-            <CardDescription>Volumen de entregas por sector</CardDescription>
-          </CardHeader>
-          <CardContent className="h-[300px]">
-            {ordersByZone.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-muted-foreground">Sin datos</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ordersByZone} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="zone" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                  <RechartsTooltip cursor={{fill: 'transparent'}} />
-                  <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
+        {user?.role === UserRole.ADMIN && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Pedidos por Zona</CardTitle>
+              <CardDescription>Volumen de entregas por sector</CardDescription>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              {ordersByZone.length === 0 ? (
+                <div className="h-full flex items-center justify-center text-muted-foreground">Sin datos</div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={ordersByZone} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <XAxis dataKey="zone" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis fontSize={12} tickLine={false} axisLine={false} />
+                    <RechartsTooltip cursor={{fill: 'transparent'}} />
+                    <Bar dataKey="count" fill="var(--color-primary)" radius={[4, 4, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </CardContent>
+          </Card>
+        )}
       </div>
 
       <Card>

@@ -50,20 +50,33 @@ router.get("/orders", requireAuth, async (req, res): Promise<void> => {
   const filters = [];
   const { status, zone, customerId, driverId, from, to } = req.query;
 
-  // Role scoping: clients see only theirs, drivers see only assigned to them
+  // RBAC scoping:
+  // - CLIENTE: only orders they created
+  // - DRIVER: only orders assigned to their driver record (resolved via userId)
+  // - ADMIN: all orders, with optional filters
   if (req.user!.role === "CLIENTE") {
     filters.push(eq(ordersTable.customerId, req.user!.sub));
   } else if (req.user!.role === "DRIVER") {
-    // map auth user -> driver record by email match? For demo, drivers see all assigned
-    // We allow them to filter by driverId param too.
+    const [driver] = await db
+      .select()
+      .from(driversTable)
+      .where(eq(driversTable.userId, req.user!.sub));
+    if (!driver) {
+      res.json([]);
+      return;
+    }
+    filters.push(eq(ordersTable.driverId, driver.id));
   }
 
   if (typeof status === "string") filters.push(eq(ordersTable.status, status));
-  if (typeof zone === "string") filters.push(eq(ordersTable.zone, zone));
-  if (typeof customerId === "string")
-    filters.push(eq(ordersTable.customerId, parseInt(customerId, 10)));
-  if (typeof driverId === "string")
-    filters.push(eq(ordersTable.driverId, parseInt(driverId, 10)));
+  // Only ADMIN may filter by zone or by other customers/drivers via query params
+  if (req.user!.role === "ADMIN") {
+    if (typeof zone === "string") filters.push(eq(ordersTable.zone, zone));
+    if (typeof customerId === "string")
+      filters.push(eq(ordersTable.customerId, parseInt(customerId, 10)));
+    if (typeof driverId === "string")
+      filters.push(eq(ordersTable.driverId, parseInt(driverId, 10)));
+  }
   if (typeof from === "string") filters.push(gte(ordersTable.createdAt, new Date(from)));
   if (typeof to === "string") filters.push(lte(ordersTable.createdAt, new Date(to)));
 
@@ -92,70 +105,87 @@ router.get("/orders/:id", requireAuth, async (req, res): Promise<void> => {
     res.status(403).json({ error: "No autorizado" });
     return;
   }
+  if (req.user!.role === "DRIVER") {
+    const [driver] = await db
+      .select()
+      .from(driversTable)
+      .where(eq(driversTable.userId, req.user!.sub));
+    if (!driver || row.driverId !== driver.id) {
+      res.status(403).json({ error: "No autorizado" });
+      return;
+    }
+  }
   const [serialized] = await expandOrders([row]);
   res.json(serialized);
 });
 
-router.post("/orders", requireAuth, async (req, res): Promise<void> => {
-  const parsed = CreateOrderBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-
-  // Wallet payment: deduct balance now
-  if (parsed.data.payment === "BILLETERA") {
-    const [wallet] = await db
-      .select()
-      .from(walletsTable)
-      .where(eq(walletsTable.userId, req.user!.sub));
-    const balance = wallet ? Number(wallet.balance) : 0;
-    if (balance < parsed.data.amount) {
-      res.status(400).json({ error: "Saldo insuficiente en la billetera" });
+router.post(
+  "/orders",
+  requireAuth,
+  requireRole("CLIENTE"),
+  async (req, res): Promise<void> => {
+    const parsed = CreateOrderBody.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
       return;
     }
-    await db
-      .update(walletsTable)
-      .set({ balance: String(balance - parsed.data.amount) })
-      .where(eq(walletsTable.userId, req.user!.sub));
-    await db.insert(walletTxTable).values({
-      userId: req.user!.sub,
-      amount: String(parsed.data.amount),
-      type: "PAGO",
-      description: "Pago de pedido",
+
+    const amount = parsed.data.amount ?? 0;
+
+    // Wallet payment: deduct balance now
+    if (parsed.data.payment === "BILLETERA") {
+      const [wallet] = await db
+        .select()
+        .from(walletsTable)
+        .where(eq(walletsTable.userId, req.user!.sub));
+      const balance = wallet ? Number(wallet.balance) : 0;
+      if (balance < amount) {
+        res.status(400).json({ error: "Saldo insuficiente en la billetera" });
+        return;
+      }
+      await db
+        .update(walletsTable)
+        .set({ balance: String(balance - amount) })
+        .where(eq(walletsTable.userId, req.user!.sub));
+      await db.insert(walletTxTable).values({
+        userId: req.user!.sub,
+        amount: String(amount),
+        type: "PAGO",
+        description: "Pago de pedido",
+      });
+    }
+
+    const [order] = await db
+      .insert(ordersTable)
+      .values({
+        customerId: req.user!.sub,
+        pickup: parsed.data.pickup,
+        delivery: parsed.data.delivery,
+        zone: parsed.data.zone ?? null,
+        payment: parsed.data.payment,
+        amount: String(amount),
+        notes: parsed.data.notes ?? null,
+        status: "PENDIENTE",
+      })
+      .returning();
+    if (!order) {
+      res.status(500).json({ error: "No se pudo crear el pedido" });
+      return;
+    }
+
+    // Record income transaction
+    await db.insert(transactionsTable).values({
+      orderId: order.id,
+      amount: String(amount),
+      type: "INGRESO",
+      method: parsed.data.payment,
+      description: `Pedido #${order.id}`,
     });
-  }
 
-  const [order] = await db
-    .insert(ordersTable)
-    .values({
-      customerId: req.user!.sub,
-      pickup: parsed.data.pickup,
-      delivery: parsed.data.delivery,
-      zone: parsed.data.zone,
-      payment: parsed.data.payment,
-      amount: String(parsed.data.amount),
-      notes: parsed.data.notes ?? null,
-      status: "PENDIENTE",
-    })
-    .returning();
-  if (!order) {
-    res.status(500).json({ error: "No se pudo crear el pedido" });
-    return;
-  }
-
-  // Record income transaction
-  await db.insert(transactionsTable).values({
-    orderId: order.id,
-    amount: String(parsed.data.amount),
-    type: "INGRESO",
-    method: parsed.data.payment,
-    description: `Pedido #${order.id}`,
-  });
-
-  const [serialized] = await expandOrders([order]);
-  res.status(201).json(serialized);
-});
+    const [serialized] = await expandOrders([order]);
+    res.status(201).json(serialized);
+  },
+);
 
 router.patch(
   "/orders/:id",
@@ -175,6 +205,26 @@ router.patch(
     if (req.user!.role === "CLIENTE") {
       res.status(403).json({ error: "No autorizado" });
       return;
+    }
+
+    // DRIVER may only update orders assigned to them, and cannot reassign driverId
+    if (req.user!.role === "DRIVER") {
+      const [driver] = await db
+        .select()
+        .from(driversTable)
+        .where(eq(driversTable.userId, req.user!.sub));
+      const [existing] = await db
+        .select()
+        .from(ordersTable)
+        .where(eq(ordersTable.id, id));
+      if (!driver || !existing || existing.driverId !== driver.id) {
+        res.status(403).json({ error: "No autorizado" });
+        return;
+      }
+      if (parsed.data.driverId !== undefined) {
+        res.status(403).json({ error: "No podés reasignar el pedido" });
+        return;
+      }
     }
 
     const updates: Partial<typeof ordersTable.$inferInsert> = {};

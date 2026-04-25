@@ -143,8 +143,7 @@ export default function Login() {
               La logística de última milla, simplificada.
             </h1>
             <p className="text-xl opacity-90">
-              Gestioná tus entregas, despachá a tus repartidores y controlá tus
-              finanzas desde una sola plataforma unificada.
+              Confianza y seguridad en cada kilometro.
             </p>
           </div>
         </div>

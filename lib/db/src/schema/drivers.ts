@@ -1,7 +1,9 @@
-import { pgTable, serial, varchar, boolean, text, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, boolean, text, timestamp, integer } from "drizzle-orm/pg-core";
+import { usersTable } from "./users";
 
 export const driversTable = pgTable("drivers", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => usersTable.id),
   name: varchar("name", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 64 }).notNull(),
   vehicle: varchar("vehicle", { length: 64 }).notNull(),

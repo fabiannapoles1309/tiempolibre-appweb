@@ -11,6 +11,6 @@ export type AutoAssignResultDetailsItem = {
   orderId: number;
   /** @nullable */
   driverId: number | null;
-  zone: ZoneName;
+  zone: ZoneName | null;
   status: string;
 };

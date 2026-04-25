@@ -13,10 +13,10 @@ export interface CreateOrderBody {
   pickup: string;
   /** @minLength 1 */
   delivery: string;
-  zone: ZoneName;
+  zone?: ZoneName | null;
   payment: PaymentMethod;
-  /** @exclusiveMinimum 0 */
-  amount: number;
+  /** @minimum 0 */
+  amount?: number;
   /** @nullable */
   notes?: string | null;
 }

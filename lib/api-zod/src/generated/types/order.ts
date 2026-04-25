@@ -15,7 +15,7 @@ export interface Order {
   customerName: string;
   pickup: string;
   delivery: string;
-  zone: ZoneName;
+  zone: ZoneName | null;
   payment: PaymentMethod;
   amount: number;
   status: OrderStatus;

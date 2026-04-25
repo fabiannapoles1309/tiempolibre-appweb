@@ -2,7 +2,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useCreateOrder, ZoneName, PaymentMethod, getListOrdersQueryKey, getGetDashboardQueryKey } from "@workspace/api-client-react";
+import { useCreateOrder, PaymentMethod, getListOrdersQueryKey, getGetDashboardQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +14,15 @@ import { toast } from "sonner";
 import { Loader2, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
+// Cliente solo elige métodos de pago directos (sin Billetera).
+const ALLOWED_PAYMENTS = [PaymentMethod.EFECTIVO, PaymentMethod.TRANSFERENCIA] as const;
+
 const orderSchema = z.object({
   pickup: z.string().min(1, "La dirección de recolección es requerida"),
   delivery: z.string().min(1, "La dirección de entrega es requerida"),
-  zone: z.nativeEnum(ZoneName, { required_error: "Selecciona una zona" }),
-  payment: z.nativeEnum(PaymentMethod, { required_error: "Selecciona un método de pago" }),
-  amount: z.coerce.number().min(0.01, "El monto debe ser mayor a 0"),
+  payment: z.enum([PaymentMethod.EFECTIVO, PaymentMethod.TRANSFERENCIA], {
+    required_error: "Selecciona un método de pago",
+  }),
   notes: z.string().optional(),
 });
 
@@ -39,7 +42,15 @@ export default function NewOrder() {
 
   const onSubmit = async (data: z.infer<typeof orderSchema>) => {
     try {
-      await createMutation.mutateAsync({ data });
+      // El admin asigna la zona y el monto. Cliente solo carga origen/destino + pago.
+      await createMutation.mutateAsync({
+        data: {
+          pickup: data.pickup,
+          delivery: data.delivery,
+          payment: data.payment,
+          notes: data.notes ?? null,
+        },
+      });
       queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
       toast.success("Pedido creado exitosamente");
@@ -66,17 +77,17 @@ export default function NewOrder() {
       <Card>
         <CardHeader>
           <CardTitle>Detalles del Pedido</CardTitle>
-          <CardDescription>La asignación de repartidor se realizará automáticamente según la zona.</CardDescription>
+          <CardDescription>El equipo de despacho asignará la zona y el repartidor según la dirección de entrega.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 gap-6">
                 <FormField
                   control={form.control}
                   name="pickup"
                   render={({ field }) => (
-                    <FormItem className="col-span-1 md:col-span-2">
+                    <FormItem>
                       <FormLabel>Dirección de Recolección</FormLabel>
                       <FormControl>
                         <Input placeholder="Ej. Av. Principal 123, Bodega A" {...field} />
@@ -90,34 +101,11 @@ export default function NewOrder() {
                   control={form.control}
                   name="delivery"
                   render={({ field }) => (
-                    <FormItem className="col-span-1 md:col-span-2">
+                    <FormItem>
                       <FormLabel>Dirección de Entrega</FormLabel>
                       <FormControl>
                         <Input placeholder="Ej. Calle Secundaria 456, Apto 2B" {...field} />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="zone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Zona</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecciona la zona" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Object.values(ZoneName).map((z) => (
-                            <SelectItem key={z} value={z}>{z}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -136,25 +124,11 @@ export default function NewOrder() {
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Object.values(PaymentMethod).map((p) => (
+                          {ALLOWED_PAYMENTS.map((p) => (
                             <SelectItem key={p} value={p}>{p}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="amount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto a cobrar ($)</FormLabel>
-                      <FormControl>
-                        <Input type="number" step="0.01" placeholder="0.00" {...field} />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

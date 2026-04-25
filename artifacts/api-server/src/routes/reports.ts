@@ -116,11 +116,22 @@ router.get(
 router.get(
   "/reports/dashboard",
   requireAuth,
-  async (_req, res): Promise<void> => {
+  async (req, res): Promise<void> => {
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
 
-    const allOrders = await db.select().from(ordersTable);
+    // RBAC scoping: each role sees only what they own
+    let allOrders = await db.select().from(ordersTable);
+    if (req.user!.role === "CLIENTE") {
+      allOrders = allOrders.filter((o) => o.customerId === req.user!.sub);
+    } else if (req.user!.role === "DRIVER") {
+      const [driver] = await db
+        .select()
+        .from(driversTable)
+        .where(eq(driversTable.userId, req.user!.sub));
+      allOrders = driver ? allOrders.filter((o) => o.driverId === driver.id) : [];
+    }
+
     const todayOrders = allOrders.filter((o) => o.createdAt >= startOfDay);
     const pending = allOrders.filter((o) => o.status === "PENDIENTE");
     const inRoute = allOrders.filter((o) => o.status === "EN_RUTA");
@@ -136,7 +147,7 @@ router.get(
       }),
     );
 
-    const zones = ["Norte", "Sur", "Este", "Oeste"];
+    const zones = ["1", "2", "3", "4", "5", "6", "7", "8"];
     const ordersByZone = zones.map((zone) => {
       const zoneOrders = allOrders.filter((o) => o.zone === zone);
       return {

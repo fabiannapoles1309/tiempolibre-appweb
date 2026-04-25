@@ -77,7 +77,7 @@ export const ListOrdersQueryParams = zod.object({
   status: zod
     .enum(["PENDIENTE", "ASIGNADO", "EN_RUTA", "ENTREGADO", "CANCELADO"])
     .optional(),
-  zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]).optional(),
+  zone: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]).optional(),
   customerId: zod.coerce.number().optional(),
   driverId: zod.coerce.number().optional(),
   from: zod.date().optional().describe("ISO date filter (createdAt >=)"),
@@ -90,7 +90,10 @@ export const ListOrdersResponseItem = zod.object({
   customerName: zod.string(),
   pickup: zod.string(),
   delivery: zod.string(),
-  zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+  zone: zod.union([
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.null(),
+  ]),
   payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
   amount: zod.number(),
   status: zod.enum([
@@ -112,14 +115,16 @@ export const ListOrdersResponse = zod.array(ListOrdersResponseItem);
  * @summary Create a new order
  */
 
-export const createOrderBodyAmountExclusiveMin = 0;
+export const createOrderBodyAmountMin = 0;
 
 export const CreateOrderBody = zod.object({
   pickup: zod.string().min(1),
   delivery: zod.string().min(1),
-  zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+  zone: zod
+    .union([zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]), zod.null()])
+    .optional(),
   payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
-  amount: zod.number().gt(createOrderBodyAmountExclusiveMin),
+  amount: zod.number().min(createOrderBodyAmountMin).optional(),
   notes: zod.string().nullish(),
 });
 
@@ -136,7 +141,10 @@ export const GetOrderResponse = zod.object({
   customerName: zod.string(),
   pickup: zod.string(),
   delivery: zod.string(),
-  zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+  zone: zod.union([
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.null(),
+  ]),
   payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
   amount: zod.number(),
   status: zod.enum([
@@ -173,7 +181,10 @@ export const UpdateOrderResponse = zod.object({
   customerName: zod.string(),
   pickup: zod.string(),
   delivery: zod.string(),
-  zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+  zone: zod.union([
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.null(),
+  ]),
   payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
   amount: zod.number(),
   status: zod.enum([
@@ -200,7 +211,10 @@ export const AssignOrdersAutoResponse = zod.object({
     zod.object({
       orderId: zod.number(),
       driverId: zod.number().nullable(),
-      zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+      zone: zod.union([
+        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+        zod.null(),
+      ]),
       status: zod.string(),
     }),
   ),
@@ -223,7 +237,10 @@ export const AssignOrderManualResponse = zod.object({
   customerName: zod.string(),
   pickup: zod.string(),
   delivery: zod.string(),
-  zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+  zone: zod.union([
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.null(),
+  ]),
   payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
   amount: zod.number(),
   status: zod.enum([
@@ -245,10 +262,11 @@ export const AssignOrderManualResponse = zod.object({
  */
 export const ListDriversResponseItem = zod.object({
   id: zod.number(),
+  userId: zod.number().nullable(),
   name: zod.string(),
   phone: zod.string(),
   vehicle: zod.string(),
-  zones: zod.array(zod.enum(["Norte", "Sur", "Este", "Oeste"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -262,7 +280,7 @@ export const CreateDriverBody = zod.object({
   name: zod.string().min(1),
   phone: zod.string().min(1),
   vehicle: zod.string().min(1),
-  zones: zod.array(zod.enum(["Norte", "Sur", "Este", "Oeste"])).min(1),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])).min(1),
   active: zod.boolean().optional(),
 });
 
@@ -277,16 +295,19 @@ export const UpdateDriverBody = zod.object({
   name: zod.string().optional(),
   phone: zod.string().optional(),
   vehicle: zod.string().optional(),
-  zones: zod.array(zod.enum(["Norte", "Sur", "Este", "Oeste"])).optional(),
+  zones: zod
+    .array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]))
+    .optional(),
   active: zod.boolean().optional(),
 });
 
 export const UpdateDriverResponse = zod.object({
   id: zod.number(),
+  userId: zod.number().nullable(),
   name: zod.string(),
   phone: zod.string(),
   vehicle: zod.string(),
-  zones: zod.array(zod.enum(["Norte", "Sur", "Este", "Oeste"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
   active: zod.boolean(),
   createdAt: zod.coerce.date(),
 });
@@ -303,7 +324,7 @@ export const DeleteDriverParams = zod.object({
  */
 export const ListZonesResponseItem = zod.object({
   id: zod.number(),
-  name: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+  name: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
 });
 export const ListZonesResponse = zod.array(ListZonesResponseItem);
 
@@ -396,7 +417,7 @@ export const ListWalletTransactionsResponse = zod.array(
  */
 export const GetDeliveriesReportQueryParams = zod.object({
   range: zod.enum(["day", "week", "month"]),
-  zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]).optional(),
+  zone: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]).optional(),
 });
 
 export const GetDeliveriesReportResponseItem = zod.object({
@@ -418,7 +439,7 @@ export const GetDriversReportQueryParams = zod.object({
 export const GetDriversReportResponseItem = zod.object({
   driverId: zod.number(),
   driverName: zod.string(),
-  zones: zod.array(zod.enum(["Norte", "Sur", "Este", "Oeste"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
   deliveries: zod.number(),
   revenue: zod.number(),
   active: zod.boolean(),
@@ -451,7 +472,10 @@ export const GetDashboardResponse = zod.object({
   ),
   ordersByZone: zod.array(
     zod.object({
-      zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+      zone: zod.union([
+        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+        zod.null(),
+      ]),
       count: zod.number(),
       revenue: zod.number(),
     }),
@@ -463,7 +487,10 @@ export const GetDashboardResponse = zod.object({
       customerName: zod.string(),
       pickup: zod.string(),
       delivery: zod.string(),
-      zone: zod.enum(["Norte", "Sur", "Este", "Oeste"]),
+      zone: zod.union([
+        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+        zod.null(),
+      ]),
       payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
       amount: zod.number(),
       status: zod.enum([

@@ -9,6 +9,7 @@ const router: IRouter = Router();
 function serialize(d: typeof driversTable.$inferSelect) {
   return {
     id: d.id,
+    userId: d.userId,
     name: d.name,
     phone: d.phone,
     vehicle: d.vehicle,

@@ -9,6 +9,8 @@ import type { ZoneName } from "./zoneName";
 
 export interface Driver {
   id: number;
+  /** @nullable */
+  userId: number | null;
   name: string;
   phone: string;
   vehicle: string;

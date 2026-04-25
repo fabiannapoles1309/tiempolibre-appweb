@@ -13,7 +13,7 @@ export const ordersTable = pgTable("orders", {
   customerId: integer("customer_id").notNull(),
   pickup: text("pickup").notNull(),
   delivery: text("delivery").notNull(),
-  zone: varchar("zone", { length: 16 }).notNull(),
+  zone: varchar("zone", { length: 16 }),
   payment: varchar("payment", { length: 16 }).notNull(),
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   status: varchar("status", { length: 16 }).notNull().default("PENDIENTE"),

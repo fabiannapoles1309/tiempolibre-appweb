@@ -576,7 +576,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/User"
+                $ref: "#/components/schemas/AdminCreatedUser"
 
   /admin/customer-deliveries:
     get:
@@ -902,7 +902,25 @@ components:
           $ref: "#/components/schemas/UserRole"
         createdAt:
           type: string
-          format: date-time
+      required: [id, email, name, role, createdAt]
+
+    AdminCreatedUser:
+      type: object
+      description: User devuelto al crear desde el panel de admin. Incluye welcomeMessage cuando el rol es DRIVER.
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+        welcomeMessage:
+          type: string
+          nullable: true
       required: [id, email, name, role, createdAt]
 
     AuthSession:

@@ -42,7 +42,7 @@ export const LoginResponse = zod.object({
     email: zod.string(),
     name: zod.string(),
     role: zod.enum(["SUPERUSER", "ADMIN", "CLIENTE", "DRIVER"]),
-    createdAt: zod.coerce.date(),
+    createdAt: zod.string(),
   }),
   token: zod.string(),
 });
@@ -64,7 +64,7 @@ export const GetMeResponse = zod.object({
       email: zod.string(),
       name: zod.string(),
       role: zod.enum(["SUPERUSER", "ADMIN", "CLIENTE", "DRIVER"]),
-      createdAt: zod.coerce.date(),
+      createdAt: zod.string(),
     }),
     zod.null(),
   ]),

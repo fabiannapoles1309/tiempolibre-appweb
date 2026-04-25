@@ -68,6 +68,18 @@ export interface User {
   createdAt: string;
 }
 
+/**
+ * User devuelto al crear desde el panel de admin. Incluye welcomeMessage cuando el rol es DRIVER.
+ */
+export interface AdminCreatedUser {
+  id: number;
+  email: string;
+  name: string;
+  role: UserRole;
+  createdAt: string;
+  welcomeMessage?: string | null;
+}
+
 export interface AuthSession {
   user: User;
   token: string;

@@ -20,8 +20,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, UserPlus } from "lucide-react";
+import { Loader2, UserPlus, Copy, Check } from "lucide-react";
 
 const schema = z.object({
   role: z.nativeEnum(AdminCreateUserBodyRole),
@@ -42,7 +51,31 @@ type FormValues = z.infer<typeof schema>;
 
 export default function AdminUsersPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
+  const [welcomeDriverName, setWelcomeDriverName] = useState<string>("");
+  const [copied, setCopied] = useState(false);
   const create = useAdminCreateUser();
+
+  const handleCopy = async () => {
+    if (!welcomeMessage) return;
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(welcomeMessage);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = welcomeMessage;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setCopied(true);
+      toast.success("Mensaje copiado al portapapeles");
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast.error("No se pudo copiar. Seleccioná el texto manualmente.");
+    }
+  };
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -80,8 +113,14 @@ export default function AdminUsersPage() {
         if (data.licensePlate) payload.licensePlate = data.licensePlate;
         if (data.circulationCard) payload.circulationCard = data.circulationCard;
       }
-      await create.mutateAsync({ data: payload });
+      const created = await create.mutateAsync({ data: payload });
       toast.success("Usuario creado correctamente");
+      // Si el backend devolvió el mensaje de bienvenida (drivers), abrimos el modal.
+      if (data.role === AdminCreateUserBodyRole.DRIVER && created?.welcomeMessage) {
+        setWelcomeDriverName(data.name);
+        setWelcomeMessage(created.welcomeMessage);
+        setCopied(false);
+      }
       form.reset({
         role: data.role,
         name: "",
@@ -349,6 +388,57 @@ export default function AdminUsersPage() {
           </Form>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={!!welcomeMessage}
+        onOpenChange={(open) => {
+          if (!open) {
+            setWelcomeMessage(null);
+            setWelcomeDriverName("");
+            setCopied(false);
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg" data-testid="dialog-welcome-message">
+          <DialogHeader>
+            <DialogTitle>Mensaje de bienvenida para {welcomeDriverName || "el repartidor"}</DialogTitle>
+            <DialogDescription>
+              Copialo y enviáselo por SMS o WhatsApp. Incluye sus accesos y el link a la app.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            readOnly
+            value={welcomeMessage ?? ""}
+            rows={12}
+            className="font-mono text-sm"
+            data-testid="textarea-welcome-message"
+          />
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setWelcomeMessage(null)}
+              data-testid="button-close-welcome"
+            >
+              Cerrar
+            </Button>
+            <Button
+              onClick={handleCopy}
+              className="bg-[#00B5E2] hover:bg-[#0096BD]"
+              data-testid="button-copy-welcome"
+            >
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" /> Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 mr-2" /> Copiar al portapapeles
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

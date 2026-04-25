@@ -18,6 +18,7 @@ import type {
 
 import type {
   AdminCreateUserBody,
+  AdminCreatedUser,
   AssignManualBody,
   AuthSession,
   AutoAssignResult,
@@ -59,7 +60,6 @@ import type {
   UpdateDriverStatusBody,
   UpdateIncidentBody,
   UpdateOrderBody,
-  User,
   Wallet,
   WalletTx,
   Zone,
@@ -2210,8 +2210,8 @@ export const getAdminCreateUserUrl = () => {
 export const adminCreateUser = async (
   adminCreateUserBody: AdminCreateUserBody,
   options?: RequestInit,
-): Promise<User> => {
-  return customFetch<User>(getAdminCreateUserUrl(), {
+): Promise<AdminCreatedUser> => {
+  return customFetch<AdminCreatedUser>(getAdminCreateUserUrl(), {
     ...options,
     method: "POST",
     headers: { "Content-Type": "application/json", ...options?.headers },

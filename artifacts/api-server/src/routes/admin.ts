@@ -14,6 +14,10 @@ import {
   AdminCreateUserBody,
   PutBenefitsConfigBody,
 } from "@workspace/api-zod";
+import {
+  buildDriverWelcomeMessage,
+  resolveAppUrl,
+} from "../services/notificationService";
 import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router: IRouter = Router();
@@ -87,12 +91,25 @@ router.post(
       });
     }
 
+    // Para drivers generamos el mensaje de bienvenida listo para enviar por SMS.
+    // El admin lo verá en un modal con botón "copiar al portapapeles".
+    const welcomeMessage =
+      role === "DRIVER"
+        ? buildDriverWelcomeMessage({
+            name,
+            email,
+            password,
+            appUrl: resolveAppUrl(),
+          })
+        : null;
+
     res.status(201).json({
       id: created.id,
       email: created.email,
       name: created.name,
       role: created.role,
       createdAt: created.createdAt.toISOString(),
+      welcomeMessage,
     });
   },
 );

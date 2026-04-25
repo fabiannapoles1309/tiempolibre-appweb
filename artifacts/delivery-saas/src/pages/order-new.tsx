@@ -12,9 +12,11 @@ import { DOMParser as XmlDomParser } from "@xmldom/xmldom";
 import {
   useCreateOrder,
   useGetMyCustomerProfile,
+  useGetMySubscription,
   PaymentMethod,
   getListOrdersQueryKey,
   getGetDashboardQueryKey,
+  getGetMySubscriptionQueryKey,
 } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -189,6 +191,13 @@ export default function NewOrder() {
   // restringir el mapa. ADMIN/SUPERUSER no tienen restricción: la consulta
   // siempre se ejecuta (el endpoint devuelve campos nulos para no-CLIENTE).
   const { data: profile, isFetched: profileFetched } = useGetMyCustomerProfile();
+  const { data: mySubData } = useGetMySubscription({
+    query: {
+      enabled: user?.role === "CLIENTE",
+      queryKey: getGetMySubscriptionQueryKey(),
+    },
+  });
+  const mySub = mySubData?.subscription ?? null;
   const clienteZone =
     isCliente && profile?.clienteZone != null ? String(profile.clienteZone) : null;
   // El CLIENTE necesita una zona asignada para poder operar. Si la consulta
@@ -472,7 +481,30 @@ export default function NewOrder() {
       });
       queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
-      toast.success("Envío creado exitosamente");
+      // El backend descuenta 1 envío del bloque al crear la solicitud,
+      // así que invalidamos la query de la suscripción para que el contador
+      // se refresque en toda la app (sidebar, dashboard, esta página).
+      queryClient.invalidateQueries({ queryKey: getGetMySubscriptionQueryKey() });
+      // Aviso pro-activo cuando el contador toca 5 o menos. Lo calculamos
+      // a partir del valor actual antes de la creación; si era 6, ahora son 5.
+      if (user?.role === "CLIENTE" && mySub) {
+        const newRemaining = Math.max(0, mySub.remainingDeliveries - 1);
+        if (newRemaining === 0) {
+          toast.warning(
+            "Envío creado, pero te quedaste sin envíos disponibles. Solicita una recarga.",
+            { duration: 6000 },
+          );
+        } else if (newRemaining <= 5) {
+          toast.warning(
+            `Envío creado. Te quedan sólo ${newRemaining} envíos del bloque mensual.`,
+            { duration: 6000 },
+          );
+        } else {
+          toast.success("Envío creado exitosamente");
+        }
+      } else {
+        toast.success("Envío creado exitosamente");
+      }
       setLocation("/orders");
     } catch (error: any) {
       const reason = error?.data?.reason;
@@ -503,6 +535,45 @@ export default function NewOrder() {
           </p>
         </div>
       </div>
+
+      {isCliente && mySub && (
+        <div
+          className={`flex items-center justify-between gap-4 rounded-lg border p-4 ${
+            mySub.remainingDeliveries === 0
+              ? "border-red-300 bg-red-50 text-red-900 dark:bg-red-900/20 dark:text-red-200"
+              : mySub.remainingDeliveries <= 5
+                ? "border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-200"
+                : "border-border bg-muted/30"
+          }`}
+          data-testid="banner-deliveries-counter"
+        >
+          <div className="flex items-center gap-3">
+            <AlertTriangle
+              className={`h-5 w-5 ${
+                mySub.remainingDeliveries <= 5 ? "block" : "hidden"
+              }`}
+            />
+            <div>
+              <div className="text-sm font-semibold">
+                Envíos disponibles del bloque mensual
+              </div>
+              <div className="text-xs opacity-80">
+                {mySub.remainingDeliveries === 0
+                  ? "Te quedaste sin envíos. Pide una recarga al administrador."
+                  : mySub.remainingDeliveries <= 5
+                    ? "Tu bloque está por agotarse. Pide una recarga."
+                    : `Plan ${mySub.tier} — ${mySub.usedDeliveries} / ${mySub.monthlyDeliveries} consumidos.`}
+              </div>
+            </div>
+          </div>
+          <div
+            className="text-3xl font-bold tabular-nums"
+            data-testid="text-order-new-remaining"
+          >
+            {mySub.remainingDeliveries}
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card>

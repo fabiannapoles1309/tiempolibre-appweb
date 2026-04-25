@@ -224,6 +224,11 @@ router.post(
     let computedZone: string | null = null;
     let deliveryLat: string | null = null;
     let deliveryLng: string | null = null;
+    // Cuando es CLIENTE y pasa la validación, guardamos qué suscripción se va
+    // a debitar. La reserva atómica + el INSERT del pedido se ejecutan dentro
+    // de una sola transacción más abajo para evitar "fugas" (envío descontado
+    // sin pedido) si el INSERT falla.
+    let reservedSubscriptionId: number | null = null;
 
     if (parsed.data.deliveryLat != null && parsed.data.deliveryLng != null) {
       const lat = Number(parsed.data.deliveryLat);
@@ -288,7 +293,10 @@ router.post(
         return;
       }
 
-      const [activeSub] = await db
+      // Si el cliente tiene varias suscripciones ACTIVA (p.ej. una recarga que
+      // generó un nuevo periodo), tomamos la más reciente — el mismo criterio
+      // que usa GET /me/subscription para mostrarle el contador en pantalla.
+      const [candidateSub] = await db
         .select()
         .from(subscriptionsTable)
         .where(
@@ -296,16 +304,16 @@ router.post(
             eq(subscriptionsTable.userId, req.user!.sub),
             eq(subscriptionsTable.status, "ACTIVA"),
           ),
-        );
-      if (!activeSub) {
+        )
+        .orderBy(desc(subscriptionsTable.createdAt));
+      if (!candidateSub) {
         res.status(402).json({
           error: "Necesitás una suscripción activa para solicitar pedidos.",
           reason: "NO_SUBSCRIPTION",
         });
         return;
       }
-      const remaining = activeSub.monthlyDeliveries - activeSub.usedDeliveries;
-      if (remaining <= 0) {
+      if (candidateSub.monthlyDeliveries - candidateSub.usedDeliveries <= 0) {
         res.status(402).json({
           error:
             "Tu suscripción no tiene envíos restantes. Solicitá una recarga para continuar.",
@@ -313,6 +321,12 @@ router.post(
         });
         return;
       }
+      // Guardamos el id para que la reserva atómica + el INSERT del pedido
+      // ocurran dentro de la misma transacción más abajo. Persistimos
+      // `subscription_id` en el pedido para poder reembolsar exactamente esa
+      // suscripción si después se cancela (no la "más reciente" en ese momento,
+      // que podría ser otra si hubo recargas mientras tanto).
+      reservedSubscriptionId = candidateSub.id;
     }
 
     // Cortesía: el envío no genera ingreso. El monto se fuerza a 0 aunque el
@@ -345,38 +359,82 @@ router.post(
       });
     }
 
-    const [order] = await db
-      .insert(ordersTable)
-      .values({
-        customerId: req.user!.sub,
-        pickup,
-        delivery: parsed.data.delivery,
-        zone: computedZone,
-        payment: parsed.data.payment,
-        amount: String(amount),
-        deliveryLat,
-        deliveryLng,
-        recipientPhone: parsed.data.recipientPhone ?? null,
-        recipientEmail,
-        // Solo persistimos cashAmount/cashChange cuando el método es EFECTIVO.
-        // Para otros métodos los forzamos a null aunque el cliente los envíe.
-        cashAmount:
-          parsed.data.payment === "EFECTIVO" && parsed.data.cashAmount != null
-            ? String(Math.max(0, Number(parsed.data.cashAmount)))
-            : null,
-        cashChange:
-          parsed.data.payment === "EFECTIVO" && parsed.data.cashChange != null
-            ? String(Math.max(0, Number(parsed.data.cashChange)))
-            : null,
-        notes: parsed.data.notes ?? null,
-        recipientName: recipientNameRaw || null,
-        status: "PENDIENTE",
-      })
-      .returning();
-    if (!order) {
+    // Reservamos el envío del bloque mensual y creamos el pedido en la misma
+    // transacción. Si el INSERT del pedido falla, la reserva queda revertida y
+    // el contador del cliente no se mueve (no hay "fugas" de envíos).
+    let raceLost = false;
+    const txResult = await db.transaction(async (tx): Promise<typeof ordersTable.$inferSelect | null> => {
+      if (reservedSubscriptionId != null) {
+        const [reserved] = await tx
+          .update(subscriptionsTable)
+          .set({
+            usedDeliveries: sql`${subscriptionsTable.usedDeliveries} + 1`,
+            // Si esta reserva agota el bloque, marcamos el plan como VENCIDA.
+            status: sql`CASE WHEN ${subscriptionsTable.usedDeliveries} + 1 >= ${subscriptionsTable.monthlyDeliveries} THEN 'VENCIDA' ELSE ${subscriptionsTable.status} END`,
+          })
+          .where(
+            and(
+              eq(subscriptionsTable.id, reservedSubscriptionId),
+              // Defensa contra carrera con cancelaciones del admin: si la
+              // suscripción dejó de estar ACTIVA entre el SELECT y este
+              // UPDATE, no debitamos. El cliente recibe 402 igual que cuando
+              // se queda sin saldo.
+              eq(subscriptionsTable.status, "ACTIVA"),
+              sql`${subscriptionsTable.usedDeliveries} < ${subscriptionsTable.monthlyDeliveries}`,
+            ),
+          )
+          .returning({ id: subscriptionsTable.id });
+        if (!reserved) {
+          // Carrera: alguien más consumió el último envío entre el SELECT
+          // anterior y el UPDATE. Marcamos para responder 402 fuera de la tx.
+          raceLost = true;
+          return null;
+        }
+      }
+      const [created] = await tx
+        .insert(ordersTable)
+        .values({
+          customerId: req.user!.sub,
+          pickup,
+          delivery: parsed.data.delivery,
+          zone: computedZone,
+          payment: parsed.data.payment,
+          amount: String(amount),
+          deliveryLat,
+          deliveryLng,
+          recipientPhone: parsed.data.recipientPhone ?? null,
+          recipientEmail,
+          subscriptionId: reservedSubscriptionId,
+          // Solo persistimos cashAmount/cashChange cuando el método es EFECTIVO.
+          // Para otros métodos los forzamos a null aunque el cliente los envíe.
+          cashAmount:
+            parsed.data.payment === "EFECTIVO" && parsed.data.cashAmount != null
+              ? String(Math.max(0, Number(parsed.data.cashAmount)))
+              : null,
+          cashChange:
+            parsed.data.payment === "EFECTIVO" && parsed.data.cashChange != null
+              ? String(Math.max(0, Number(parsed.data.cashChange)))
+              : null,
+          notes: parsed.data.notes ?? null,
+          recipientName: recipientNameRaw || null,
+          status: "PENDIENTE",
+        })
+        .returning();
+      return created ?? null;
+    });
+    if (raceLost) {
+      res.status(402).json({
+        error:
+          "Tu suscripción no tiene envíos restantes. Solicitá una recarga para continuar.",
+        reason: "NO_DELIVERIES_LEFT",
+      });
+      return;
+    }
+    if (!txResult) {
       res.status(500).json({ error: "No se pudo crear el pedido" });
       return;
     }
+    const order = txResult;
 
     // Upsert del destinatario en el directorio del cliente. Sólo aplica para
     // CLIENTE (los pedidos creados por ADMIN/SUPERUSER no tienen un cliente
@@ -502,6 +560,35 @@ router.patch(
 
       const becameDelivered =
         previous.status !== "ENTREGADO" && u.status === "ENTREGADO";
+      const becameCanceled =
+        previous.status !== "CANCELADO" && u.status === "CANCELADO";
+
+      // Reembolso del bloque mensual cuando se cancela un envío. El envío se
+      // descuenta al solicitar (POST /orders), así que si después se cancela
+      // hay que devolverlo. No bajamos el contador por debajo de 0 y, si el
+      // plan estaba VENCIDA por agotamiento, lo reactivamos para reflejar que
+      // ahora vuelve a tener envíos disponibles.
+      if (becameCanceled && u.subscriptionId != null) {
+        // Reembolsamos sobre la suscripción EXACTA que se debitó al solicitar
+        // (persistida en `orders.subscription_id`), no la "última activa", para
+        // evitar mover el contador equivocado si entremedio hubo recargas o
+        // un nuevo periodo. Si la suscripción está VENCIDA por agotamiento, la
+        // reactivamos porque ahora vuelve a tener envíos.
+        const [chargedSub] = await tx
+          .select()
+          .from(subscriptionsTable)
+          .where(eq(subscriptionsTable.id, u.subscriptionId));
+        if (chargedSub && chargedSub.usedDeliveries > 0) {
+          await tx
+            .update(subscriptionsTable)
+            .set({
+              usedDeliveries: sql`GREATEST(${subscriptionsTable.usedDeliveries} - 1, 0)`,
+              status:
+                chargedSub.status === "VENCIDA" ? "ACTIVA" : chargedSub.status,
+            })
+            .where(eq(subscriptionsTable.id, chargedSub.id));
+        }
+      }
 
       if (becameDelivered) {
         if (u.driverId != null && u.payment === "EFECTIVO") {
@@ -551,28 +638,9 @@ router.patch(
             });
           }
         }
-        if (u.customerId != null) {
-          const [activeSub] = await tx
-            .select()
-            .from(subscriptionsTable)
-            .where(
-              and(
-                eq(subscriptionsTable.userId, u.customerId),
-                eq(subscriptionsTable.status, "ACTIVA"),
-              ),
-            );
-          if (activeSub) {
-            const newUsed = activeSub.usedDeliveries + 1;
-            const exhausted = newUsed >= activeSub.monthlyDeliveries;
-            await tx
-              .update(subscriptionsTable)
-              .set({
-                usedDeliveries: newUsed,
-                status: exhausted ? "VENCIDA" : activeSub.status,
-              })
-              .where(eq(subscriptionsTable.id, activeSub.id));
-          }
-        }
+        // Nota: el contador de envíos del bloque ya fue decrementado al
+        // momento de crear la solicitud (POST /orders). Aquí no se vuelve a
+        // tocar para evitar doble cuenta.
       }
       return u;
     });

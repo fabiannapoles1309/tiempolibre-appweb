@@ -1,7 +1,8 @@
-import { useGetDashboard, OrderStatus, UserRole } from "@workspace/api-client-react";
+import { useGetDashboard, useGetMySubscription, getGetMySubscriptionQueryKey, OrderStatus, UserRole } from "@workspace/api-client-react";
 import { useAuth, isAdmin } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Package, Truck, CheckCircle2, DollarSign, Clock, Users, Plus } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Package, Truck, CheckCircle2, DollarSign, Clock, Users, Plus, AlertTriangle, XOctagon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,15 @@ const ARS = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN',
 export default function Dashboard() {
   const { user } = useAuth();
   const { data: dashboardData, isLoading } = useGetDashboard();
+  // Sólo el cliente tiene suscripción/bloque de envíos. El hook está
+  // condicionado con `enabled` para no llamar al endpoint con admins/drivers.
+  const { data: mySubData } = useGetMySubscription({
+    query: {
+      enabled: user?.role === UserRole.CLIENTE,
+      queryKey: getGetMySubscriptionQueryKey(),
+    },
+  });
+  const mySub = mySubData?.subscription ?? null;
 
   if (isLoading) {
     return (
@@ -72,6 +82,61 @@ export default function Dashboard() {
           </Link>
         )}
       </div>
+
+      {user?.role === UserRole.CLIENTE && mySub && mySub.remainingDeliveries <= 5 && (
+        <Alert
+          variant={mySub.remainingDeliveries === 0 ? "destructive" : "default"}
+          className={
+            mySub.remainingDeliveries === 0
+              ? undefined
+              : "border-amber-300 bg-amber-50 text-amber-900 dark:bg-amber-900/20 dark:text-amber-200"
+          }
+          data-testid="alert-deliveries-low"
+        >
+          {mySub.remainingDeliveries === 0 ? (
+            <XOctagon className="h-4 w-4" />
+          ) : (
+            <AlertTriangle className="h-4 w-4" />
+          )}
+          <AlertTitle>
+            {mySub.remainingDeliveries === 0
+              ? "Te quedaste sin envíos disponibles"
+              : "Tu bloque de envíos está por agotarse"}
+          </AlertTitle>
+          <AlertDescription>
+            {mySub.remainingDeliveries === 0 ? (
+              <>
+                Solicita una recarga de tu paquete para seguir generando envíos.{" "}
+                <Link
+                  href="/subscription"
+                  className="underline font-medium"
+                  data-testid="link-subscription-from-alert"
+                >
+                  Ir a Suscripción
+                </Link>
+                .
+              </>
+            ) : (
+              <>
+                Te quedan{" "}
+                <span className="font-bold" data-testid="text-remaining-deliveries">
+                  {mySub.remainingDeliveries}
+                </span>{" "}
+                envíos del bloque mensual ({mySub.usedDeliveries} / {mySub.monthlyDeliveries}{" "}
+                consumidos). Solicita una recarga antes de que se agoten.{" "}
+                <Link
+                  href="/subscription"
+                  className="underline font-medium"
+                  data-testid="link-subscription-from-alert"
+                >
+                  Ver mi plan
+                </Link>
+                .
+              </>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>

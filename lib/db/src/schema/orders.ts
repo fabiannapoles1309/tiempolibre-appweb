@@ -18,6 +18,7 @@ export const ordersTable = pgTable("orders", {
   amount: numeric("amount", { precision: 12, scale: 2 }).notNull(),
   status: varchar("status", { length: 16 }).notNull().default("PENDIENTE"),
   driverId: integer("driver_id"),
+  subscriptionId: integer("subscription_id"),
   deliveryLat: numeric("delivery_lat", { precision: 10, scale: 7 }),
   deliveryLng: numeric("delivery_lng", { precision: 10, scale: 7 }),
   // Datos de contacto y cobro adicionales

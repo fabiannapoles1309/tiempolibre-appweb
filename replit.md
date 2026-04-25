@@ -2,7 +2,7 @@
 
 ## Overview
 
-Rapidoo is a production-ready B2B last-mile delivery management platform designed to streamline and manage delivery operations. It provides a comprehensive solution for businesses requiring efficient last-mile logistics, supporting various user roles like administrators, clients, and drivers. Key capabilities include order management, driver assignment, subscription handling, financial tracking, and incident reporting. The project aims to capture the B2B last-mile delivery market with a reliable and scalable SaaS offering.
+Rapidoo is a production-ready B2B last-mile delivery management platform designed to streamline and manage delivery operations. It provides a comprehensive solution for businesses requiring efficient last-mile logistics, supporting various user roles like administrators, clients, and drivers. Key capabilities include order management, driver assignment, subscription handling, financial tracking, and incident reporting. The project aims to capture the B2B last-mile delivery market with a reliable and scalable SaaS offering, offering a robust and scalable solution for urban logistics.
 
 ## User Preferences
 
@@ -22,7 +22,8 @@ Rapidoo is a production-ready B2B last-mile delivery management platform designe
 - Currency formatted as ARS via `Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })`.
 - Order payment methods now include `EFECTIVO`, `TRANSFERENCIA`, `BILLETERA`, `TARJETA`, `CORTESIA`. `cashAmount`/`cashChange` are persisted only when `payment === EFECTIVO` (server forces null otherwise). The /finance donut chart always renders all 5 canonical methods with stable colors and Spanish labels (Cortesía visible even at $0). The accounting Excel export includes a "Por método de pago" sheet that always lists all 5 methods plus a TOTAL row.
 - Order create accepts optional `deliveryLat`/`deliveryLng`. When provided, the server runs point-in-polygon validation against `zonas.kml` (`mapService.validarPunto`) and rejects out-of-zone points with HTTP 400 `FUERA_DE_ZONA`. When absent, falls back to address geocoding via `validarZona`.
-- Cliente order creation requires an active subscription with `remainingDeliveries > 0` (HTTP 402 `NO_SUBSCRIPTION` / `NO_DELIVERIES_LEFT`).
+- Cliente order creation requires an active subscription with `remainingDeliveries > 0` (HTTP 402 `NO_SUBSCRIPTION` / `NO_DELIVERIES_LEFT`). El bloque mensual se descuenta **al solicitar** el envío (POST /orders), no al entregar. La reserva atómica + el `INSERT` del pedido se ejecutan dentro de una **única `db.transaction`**: si el insert falla, la reserva se revierte (no hay "fugas" de envíos). El SQL de reserva: `UPDATE subscriptions SET used_deliveries=used_deliveries+1, status=CASE WHEN +1>=monthly THEN 'VENCIDA' ELSE status END WHERE id=? AND used_deliveries<monthly RETURNING`. Si dos pedidos compiten por el último envío, sólo uno entra; el otro recibe 402. Cuando el cliente tiene varias suscripciones `ACTIVA` (p.ej. tras una recarga que crea un nuevo periodo), la reserva siempre toma la más reciente (`orderBy desc(createdAt)`) — el mismo criterio que `GET /me/subscription` muestra en pantalla. La columna `orders.subscription_id` (nullable, agregada en este flujo) persiste exactamente qué suscripción se debitó. Al cancelar (PATCH `status=CANCELADO`), el reembolso usa **ese mismo `subscription_id`** (`GREATEST(used-1,0)` y reactiva `VENCIDA→ACTIVA` si corresponde), evitando reembolsar el bloque equivocado si entremedio hubo recargas. Pasar a `ENTREGADO` ya **no** vuelve a descontar (evita doble cobro).
+- Frontend muestra el bloque restante en dos lugares: (a) banner en `/orders/new` con `data-testid="banner-deliveries-counter"` y `text-order-new-remaining` (neutro >5, ámbar 1-5, rojo 0); (b) alerta sobre el grid de KPIs en `/dashboard` con `data-testid="alert-deliveries-low"` que sólo aparece cuando `remainingDeliveries ≤ 5`. Tras crear un envío, la página invalida `getMySubscriptionQueryKey` y muestra `toast.warning` si el nuevo restante quedará en ≤ 5.
 - `POST /me/subscription/recharge` adds a 35-envíos block to the latest subscription regardless of whether it is `ACTIVA` or `VENCIDA`, and reactivates it.
 - Admin endpoints: `POST /admin/users` (creates CLIENTE w/ tier or DRIVER w/ profile), `GET /admin/customer-deliveries`, `GET /admin/cash-by-customer` (sums `cashAmount` falling back to `amount`), `GET|PUT /admin/benefits-config`, `GET /finance/today-split` (Reparto vs Planes).
 - Cliente order detail polls every 5s (React Query `refetchInterval: 5000`) for near-real-time status updates.
@@ -97,24 +98,26 @@ The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts
 -   **Domain Model:** Includes Users, Zones, Drivers, Orders, Transactions, Wallet (with `wallets` and `wallet_tx`), Incidents, Subscriptions, Recipients, and Package Requests.
 -   **Authentication:** JWT (HS256) via httpOnly cookies, bcryptjs for password hashing, and RBAC middleware for route protection.
 -   **Order Management:** Supports automatic and manual driver assignment, with atomic state transitions for order delivery that trigger financial and subscription updates.
--   **Financial Tracking:** Comprehensive ledger, user-specific prepaid wallets, and detailed financial reporting.
+-   **Financial Tracking:** Comprehensive ledger, user-specific prepaid wallets, and detailed financial reporting, including configurable pricing settings.
 -   **Benefit Tracking:** Manages driver benefits, tracking progress and claims.
 -   **Recipient Management:** Stores recipient details, including marketing consents, supporting autofill and server-side upsert logic.
 -   **Package Requests:** Allows clients to request new delivery blocks, with an atomic approval/rejection process for administrators.
+-   **Feedback System:** Implements a complaints and suggestions system for all user roles, with admin review capabilities and email notifications.
 -   **UI/UX:** Light theme with cyan primary color, localized for Spanish (Argentina), with role-based widget visibility. Uses Tailwind CSS and shadcn UI.
 -   **Geospatial Features:** Interactive delivery point selection using client-side MapLibre with `public/zonas.kml` and `turf` for zone validation. Server-side validation handles point-in-polygon checks and geocoding.
--   **Notification System:** `notificationService` for driver welcome messages and admin package request notifications (logging only).
+-   **Notification System:** `notificationService` for driver welcome messages and admin package request notifications (logging only, with Sendgrid integration planned).
+-   **Reporting:** Generates combined Excel reports for administrators with detailed financial and delivery metrics.
 
 ## External Dependencies
 
--   **PostgreSQL:** Primary database.
--   **Express 5:** Backend framework.
--   **React + Vite:** Frontend stack.
--   **Tailwind CSS + shadcn UI:** Styling and component library.
--   **Orval:** Generates Zod schemas and React Query hooks from OpenAPI.
--   **bcryptjs:** Password hashing.
--   **date-fns:** Date formatting.
--   **MapLibre:** Embedded maps.
--   **turf.js:** Client-side geospatial analysis.
--   **exceljs:** Excel report generation.
--   **Sendgrid:** Email service for notifications (via Replit Connectors).
+-   **PostgreSQL:** Primary database for all application data.
+-   **Express 5:** Backend framework handling API routes and business logic.
+-   **React + Vite:** Frontend framework for building the user interface.
+-   **Tailwind CSS + shadcn UI:** Utility-first CSS framework and UI component library for styling.
+-   **Orval:** Tool for generating Zod schemas and React Query hooks from OpenAPI specifications.
+-   **bcryptjs:** Library for hashing and comparing passwords securely.
+-   **date-fns:** Comprehensive utility library for date manipulation.
+-   **MapLibre:** Open-source library for interactive maps, used for delivery point selection.
+-   **turf.js:** JavaScript library for geospatial analysis, used for client-side zone validation.
+-   **exceljs:** Library for reading, writing, and manipulating XLSX files for report generation.
+-   **Sendgrid:** Email communication platform for notifications (currently using a fallback logging mechanism due to connector status).

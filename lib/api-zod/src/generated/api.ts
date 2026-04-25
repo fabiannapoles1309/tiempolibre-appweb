@@ -832,6 +832,44 @@ export const AdminCashByCustomerResponse = zod.array(
 );
 
 /**
+ * @summary Driver self-service progress and unlocked benefits
+ */
+export const getMyDriverBenefitsQueryMonthMax = 12;
+
+export const GetMyDriverBenefitsQueryParams = zod.object({
+  year: zod.coerce.number().optional(),
+  month: zod.coerce
+    .number()
+    .min(1)
+    .max(getMyDriverBenefitsQueryMonthMax)
+    .optional(),
+});
+
+export const GetMyDriverBenefitsResponse = zod.object({
+  year: zod.number(),
+  month: zod.number(),
+  driverName: zod.string(),
+  deliveries: zod.number(),
+  currentLevel: zod.number(),
+  currentLevelName: zod.string().nullish(),
+  nextLevel: zod.number().nullish(),
+  nextLevelName: zod.string().nullish(),
+  nextLevelTarget: zod.number().nullish(),
+  remainingForNext: zod.number().nullish(),
+  progressPct: zod.number(),
+  benefits: zod.array(
+    zod.object({
+      benefitItemId: zod.number(),
+      level: zod.number(),
+      name: zod.string(),
+      icon: zod.string(),
+      status: zod.enum(["POR_RECLAMAR", "ENTREGADO"]),
+      deliveredAt: zod.coerce.date().nullish(),
+    }),
+  ),
+});
+
+/**
  * @summary List concrete benefit items per level (ADMIN)
  */
 export const ListBenefitItemsResponseItem = zod.object({

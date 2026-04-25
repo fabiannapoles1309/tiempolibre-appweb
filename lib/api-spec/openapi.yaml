@@ -731,6 +731,26 @@ paths:
                 items:
                   $ref: "#/components/schemas/CashByCustomerRow"
 
+  /me/driver/benefits:
+    get:
+      operationId: getMyDriverBenefits
+      tags: [drivers]
+      summary: Driver self-service progress and unlocked benefits
+      parameters:
+        - in: query
+          name: year
+          schema: { type: integer }
+        - in: query
+          name: month
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: Progress summary for the authenticated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverBenefitsProgress"
+
   /admin/benefit-items:
     get:
       operationId: listBenefitItems
@@ -2068,3 +2088,23 @@ components:
           items:
             $ref: "#/components/schemas/BenefitsTrackingRow"
       required: [year, month, rows]
+
+    DriverBenefitsProgress:
+      type: object
+      properties:
+        year: { type: integer }
+        month: { type: integer }
+        driverName: { type: string }
+        deliveries: { type: integer }
+        currentLevel: { type: integer }
+        currentLevelName: { type: string, nullable: true }
+        nextLevel: { type: integer, nullable: true }
+        nextLevelName: { type: string, nullable: true }
+        nextLevelTarget: { type: integer, nullable: true }
+        remainingForNext: { type: integer, nullable: true }
+        progressPct: { type: number }
+        benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/BenefitsTrackingBenefit"
+      required: [year, month, driverName, deliveries, currentLevel, progressPct, benefits]

@@ -722,6 +722,21 @@ export interface BenefitsTrackingResponse {
   rows: BenefitsTrackingRow[];
 }
 
+export interface DriverBenefitsProgress {
+  year: number;
+  month: number;
+  driverName: string;
+  deliveries: number;
+  currentLevel: number;
+  currentLevelName?: string | null;
+  nextLevel?: number | null;
+  nextLevelName?: string | null;
+  nextLevelTarget?: number | null;
+  remainingForNext?: number | null;
+  progressPct: number;
+  benefits: BenefitsTrackingBenefit[];
+}
+
 export type ListOrdersParams = {
   status?: OrderStatus;
   zone?: ZoneName;
@@ -761,6 +776,15 @@ export const FinanceExportExcelPeriod = {
   month: "month",
   year: "year",
 } as const;
+
+export type GetMyDriverBenefitsParams = {
+  year?: number;
+  /**
+   * @minimum 1
+   * @maximum 12
+   */
+  month?: number;
+};
 
 export type GetBenefitsTrackingParams = {
   year?: number;

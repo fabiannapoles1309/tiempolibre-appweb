@@ -10,6 +10,7 @@ import {
   benefitClaimsTable,
 } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/auth";
+import type { Request } from "express";
 
 const router: IRouter = Router();
 
@@ -155,6 +156,69 @@ async function buildTracking(year: number, month: number) {
 
   return { year, month, rows };
 }
+
+// === Driver self-service ===
+
+router.get(
+  "/me/driver/benefits",
+  requireAuth,
+  requireRole("DRIVER", "SUPERUSER"),
+  async (req: Request, res) => {
+    const userId = (req as { user?: { sub?: number } }).user?.sub;
+    if (!userId) {
+      res.status(401).json({ error: "No autenticado" });
+      return;
+    }
+    const [driver] = await db
+      .select({ id: driversTable.id, name: driversTable.name })
+      .from(driversTable)
+      .where(eq(driversTable.userId, userId));
+    if (!driver) {
+      res.status(404).json({
+        error: "No hay un repartidor vinculado a tu cuenta",
+      });
+      return;
+    }
+    const { year, month } = parsePeriod(req);
+    const tracking = await buildTracking(year, month);
+    const row = tracking.rows.find((r) => r.driverId === driver.id);
+    if (!row) {
+      res.json({
+        year,
+        month,
+        driverName: driver.name,
+        deliveries: 0,
+        currentLevel: 0,
+        currentLevelName: null,
+        nextLevel: null,
+        nextLevelName: null,
+        nextLevelTarget: null,
+        remainingForNext: null,
+        progressPct: 0,
+        benefits: [],
+      });
+      return;
+    }
+    const remainingForNext =
+      row.nextLevelTarget != null
+        ? Math.max(0, row.nextLevelTarget - row.deliveries)
+        : null;
+    res.json({
+      year,
+      month,
+      driverName: row.driverName,
+      deliveries: row.deliveries,
+      currentLevel: row.currentLevel,
+      currentLevelName: row.currentLevelName,
+      nextLevel: row.nextLevel,
+      nextLevelName: row.nextLevelName,
+      nextLevelTarget: row.nextLevelTarget,
+      remainingForNext,
+      progressPct: row.progressPct,
+      benefits: row.benefits,
+    });
+  },
+);
 
 // === Benefit items CRUD ===
 
@@ -344,8 +408,8 @@ router.get(
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    const buffer = await wb.xlsx.writeBuffer();
-    res.end(Buffer.from(buffer));
+    await wb.xlsx.write(res);
+    res.end();
   },
 );
 

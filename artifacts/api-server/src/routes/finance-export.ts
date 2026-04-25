@@ -254,8 +254,9 @@ router.get(
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    const buffer = await wb.xlsx.writeBuffer();
-    res.end(Buffer.from(buffer));
+    // Stream binario directo para evitar "Formato o extensión no válidos" al abrir.
+    await wb.xlsx.write(res);
+    res.end();
   },
 );
 

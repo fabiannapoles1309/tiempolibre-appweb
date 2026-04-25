@@ -307,8 +307,11 @@ export default function NewOrder() {
     } catch (error: any) {
       const reason = error?.data?.reason;
       if (reason === "NO_SUBSCRIPTION" || reason === "NO_DELIVERIES_LEFT") {
-        toast.error(error.data.error);
-        setLocation("/subscription");
+        // La autogestión de suscripción fue removida (M1). Las recargas y
+        // renovaciones las hace el administrador desde /admin/clientes.
+        toast.error(
+          `${error.data.error} — Contacta a tu administrador para recargar tu bloque de envíos.`,
+        );
         return;
       }
       toast.error(error.data?.error || "Error al crear el envío");

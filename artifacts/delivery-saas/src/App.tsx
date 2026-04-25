@@ -20,7 +20,6 @@ import MapPage from "@/pages/map";
 import DriverBenefits from "@/pages/driver-benefits";
 import DriverRankingPage from "@/pages/driver-ranking";
 import IncidentsPage from "@/pages/incidents";
-import SubscriptionPage from "@/pages/subscription";
 import AdminSubscriptionsPage from "@/pages/admin-subscriptions";
 import AdminUsersPage from "@/pages/admin-users";
 import AdminCustomerDeliveriesPage from "@/pages/admin-customer-deliveries";
@@ -90,7 +89,6 @@ function Router() {
       <Route path="/admin/benefits-config" component={() => <ProtectedRoute component={AdminBenefitsConfigPage} roles={["ADMIN"]} />} />
       <Route path="/admin/benefits-tracking" component={() => <ProtectedRoute component={AdminBenefitsTrackingPage} roles={["ADMIN"]} />} />
       <Route path="/admin/clientes" component={() => <ProtectedRoute component={AdminClientesPage} roles={["ADMIN"]} />} />
-      <Route path="/subscription" component={() => <ProtectedRoute component={SubscriptionPage} roles={["CLIENTE"]} />} />
       <Route component={NotFound} />
     </Switch>
   );

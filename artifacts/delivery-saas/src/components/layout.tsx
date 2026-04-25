@@ -36,7 +36,6 @@ const navItems: NavItem[] = [
   { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
   { title: "Billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },
-  { title: "Mi suscripción", href: "/subscription", icon: Crown, roles: [UserRole.CLIENTE] },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {

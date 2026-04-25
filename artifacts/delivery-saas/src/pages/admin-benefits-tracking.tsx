@@ -55,26 +55,40 @@ import {
   Crown,
   Star,
   Truck,
+  Smartphone,
+  Headphones,
   CircleCheck,
   CircleAlert,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-const ICONS: { key: string; label: string; Icon: LucideIcon }[] = [
-  { key: "fuel", label: "Vales de gasolina", Icon: Fuel },
-  { key: "zap", label: "Rayo / energía", Icon: Zap },
-  { key: "wrench", label: "Mantenimiento", Icon: Wrench },
-  { key: "stethoscope", label: "Salud", Icon: Stethoscope },
-  { key: "shield", label: "Seguro", Icon: Shield },
-  { key: "coffee", label: "Descanso", Icon: Coffee },
-  { key: "truck", label: "Vehículo", Icon: Truck },
-  { key: "crown", label: "Premium", Icon: Crown },
-  { key: "star", label: "Estrella", Icon: Star },
-  { key: "gift", label: "Regalo", Icon: Gift },
+// Catálogo cerrado de beneficios disponibles (M2). El admin selecciona uno
+// de estos 5 tipos al asignar beneficios a un nivel; el ícono se infiere.
+const BENEFIT_TYPES: { name: string; icon: string; Icon: LucideIcon }[] = [
+  { name: "Asistencia Médica", icon: "stethoscope", Icon: Stethoscope },
+  { name: "Mantenimiento de Moto", icon: "wrench", Icon: Wrench },
+  { name: "Vales de Gasolina", icon: "fuel", Icon: Fuel },
+  { name: "Reparación de Celular (30% descuento)", icon: "smartphone", Icon: Smartphone },
+  { name: "Accesorios para Celular (30% descuento)", icon: "headphones", Icon: Headphones },
 ];
 
+const ICON_MAP: Record<string, LucideIcon> = {
+  stethoscope: Stethoscope,
+  wrench: Wrench,
+  fuel: Fuel,
+  smartphone: Smartphone,
+  headphones: Headphones,
+  shield: Shield,
+  coffee: Coffee,
+  truck: Truck,
+  crown: Crown,
+  star: Star,
+  zap: Zap,
+  gift: Gift,
+};
+
 function iconFor(key: string): LucideIcon {
-  return ICONS.find((i) => i.key === key)?.Icon ?? Gift;
+  return ICON_MAP[key] ?? Gift;
 }
 
 const MONTHS = [
@@ -108,8 +122,7 @@ export default function AdminBenefitsTrackingPage() {
 
   const [newItem, setNewItem] = useState({
     level: 1,
-    name: "",
-    icon: "fuel",
+    typeIndex: 0,
     description: "",
   });
 
@@ -153,21 +166,22 @@ export default function AdminBenefitsTrackingPage() {
   };
 
   const onCreateItem = async () => {
-    if (!newItem.name.trim()) {
-      toast.error("Ingresa un nombre");
+    const type = BENEFIT_TYPES[newItem.typeIndex];
+    if (!type) {
+      toast.error("Selecciona un beneficio");
       return;
     }
     try {
       await createItem.mutateAsync({
         data: {
           level: Number(newItem.level),
-          name: newItem.name.trim(),
-          icon: newItem.icon,
+          name: type.name,
+          icon: type.icon,
           description: newItem.description.trim() || null,
         },
       });
       toast.success("Beneficio agregado");
-      setNewItem({ level: newItem.level, name: "", icon: "fuel", description: "" });
+      setNewItem({ level: newItem.level, typeIndex: 0, description: "" });
       qc.invalidateQueries({ queryKey: getListBenefitItemsQueryKey() });
       qc.invalidateQueries({
         queryKey: getGetBenefitsTrackingQueryKey({ year, month }),
@@ -409,29 +423,22 @@ export default function AdminBenefitsTrackingPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="md:col-span-3">
-              <Label className="text-xs">Nombre del beneficio</Label>
-              <Input
-                value={newItem.name}
-                onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-                placeholder="Ej. Vales de gasolina"
-                data-testid="input-new-benefit-name"
-              />
-            </div>
-            <div className="md:col-span-2">
-              <Label className="text-xs">Icono</Label>
+            <div className="md:col-span-5">
+              <Label className="text-xs">Beneficio</Label>
               <Select
-                value={newItem.icon}
-                onValueChange={(v) => setNewItem({ ...newItem, icon: v })}
+                value={String(newItem.typeIndex)}
+                onValueChange={(v) =>
+                  setNewItem({ ...newItem, typeIndex: Number(v) })
+                }
               >
-                <SelectTrigger data-testid="select-new-icon">
+                <SelectTrigger data-testid="select-new-benefit-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ICONS.map(({ key, label, Icon }) => (
-                    <SelectItem key={key} value={key}>
+                  {BENEFIT_TYPES.map((t, i) => (
+                    <SelectItem key={t.name} value={String(i)}>
                       <span className="inline-flex items-center gap-2">
-                        <Icon className="w-4 h-4" /> {label}
+                        <t.Icon className="w-4 h-4" /> {t.name}
                       </span>
                     </SelectItem>
                   ))}
@@ -439,7 +446,7 @@ export default function AdminBenefitsTrackingPage() {
               </Select>
             </div>
             <div className="md:col-span-3">
-              <Label className="text-xs">Descripción (opcional)</Label>
+              <Label className="text-xs">Notas (opcional)</Label>
               <Input
                 value={newItem.description}
                 onChange={(e) =>

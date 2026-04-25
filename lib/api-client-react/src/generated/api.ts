@@ -39,6 +39,7 @@ import type {
   DashboardData,
   DeliveriesPoint,
   Driver,
+  DriverBenefitsProgress,
   DriverPerformance,
   DriverRankingEntry,
   ErrorResponse,
@@ -49,6 +50,7 @@ import type {
   GetDeliveriesReportParams,
   GetDriversReportParams,
   GetFinanceSummaryParams,
+  GetMyDriverBenefitsParams,
   HealthStatus,
   Incident,
   ListOrdersParams,
@@ -2942,6 +2944,109 @@ export function useAdminCashByCustomer<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getAdminCashByCustomerQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Driver self-service progress and unlocked benefits
+ */
+export const getGetMyDriverBenefitsUrl = (
+  params?: GetMyDriverBenefitsParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/me/driver/benefits?${stringifiedParams}`
+    : `/api/me/driver/benefits`;
+};
+
+export const getMyDriverBenefits = async (
+  params?: GetMyDriverBenefitsParams,
+  options?: RequestInit,
+): Promise<DriverBenefitsProgress> => {
+  return customFetch<DriverBenefitsProgress>(
+    getGetMyDriverBenefitsUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetMyDriverBenefitsQueryKey = (
+  params?: GetMyDriverBenefitsParams,
+) => {
+  return [`/api/me/driver/benefits`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetMyDriverBenefitsQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyDriverBenefits>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetMyDriverBenefitsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyDriverBenefits>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetMyDriverBenefitsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMyDriverBenefits>>
+  > = ({ signal }) =>
+    getMyDriverBenefits(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyDriverBenefits>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyDriverBenefitsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyDriverBenefits>>
+>;
+export type GetMyDriverBenefitsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Driver self-service progress and unlocked benefits
+ */
+
+export function useGetMyDriverBenefits<
+  TData = Awaited<ReturnType<typeof getMyDriverBenefits>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetMyDriverBenefitsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMyDriverBenefits>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyDriverBenefitsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

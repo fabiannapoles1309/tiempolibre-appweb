@@ -8,7 +8,7 @@ const router: IRouter = Router();
 
 const TIERS = {
   ESTANDAR: { monthlyPrice: 15000, monthlyDeliveries: 35 },
-  OPTIMO: { monthlyPrice: 25000, monthlyDeliveries: 70 },
+  OPTIMO: { monthlyPrice: 25000, monthlyDeliveries: 35 },
 } as const;
 
 function serializeSubscription(s: typeof subscriptionsTable.$inferSelect, userName: string) {
@@ -134,48 +134,17 @@ router.post(
   },
 );
 
-// Recarga: agrega un bloque de 35 envíos a la última suscripción del cliente.
-// Acepta ACTIVA o VENCIDA (el cliente puede recargar cuando se le agotaron envíos).
-// Si la sub estaba VENCIDA, la reactiva a ACTIVA.
+// La autorrecarga del cliente fue eliminada (M1): solo el ADMIN puede agregar
+// bloques de 35 envíos vía /admin/clientes/:id/recharge. El endpoint queda
+// bloqueado de forma explícita para cualquier rol.
 router.post(
   "/me/subscription/recharge",
   requireAuth,
-  requireRole("CLIENTE", "SUPERUSER"),
-  async (req, res): Promise<void> => {
-    if (!req.user) {
-      res.status(401).json({ error: "No autenticado" });
-      return;
-    }
-    const [latest] = await db
-      .select()
-      .from(subscriptionsTable)
-      .where(
-        and(
-          eq(subscriptionsTable.userId, req.user.sub),
-          inArray(subscriptionsTable.status, ["ACTIVA", "VENCIDA"]),
-        ),
-      )
-      .orderBy(desc(subscriptionsTable.createdAt));
-    if (!latest) {
-      res.status(404).json({
-        error: "No tienes una suscripción para recargar. Suscríbete primero.",
-      });
-      return;
-    }
-    const RECHARGE_BLOCK = 35;
-    const [updated] = await db
-      .update(subscriptionsTable)
-      .set({
-        monthlyDeliveries: latest.monthlyDeliveries + RECHARGE_BLOCK,
-        status: "ACTIVA",
-      })
-      .where(eq(subscriptionsTable.id, latest.id))
-      .returning();
-    if (!updated) {
-      res.status(500).json({ error: "No se pudo recargar la suscripción" });
-      return;
-    }
-    res.json(serializeSubscription(updated, (req.user as any).name ?? "Cliente"));
+  async (_req, res): Promise<void> => {
+    res.status(403).json({
+      error:
+        "La recarga es exclusiva del administrador. Contacta a tu ejecutivo.",
+    });
   },
 );
 

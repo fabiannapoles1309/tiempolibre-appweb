@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetWallet, useListWalletTransactions, useTopUpWallet, useGetMySubscription, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
+import { useGetWallet, useListWalletTransactions, useTopUpWallet, useGetMySubscription, getGetMySubscriptionQueryKey, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
 import { useAuth } from "@/lib/auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -79,10 +79,14 @@ export default function WalletPage() {
   // Envíos del periodo: visible sólo para CLIENTE. Replicamos los counters
   // que ya existen en /subscription para que el cliente pueda consultarlos
   // junto con su saldo cobrado sin cambiar de pantalla.
+  // Usamos la queryKey canónica (la que genera orval) para que cuando el
+  // cliente crea un envío en /orders/new y se invalida ese key, esta tarjeta
+  // ("Envíos del periodo") refresque los contadores Solicitados/Restantes
+  // automáticamente sin necesidad de recargar la página.
   const { data: subData, isLoading: loadingSub } = useGetMySubscription({
     query: {
       enabled: isCliente,
-      queryKey: ["wallet-my-subscription"],
+      queryKey: getGetMySubscriptionQueryKey(),
     },
   });
   const sub = subData?.subscription ?? null;

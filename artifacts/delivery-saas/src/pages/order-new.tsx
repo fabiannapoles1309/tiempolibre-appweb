@@ -448,10 +448,8 @@ export default function NewOrder() {
       toast.error(zoneError);
       return;
     }
-    if (!selectedPoint && !mapUnsupported) {
-      toast.error("Marca el punto de entrega en el mapa.");
-      return;
-    }
+    // El punto en el mapa es opcional: si no lo marcaron, el backend
+    // geocodifica la dirección de entrega y valida la zona automáticamente.
     try {
       await createMutation.mutateAsync({
         // Los campos `recipientName` + `allowMarketing*` aún no están en el
@@ -583,7 +581,9 @@ export default function NewOrder() {
               Punto de entrega en el mapa
             </CardTitle>
             <CardDescription>
-              Haz clic sobre el mapa donde se entrega el envío. Solo se aceptan puntos dentro de las zonas delimitadas.
+              Marcar el destino sobre el mapa es opcional pero recomendado: nos da
+              coordenadas exactas para el repartidor. Si no lo marcas, validaremos
+              la dirección de entrega de forma automática en el servidor.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -908,7 +908,7 @@ export default function NewOrder() {
                   <Button
                     type="submit"
                     className="bg-[#00B5E2] hover:bg-[#0096BD]"
-                    disabled={createMutation.isPending || !!zoneError || (!selectedPoint && !mapUnsupported)}
+                    disabled={createMutation.isPending || !!zoneError}
                     data-testid="button-submit-order"
                   >
                     {createMutation.isPending && (

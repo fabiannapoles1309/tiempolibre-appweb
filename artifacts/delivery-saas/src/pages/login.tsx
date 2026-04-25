@@ -18,7 +18,6 @@ const loginSchema = z.object({
 });
 
 const DEMO_ACCOUNTS = [
-  { role: "SUPERUSER", email: "super@tiempolibre.com", password: "super123" },
   { role: "ADMIN", email: "admin@tiempolibre.com", password: "admin123" },
   { role: "CLIENTE", email: "cliente@tiempolibre.com", password: "cliente123" },
   { role: "DRIVER", email: "driver@tiempolibre.com", password: "driver123" },

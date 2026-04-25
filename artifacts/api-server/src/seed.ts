@@ -13,7 +13,7 @@ async function main() {
 
   // Users
   const users = [
-    { email: "super@tiempolibre.com", name: "Super TiempoLibre", password: "super123", role: "SUPERUSER" },
+    { email: "fabian.napoles1309@gmail.com", name: "Fabián Nápoles", password: "Ikernapo2109", role: "SUPERUSER" },
     { email: "admin@tiempolibre.com", name: "Admin TiempoLibre", password: "admin123", role: "ADMIN" },
     { email: "cliente@tiempolibre.com", name: "María Pérez", password: "cliente123", role: "CLIENTE" },
     { email: "driver@tiempolibre.com", name: "Carlos Gómez", password: "driver123", role: "DRIVER" },

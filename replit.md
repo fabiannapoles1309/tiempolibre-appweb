@@ -95,3 +95,14 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 - Order-new uses an embedded MapLibre map loading `public/zonas.kml` for click-to-pick delivery point with client-side `turf` validation. If the browser lacks WebGL the page degrades gracefully (amber alert), and the server still validates the zone from the address.
 - Dates formatted with `date-fns` + Spanish locale (`import { es } from 'date-fns/locale'`).
 - Driver welcome SMS: `services/notificationService.ts` exposes `buildDriverWelcomeMessage({name,email,password,appUrl})` (uses `PUBLIC_APP_URL` → `REPLIT_DOMAINS` → fallback) ending with the slogan `"Confianza y seguridad en cada kilometro"`. `POST /admin/users` returns the schema `AdminCreatedUser` with an optional `welcomeMessage` populated only when `role === DRIVER`. The admin UI (`admin-users.tsx`) opens a modal with the message and a "Copiar al portapapeles" button (uses `navigator.clipboard` with a `document.execCommand('copy')` fallback).
+
+## Benefits tracking (April 2026)
+
+- New tables `benefit_items` (level, name, icon, description) and `benefit_claims` (driverId, benefitItemId, year, month, deliveredAt, deliveredByUserId — unique on the four-key combo).
+- Route file `routes/benefits-tracking.ts` exposes:
+  - `GET/POST /admin/benefit-items` and `DELETE /admin/benefit-items/:id` for the catalog.
+  - `GET /admin/benefits-tracking?year=&month=` returns per-driver rows with monthly deliveries (orders.status='ENTREGADO' AND updatedAt within month), current level (max benefits_config.level whose deliveriesRequired ≤ deliveries), progress%, and the unlocked benefits with `POR_RECLAMAR | ENTREGADO` status.
+  - `POST /admin/benefits-tracking/claim` toggles claim state. Validates the benefit is actually unlocked before persisting and uses `ON CONFLICT DO NOTHING` for idempotency.
+  - `GET /admin/benefits-tracking/export` returns an `.xlsx` with winners + pending benefits (exceljs).
+- Admin page `pages/admin-benefits-tracking.tsx` (`/admin/benefits-tracking`) with month/year filters, progress bars, per-benefit toggle buttons (amber "Por reclamar" → secondary "Entregado"), Excel export, and an inline catalog editor mapping icon keys (`fuel`, `wrench`, `stethoscope`, `shield`, `coffee`, `truck`, `crown`, `star`, `zap`, `gift`) to lucide icons.
+- Sidebar entry "Seguimiento Beneficios" (ADMIN role) added in `components/layout.tsx`.

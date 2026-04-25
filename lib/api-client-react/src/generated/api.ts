@@ -25,7 +25,10 @@ import type {
   AuthSession,
   AutoAssignResult,
   B2BRevenueReport,
+  BenefitItem,
+  BenefitItemInput,
   BenefitLevel,
+  BenefitsTrackingResponse,
   CashByCustomerRow,
   CashReport,
   CreateDriverBody,
@@ -39,8 +42,10 @@ import type {
   DriverPerformance,
   DriverRankingEntry,
   ErrorResponse,
+  ExportBenefitsTrackingParams,
   FinanceExportExcelParams,
   FinanceSummary,
+  GetBenefitsTrackingParams,
   GetDeliveriesReportParams,
   GetDriversReportParams,
   GetFinanceSummaryParams,
@@ -53,6 +58,8 @@ import type {
   Order,
   PutBenefitsConfigBody,
   RegisterBody,
+  SetBenefitClaim200,
+  SetBenefitClaimBody,
   SettleCashBody,
   SimpleOk,
   SubscribeBody,
@@ -2935,6 +2942,543 @@ export function useAdminCashByCustomer<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getAdminCashByCustomerQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List concrete benefit items per level (ADMIN)
+ */
+export const getListBenefitItemsUrl = () => {
+  return `/api/admin/benefit-items`;
+};
+
+export const listBenefitItems = async (
+  options?: RequestInit,
+): Promise<BenefitItem[]> => {
+  return customFetch<BenefitItem[]>(getListBenefitItemsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListBenefitItemsQueryKey = () => {
+  return [`/api/admin/benefit-items`] as const;
+};
+
+export const getListBenefitItemsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listBenefitItems>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listBenefitItems>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListBenefitItemsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listBenefitItems>>
+  > = ({ signal }) => listBenefitItems({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listBenefitItems>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListBenefitItemsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listBenefitItems>>
+>;
+export type ListBenefitItemsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List concrete benefit items per level (ADMIN)
+ */
+
+export function useListBenefitItems<
+  TData = Awaited<ReturnType<typeof listBenefitItems>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listBenefitItems>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListBenefitItemsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Create a benefit item for a level (ADMIN)
+ */
+export const getCreateBenefitItemUrl = () => {
+  return `/api/admin/benefit-items`;
+};
+
+export const createBenefitItem = async (
+  benefitItemInput: BenefitItemInput,
+  options?: RequestInit,
+): Promise<BenefitItem> => {
+  return customFetch<BenefitItem>(getCreateBenefitItemUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(benefitItemInput),
+  });
+};
+
+export const getCreateBenefitItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBenefitItem>>,
+    TError,
+    { data: BodyType<BenefitItemInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createBenefitItem>>,
+  TError,
+  { data: BodyType<BenefitItemInput> },
+  TContext
+> => {
+  const mutationKey = ["createBenefitItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createBenefitItem>>,
+    { data: BodyType<BenefitItemInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createBenefitItem(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateBenefitItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createBenefitItem>>
+>;
+export type CreateBenefitItemMutationBody = BodyType<BenefitItemInput>;
+export type CreateBenefitItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a benefit item for a level (ADMIN)
+ */
+export const useCreateBenefitItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createBenefitItem>>,
+    TError,
+    { data: BodyType<BenefitItemInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createBenefitItem>>,
+  TError,
+  { data: BodyType<BenefitItemInput> },
+  TContext
+> => {
+  return useMutation(getCreateBenefitItemMutationOptions(options));
+};
+
+/**
+ * @summary Delete a benefit item (ADMIN)
+ */
+export const getDeleteBenefitItemUrl = (id: number) => {
+  return `/api/admin/benefit-items/${id}`;
+};
+
+export const deleteBenefitItem = async (
+  id: number,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteBenefitItemUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteBenefitItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBenefitItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteBenefitItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["deleteBenefitItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteBenefitItem>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteBenefitItem(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteBenefitItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteBenefitItem>>
+>;
+
+export type DeleteBenefitItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Delete a benefit item (ADMIN)
+ */
+export const useDeleteBenefitItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBenefitItem>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof deleteBenefitItem>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getDeleteBenefitItemMutationOptions(options));
+};
+
+/**
+ * @summary Monthly benefits tracking dashboard (ADMIN)
+ */
+export const getGetBenefitsTrackingUrl = (
+  params?: GetBenefitsTrackingParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/benefits-tracking?${stringifiedParams}`
+    : `/api/admin/benefits-tracking`;
+};
+
+export const getBenefitsTracking = async (
+  params?: GetBenefitsTrackingParams,
+  options?: RequestInit,
+): Promise<BenefitsTrackingResponse> => {
+  return customFetch<BenefitsTrackingResponse>(
+    getGetBenefitsTrackingUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetBenefitsTrackingQueryKey = (
+  params?: GetBenefitsTrackingParams,
+) => {
+  return [`/api/admin/benefits-tracking`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetBenefitsTrackingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBenefitsTracking>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetBenefitsTrackingParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBenefitsTracking>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getGetBenefitsTrackingQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getBenefitsTracking>>
+  > = ({ signal }) =>
+    getBenefitsTracking(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBenefitsTracking>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetBenefitsTrackingQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBenefitsTracking>>
+>;
+export type GetBenefitsTrackingQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Monthly benefits tracking dashboard (ADMIN)
+ */
+
+export function useGetBenefitsTracking<
+  TData = Awaited<ReturnType<typeof getBenefitsTracking>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: GetBenefitsTrackingParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getBenefitsTracking>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetBenefitsTrackingQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark a benefit item as delivered or pending for a driver in a month (ADMIN)
+ */
+export const getSetBenefitClaimUrl = () => {
+  return `/api/admin/benefits-tracking/claim`;
+};
+
+export const setBenefitClaim = async (
+  setBenefitClaimBody: SetBenefitClaimBody,
+  options?: RequestInit,
+): Promise<SetBenefitClaim200> => {
+  return customFetch<SetBenefitClaim200>(getSetBenefitClaimUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(setBenefitClaimBody),
+  });
+};
+
+export const getSetBenefitClaimMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setBenefitClaim>>,
+    TError,
+    { data: BodyType<SetBenefitClaimBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setBenefitClaim>>,
+  TError,
+  { data: BodyType<SetBenefitClaimBody> },
+  TContext
+> => {
+  const mutationKey = ["setBenefitClaim"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setBenefitClaim>>,
+    { data: BodyType<SetBenefitClaimBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return setBenefitClaim(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetBenefitClaimMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setBenefitClaim>>
+>;
+export type SetBenefitClaimMutationBody = BodyType<SetBenefitClaimBody>;
+export type SetBenefitClaimMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark a benefit item as delivered or pending for a driver in a month (ADMIN)
+ */
+export const useSetBenefitClaim = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setBenefitClaim>>,
+    TError,
+    { data: BodyType<SetBenefitClaimBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof setBenefitClaim>>,
+  TError,
+  { data: BodyType<SetBenefitClaimBody> },
+  TContext
+> => {
+  return useMutation(getSetBenefitClaimMutationOptions(options));
+};
+
+/**
+ * @summary Export winning drivers and pending benefits to Excel (ADMIN)
+ */
+export const getExportBenefitsTrackingUrl = (
+  params?: ExportBenefitsTrackingParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/admin/benefits-tracking/export?${stringifiedParams}`
+    : `/api/admin/benefits-tracking/export`;
+};
+
+export const exportBenefitsTracking = async (
+  params?: ExportBenefitsTrackingParams,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getExportBenefitsTrackingUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportBenefitsTrackingQueryKey = (
+  params?: ExportBenefitsTrackingParams,
+) => {
+  return [
+    `/api/admin/benefits-tracking/export`,
+    ...(params ? [params] : []),
+  ] as const;
+};
+
+export const getExportBenefitsTrackingQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportBenefitsTracking>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ExportBenefitsTrackingParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof exportBenefitsTracking>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getExportBenefitsTrackingQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof exportBenefitsTracking>>
+  > = ({ signal }) =>
+    exportBenefitsTracking(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof exportBenefitsTracking>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ExportBenefitsTrackingQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportBenefitsTracking>>
+>;
+export type ExportBenefitsTrackingQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Export winning drivers and pending benefits to Excel (ADMIN)
+ */
+
+export function useExportBenefitsTracking<
+  TData = Awaited<ReturnType<typeof exportBenefitsTracking>>,
+  TError = ErrorType<unknown>,
+>(
+  params?: ExportBenefitsTrackingParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof exportBenefitsTracking>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getExportBenefitsTrackingQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

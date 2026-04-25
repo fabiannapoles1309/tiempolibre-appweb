@@ -32,6 +32,7 @@ const navItems: NavItem[] = [
   { title: "Envíos por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
   { title: "Cash por cliente", href: "/admin/cash-by-customer", icon: Banknote, roles: [UserRole.ADMIN] },
   { title: "Beneficios", href: "/admin/benefits-config", icon: Award, roles: [UserRole.ADMIN] },
+  { title: "Seguimiento Beneficios", href: "/admin/benefits-tracking", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
   { title: "Billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },

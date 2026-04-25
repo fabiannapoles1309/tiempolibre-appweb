@@ -8,3 +8,5 @@ export * from "./wallets";
 export * from "./incidents";
 export * from "./subscriptions";
 export * from "./benefits-config";
+export * from "./benefit-items";
+export * from "./benefit-claims";

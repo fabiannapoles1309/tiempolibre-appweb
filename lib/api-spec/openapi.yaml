@@ -731,6 +731,121 @@ paths:
                 items:
                   $ref: "#/components/schemas/CashByCustomerRow"
 
+  /admin/benefit-items:
+    get:
+      operationId: listBenefitItems
+      tags: [admin]
+      summary: List concrete benefit items per level (ADMIN)
+      responses:
+        "200":
+          description: Items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenefitItem"
+    post:
+      operationId: createBenefitItem
+      tags: [admin]
+      summary: Create a benefit item for a level (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BenefitItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenefitItem"
+  /admin/benefit-items/{id}:
+    delete:
+      operationId: deleteBenefitItem
+      tags: [admin]
+      summary: Delete a benefit item (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/benefits-tracking:
+    get:
+      operationId: getBenefitsTracking
+      tags: [admin]
+      summary: Monthly benefits tracking dashboard (ADMIN)
+      parameters:
+        - in: query
+          name: year
+          schema: { type: integer }
+        - in: query
+          name: month
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: Tracking rows for the requested period
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenefitsTrackingResponse"
+
+  /admin/benefits-tracking/claim:
+    post:
+      operationId: setBenefitClaim
+      tags: [admin]
+      summary: Mark a benefit item as delivered or pending for a driver in a month (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId: { type: integer }
+                benefitItemId: { type: integer }
+                year: { type: integer }
+                month: { type: integer, minimum: 1, maximum: 12 }
+                delivered: { type: boolean }
+              required: [driverId, benefitItemId, year, month, delivered]
+      responses:
+        "200":
+          description: Updated claim status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                required: [ok]
+
+  /admin/benefits-tracking/export:
+    get:
+      operationId: exportBenefitsTracking
+      tags: [admin]
+      summary: Export winning drivers and pending benefits to Excel (ADMIN)
+      parameters:
+        - in: query
+          name: year
+          schema: { type: integer }
+        - in: query
+          name: month
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: XLSX file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
   /admin/benefits-config:
     get:
       operationId: getBenefitsConfig
@@ -1892,3 +2007,64 @@ components:
           type: number
       required: [repartoToday, planesToday, total]
 
+
+    BenefitItem:
+      type: object
+      properties:
+        id: { type: integer }
+        level: { type: integer }
+        name: { type: string }
+        icon: { type: string }
+        description: { type: string, nullable: true }
+      required: [id, level, name, icon]
+
+    BenefitItemInput:
+      type: object
+      properties:
+        level: { type: integer, minimum: 1 }
+        name: { type: string, minLength: 1 }
+        icon: { type: string, minLength: 1 }
+        description: { type: string, nullable: true }
+      required: [level, name, icon]
+
+    BenefitsTrackingBenefit:
+      type: object
+      properties:
+        benefitItemId: { type: integer }
+        level: { type: integer }
+        name: { type: string }
+        icon: { type: string }
+        status:
+          type: string
+          enum: [POR_RECLAMAR, ENTREGADO]
+        deliveredAt: { type: string, format: date-time, nullable: true }
+      required: [benefitItemId, level, name, icon, status]
+
+    BenefitsTrackingRow:
+      type: object
+      properties:
+        driverId: { type: integer }
+        driverName: { type: string }
+        deliveries: { type: integer }
+        currentLevel: { type: integer }
+        currentLevelName: { type: string, nullable: true }
+        nextLevel: { type: integer, nullable: true }
+        nextLevelName: { type: string, nullable: true }
+        nextLevelTarget: { type: integer, nullable: true }
+        progressPct: { type: number }
+        benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/BenefitsTrackingBenefit"
+      required: [driverId, driverName, deliveries, currentLevel, progressPct, benefits]
+
+    BenefitsTrackingResponse:
+      type: object
+      properties:
+        year: { type: integer }
+        month: { type: integer }
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/BenefitsTrackingRow"
+      required: [year, month, rows]

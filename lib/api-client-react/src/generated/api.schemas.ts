@@ -668,6 +668,60 @@ export interface TodaySplit {
   total: number;
 }
 
+export interface BenefitItem {
+  id: number;
+  level: number;
+  name: string;
+  icon: string;
+  description?: string | null;
+}
+
+export interface BenefitItemInput {
+  /** @minimum 1 */
+  level: number;
+  /** @minLength 1 */
+  name: string;
+  /** @minLength 1 */
+  icon: string;
+  description?: string | null;
+}
+
+export type BenefitsTrackingBenefitStatus =
+  (typeof BenefitsTrackingBenefitStatus)[keyof typeof BenefitsTrackingBenefitStatus];
+
+export const BenefitsTrackingBenefitStatus = {
+  POR_RECLAMAR: "POR_RECLAMAR",
+  ENTREGADO: "ENTREGADO",
+} as const;
+
+export interface BenefitsTrackingBenefit {
+  benefitItemId: number;
+  level: number;
+  name: string;
+  icon: string;
+  status: BenefitsTrackingBenefitStatus;
+  deliveredAt?: string | null;
+}
+
+export interface BenefitsTrackingRow {
+  driverId: number;
+  driverName: string;
+  deliveries: number;
+  currentLevel: number;
+  currentLevelName?: string | null;
+  nextLevel?: number | null;
+  nextLevelName?: string | null;
+  nextLevelTarget?: number | null;
+  progressPct: number;
+  benefits: BenefitsTrackingBenefit[];
+}
+
+export interface BenefitsTrackingResponse {
+  year: number;
+  month: number;
+  rows: BenefitsTrackingRow[];
+}
+
 export type ListOrdersParams = {
   status?: OrderStatus;
   zone?: ZoneName;
@@ -707,6 +761,40 @@ export const FinanceExportExcelPeriod = {
   month: "month",
   year: "year",
 } as const;
+
+export type GetBenefitsTrackingParams = {
+  year?: number;
+  /**
+   * @minimum 1
+   * @maximum 12
+   */
+  month?: number;
+};
+
+export type SetBenefitClaimBody = {
+  driverId: number;
+  benefitItemId: number;
+  year: number;
+  /**
+   * @minimum 1
+   * @maximum 12
+   */
+  month: number;
+  delivered: boolean;
+};
+
+export type SetBenefitClaim200 = {
+  ok: boolean;
+};
+
+export type ExportBenefitsTrackingParams = {
+  year?: number;
+  /**
+   * @minimum 1
+   * @maximum 12
+   */
+  month?: number;
+};
 
 export type PutBenefitsConfigBody = {
   levels: BenefitLevelInput[];

@@ -832,6 +832,109 @@ export const AdminCashByCustomerResponse = zod.array(
 );
 
 /**
+ * @summary List concrete benefit items per level (ADMIN)
+ */
+export const ListBenefitItemsResponseItem = zod.object({
+  id: zod.number(),
+  level: zod.number(),
+  name: zod.string(),
+  icon: zod.string(),
+  description: zod.string().nullish(),
+});
+export const ListBenefitItemsResponse = zod.array(ListBenefitItemsResponseItem);
+
+/**
+ * @summary Create a benefit item for a level (ADMIN)
+ */
+
+export const CreateBenefitItemBody = zod.object({
+  level: zod.number().min(1),
+  name: zod.string().min(1),
+  icon: zod.string().min(1),
+  description: zod.string().nullish(),
+});
+
+/**
+ * @summary Delete a benefit item (ADMIN)
+ */
+export const DeleteBenefitItemParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+/**
+ * @summary Monthly benefits tracking dashboard (ADMIN)
+ */
+export const getBenefitsTrackingQueryMonthMax = 12;
+
+export const GetBenefitsTrackingQueryParams = zod.object({
+  year: zod.coerce.number().optional(),
+  month: zod.coerce
+    .number()
+    .min(1)
+    .max(getBenefitsTrackingQueryMonthMax)
+    .optional(),
+});
+
+export const GetBenefitsTrackingResponse = zod.object({
+  year: zod.number(),
+  month: zod.number(),
+  rows: zod.array(
+    zod.object({
+      driverId: zod.number(),
+      driverName: zod.string(),
+      deliveries: zod.number(),
+      currentLevel: zod.number(),
+      currentLevelName: zod.string().nullish(),
+      nextLevel: zod.number().nullish(),
+      nextLevelName: zod.string().nullish(),
+      nextLevelTarget: zod.number().nullish(),
+      progressPct: zod.number(),
+      benefits: zod.array(
+        zod.object({
+          benefitItemId: zod.number(),
+          level: zod.number(),
+          name: zod.string(),
+          icon: zod.string(),
+          status: zod.enum(["POR_RECLAMAR", "ENTREGADO"]),
+          deliveredAt: zod.coerce.date().nullish(),
+        }),
+      ),
+    }),
+  ),
+});
+
+/**
+ * @summary Mark a benefit item as delivered or pending for a driver in a month (ADMIN)
+ */
+export const setBenefitClaimBodyMonthMax = 12;
+
+export const SetBenefitClaimBody = zod.object({
+  driverId: zod.number(),
+  benefitItemId: zod.number(),
+  year: zod.number(),
+  month: zod.number().min(1).max(setBenefitClaimBodyMonthMax),
+  delivered: zod.boolean(),
+});
+
+export const SetBenefitClaimResponse = zod.object({
+  ok: zod.boolean(),
+});
+
+/**
+ * @summary Export winning drivers and pending benefits to Excel (ADMIN)
+ */
+export const exportBenefitsTrackingQueryMonthMax = 12;
+
+export const ExportBenefitsTrackingQueryParams = zod.object({
+  year: zod.coerce.number().optional(),
+  month: zod.coerce
+    .number()
+    .min(1)
+    .max(exportBenefitsTrackingQueryMonthMax)
+    .optional(),
+});
+
+/**
  * @summary Get configurable benefit levels for drivers (ADMIN)
  */
 export const GetBenefitsConfigResponseItem = zod.object({

@@ -17,10 +17,20 @@ A production-ready B2B last-mile delivery management platform built on the Repli
 
 - **Users** (`users`): id, email, name, password_hash, role ∈ {`ADMIN`, `CLIENTE`, `DRIVER`}.
 - **Zones** (`zones`): Norte, Sur, Este, Oeste.
-- **Drivers** (`drivers`): name, phone, vehicle, zones[] (text array), active.
+- **Drivers** (`drivers`): name, phone, vehicle, zones[], active, userId, licensePlate, circulationCard, circulationCardExpiry, status ∈ {ACTIVO, EN_ENTREGA, EN_PAUSA, INACTIVO}, cashPending (efectivo a rendir).
 - **Orders** (`orders`): customerId, pickup, delivery, zone, payment ∈ {EFECTIVO, TRANSFERENCIA, BILLETERA}, amount, status ∈ {PENDIENTE, ASIGNADO, EN_RUTA, ENTREGADO, CANCELADO}, driverId, notes.
 - **Transactions** (`transactions`): platform-wide INGRESO/GASTO ledger linked to orders.
 - **Wallet** (`wallets` + `wallet_tx`): per-user prepaid balance with TOPUP/PAGO/REEMBOLSO movements.
+- **Incidents** (`incidents`): driverId, orderId?, type ∈ {ACCIDENTE, ROBO, DEMORA, CLIENTE_AUSENTE, VEHICULO, OTRO}, description, status ∈ {ABIERTO, EN_REVISION, RESUELTO}, adminNotes.
+- **Subscriptions** (`subscriptions`): userId, tier ∈ {ESTANDAR ($15.000/35 envíos), OPTIMO ($25.000/70 envíos)}, monthlyPrice, monthlyDeliveries, usedDeliveries, periodStart, status ∈ {ACTIVA, CANCELADA, VENCIDA}.
+
+## Side-effects on order delivery
+
+When a `PATCH /api/orders/:id` transitions an order to `ENTREGADO`, the following happen atomically inside a single DB transaction:
+1. If `payment === "EFECTIVO"` and a driver is assigned, `drivers.cashPending` is incremented by the order amount.
+2. If the customer has an `ACTIVA` subscription, `usedDeliveries` is incremented by 1; if it reaches `monthlyDeliveries`, status flips to `VENCIDA`.
+
+Cash is later cleared via `POST /api/drivers/:id/cash-settle` (admin-only).
 
 ## Authentication
 
@@ -68,6 +78,8 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
   - CLIENTE: sees only their own orders (`customerId = session.userId`); only role allowed to create orders.
   - DRIVER: sees only orders assigned to them (`drivers.userId = session.userId` → `orders.driverId`).
 - UI hides ADMIN-only widgets ("Repartidores" KPI, "Pedidos por Zona" chart, zone filter on /orders) and CLIENTE-only CTAs ("Crear Nuevo Pedido") based on role.
+- Driver-only pages: `/driver/status`, `/driver/benefits`, `/driver/ranking`. Cliente-only: `/subscription`. Admin-only: `/admin/subscriptions`, `/admin/incidents`. Drivers may report incidents via `/incidents`; admins manage them via `/admin/incidents`.
+- `GET /api/drivers` is admin-only; drivers consult their own profile via `GET /api/me/driver`.
 - `lib/api-zod/src/index.ts` re-exports zod schemas only (`export * from "./generated/api"`); TS interfaces come from `@workspace/api-client-react` to avoid duplicate-symbol errors.
 - Currency formatted as ARS via `Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })`.
 - Dates formatted with `date-fns` + Spanish locale (`import { es } from 'date-fns/locale'`).

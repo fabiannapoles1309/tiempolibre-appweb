@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetFinanceSummary, GetFinanceSummaryRange, useListTransactions } from "@workspace/api-client-react";
+import { useGetFinanceSummary, GetFinanceSummaryRange, useListTransactions, useGetCashReport, useGetB2BRevenue } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -19,6 +19,8 @@ export default function Finance() {
 
   const { data: summary, isLoading: loadingSummary } = useGetFinanceSummary({ range });
   const { data: transactions, isLoading: loadingTx } = useListTransactions();
+  const { data: cashReport } = useGetCashReport();
+  const { data: b2b } = useGetB2BRevenue();
 
   const formatChartDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -170,6 +172,92 @@ export default function Finance() {
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Efectivo en mano de repartidores</CardTitle>
+            <CardDescription>
+              Total a rendir: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashPending ?? 0)}</span>
+              {" · "}Cobrado en el período: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashCollected ?? 0)}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {!cashReport || cashReport.drivers.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                No hay efectivo pendiente de rendición.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Repartidor</TableHead>
+                    <TableHead className="text-right">A rendir</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cashReport.drivers.map((d) => (
+                    <TableRow key={d.driverId}>
+                      <TableCell>{d.driverName}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatMoney(Number(d.cashPending))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recaudación B2B (suscripciones)</CardTitle>
+            <CardDescription>
+              MRR activo:{" "}
+              <span className="font-bold text-foreground">{formatMoney(b2b?.totalMrr ?? 0)}</span>{" "}
+              · Ingresos del mes:{" "}
+              <span className="font-bold text-foreground">{formatMoney(b2b?.totalRevenue ?? 0)}</span>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            {!b2b || b2b.clients.length === 0 ? (
+              <div className="p-8 text-center text-sm text-muted-foreground">
+                Aún no hay clientes suscriptos.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Plan</TableHead>
+                    <TableHead className="text-right">Pedidos del mes</TableHead>
+                    <TableHead className="text-right">Recaudación</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {b2b.clients.map((e) => (
+                    <TableRow key={e.customerId}>
+                      <TableCell>{e.customerName}</TableCell>
+                      <TableCell>
+                        {e.subscriptionTier ? (
+                          <Badge variant="secondary" className="text-xs">{e.subscriptionTier}</Badge>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">{e.ordersCount}</TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatMoney(Number(e.revenue))}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </CardContent>
         </Card>

@@ -361,6 +361,217 @@ paths:
         "204":
           description: Deleted
 
+  /drivers/ranking:
+    get:
+      operationId: getDriverRanking
+      tags: [drivers]
+      summary: Driver ranking by deliveries
+      responses:
+        "200":
+          description: Ranking
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DriverRankingEntry"
+
+  /drivers/{id}/cash-settle:
+    post:
+      operationId: settleDriverCash
+      tags: [drivers]
+      summary: Mark cash collected by a driver as settled (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettleCashBody"
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /me/driver:
+    get:
+      operationId: getMyDriver
+      tags: [drivers]
+      summary: Driver record of the authenticated DRIVER user
+      responses:
+        "200":
+          description: Driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /me/driver/status:
+    patch:
+      operationId: updateMyDriverStatus
+      tags: [drivers]
+      summary: Update own operational status (DRIVER only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDriverStatusBody"
+      responses:
+        "200":
+          description: Driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  # ============== INCIDENTS ==============
+  /incidents:
+    get:
+      operationId: listIncidents
+      tags: [incidents]
+      summary: List incidents (ADMIN sees all, DRIVER sees own)
+      responses:
+        "200":
+          description: Incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Incident"
+    post:
+      operationId: createIncident
+      tags: [incidents]
+      summary: Report a new incident (DRIVER)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIncidentBody"
+      responses:
+        "201":
+          description: Incident created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  /incidents/{id}:
+    patch:
+      operationId: updateIncident
+      tags: [incidents]
+      summary: Update an incident status (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIncidentBody"
+      responses:
+        "200":
+          description: Incident
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  # ============== SUBSCRIPTIONS ==============
+  /me/subscription:
+    get:
+      operationId: getMySubscription
+      tags: [subscriptions]
+      summary: Subscription of the authenticated CLIENTE
+      responses:
+        "200":
+          description: Subscription wrapper
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MySubscriptionResponse"
+
+  /subscriptions:
+    get:
+      operationId: listSubscriptions
+      tags: [subscriptions]
+      summary: List all subscriptions (ADMIN)
+      responses:
+        "200":
+          description: Subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscription"
+
+  /subscriptions/subscribe:
+    post:
+      operationId: subscribe
+      tags: [subscriptions]
+      summary: Subscribe or change tier (CLIENTE)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscribeBody"
+      responses:
+        "200":
+          description: Active subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  # ============== ADMIN FINANCE EXTRAS ==============
+  /finance/cash-report:
+    get:
+      operationId: getCashReport
+      tags: [finance]
+      summary: Cash collected vs settled per driver (ADMIN)
+      responses:
+        "200":
+          description: Cash report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CashReport"
+
+  /finance/b2b-revenue:
+    get:
+      operationId: getB2BRevenue
+      tags: [finance]
+      summary: Revenue and MRR by client (ADMIN)
+      responses:
+        "200":
+          description: B2B revenue report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/B2BRevenueReport"
+
   # ============== ZONES ==============
   /zones:
     get:
@@ -631,6 +842,10 @@ components:
           $ref: "#/components/schemas/ZoneName"
       required: [id, name]
 
+    DriverStatus:
+      type: string
+      enum: [ACTIVO, EN_ENTREGA, EN_PAUSA, INACTIVO]
+
     Driver:
       type: object
       properties:
@@ -650,10 +865,34 @@ components:
             $ref: "#/components/schemas/ZoneName"
         active:
           type: boolean
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+        circulationCardExpiry:
+          type: ["string", "null"]
+          format: date
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+        cashPending:
+          type: number
         createdAt:
           type: string
           format: date-time
-      required: [id, userId, name, phone, vehicle, zones, active, createdAt]
+      required:
+        - id
+        - userId
+        - name
+        - phone
+        - vehicle
+        - zones
+        - active
+        - licensePlate
+        - circulationCard
+        - circulationCardExpiry
+        - status
+        - cashPending
+        - createdAt
 
     CreateDriverBody:
       type: object
@@ -674,6 +913,13 @@ components:
           minItems: 1
         active:
           type: boolean
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+        circulationCardExpiry:
+          type: ["string", "null"]
+          format: date
       required: [name, phone, vehicle, zones]
 
     UpdateDriverBody:
@@ -691,6 +937,209 @@ components:
             $ref: "#/components/schemas/ZoneName"
         active:
           type: boolean
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+        circulationCardExpiry:
+          type: ["string", "null"]
+          format: date
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+
+    UpdateDriverStatusBody:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+      required: [status]
+
+    DriverRankingEntry:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        driverName:
+          type: string
+        deliveries:
+          type: integer
+        revenue:
+          type: number
+        rank:
+          type: integer
+      required: [driverId, driverName, deliveries, revenue, rank]
+
+    IncidentType:
+      type: string
+      enum: [ACCIDENTE, ROBO, DEMORA, CLIENTE_AUSENTE, VEHICULO, OTRO]
+
+    IncidentStatus:
+      type: string
+      enum: [ABIERTO, EN_REVISION, RESUELTO]
+
+    Incident:
+      type: object
+      properties:
+        id:
+          type: integer
+        driverId:
+          type: integer
+        driverName:
+          type: string
+        orderId:
+          type: ["integer", "null"]
+        type:
+          $ref: "#/components/schemas/IncidentType"
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/IncidentStatus"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, driverId, driverName, orderId, type, description, status, createdAt]
+
+    CreateIncidentBody:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/IncidentType"
+        description:
+          type: string
+          minLength: 1
+        orderId:
+          type: ["integer", "null"]
+      required: [type, description]
+
+    UpdateIncidentBody:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/IncidentStatus"
+      required: [status]
+
+    SettleCashBody:
+      type: object
+      properties:
+        amount:
+          type: number
+          exclusiveMinimum: 0
+      required: [amount]
+
+    SubscriptionTier:
+      type: string
+      enum: [ESTANDAR, OPTIMO]
+
+    SubscriptionStatus:
+      type: string
+      enum: [ACTIVA, CANCELADA, VENCIDA]
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        tier:
+          $ref: "#/components/schemas/SubscriptionTier"
+        monthlyPrice:
+          type: number
+        monthlyDeliveries:
+          type: integer
+        usedDeliveries:
+          type: integer
+        remainingDeliveries:
+          type: integer
+        periodStart:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/SubscriptionStatus"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - userName
+        - tier
+        - monthlyPrice
+        - monthlyDeliveries
+        - usedDeliveries
+        - remainingDeliveries
+        - periodStart
+        - status
+        - createdAt
+
+    SubscribeBody:
+      type: object
+      properties:
+        tier:
+          $ref: "#/components/schemas/SubscriptionTier"
+      required: [tier]
+
+    MySubscriptionResponse:
+      type: object
+      properties:
+        subscription:
+          oneOf:
+            - $ref: "#/components/schemas/Subscription"
+            - type: "null"
+      required: [subscription]
+
+    CashReport:
+      type: object
+      properties:
+        totalCashPending:
+          type: number
+        totalCashCollected:
+          type: number
+        drivers:
+          type: array
+          items:
+            type: object
+            properties:
+              driverId:
+                type: integer
+              driverName:
+                type: string
+              cashPending:
+                type: number
+            required: [driverId, driverName, cashPending]
+      required: [totalCashPending, totalCashCollected, drivers]
+
+    B2BRevenueEntry:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        ordersCount:
+          type: integer
+        revenue:
+          type: number
+        subscriptionTier:
+          oneOf:
+            - $ref: "#/components/schemas/SubscriptionTier"
+            - type: "null"
+      required: [customerId, customerName, ordersCount, revenue, subscriptionTier]
+
+    B2BRevenueReport:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+        totalMrr:
+          type: number
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/B2BRevenueEntry"
+      required: [totalRevenue, totalMrr, clients]
 
     Order:
       type: object

@@ -20,27 +20,38 @@ import type {
   AssignManualBody,
   AuthSession,
   AutoAssignResult,
+  B2BRevenueReport,
+  CashReport,
   CreateDriverBody,
+  CreateIncidentBody,
   CreateOrderBody,
   DashboardData,
   DeliveriesPoint,
   Driver,
   DriverPerformance,
+  DriverRankingEntry,
   ErrorResponse,
   FinanceSummary,
   GetDeliveriesReportParams,
   GetDriversReportParams,
   GetFinanceSummaryParams,
   HealthStatus,
+  Incident,
   ListOrdersParams,
   LoginBody,
   MeResponse,
+  MySubscriptionResponse,
   Order,
   RegisterBody,
+  SettleCashBody,
   SimpleOk,
+  SubscribeBody,
+  Subscription,
   TopUpBody,
   Transaction,
   UpdateDriverBody,
+  UpdateDriverStatusBody,
+  UpdateIncidentBody,
   UpdateOrderBody,
   Wallet,
   WalletTx,
@@ -1295,6 +1306,961 @@ export const useDeleteDriver = <
 > => {
   return useMutation(getDeleteDriverMutationOptions(options));
 };
+
+/**
+ * @summary Driver ranking by deliveries
+ */
+export const getGetDriverRankingUrl = () => {
+  return `/api/drivers/ranking`;
+};
+
+export const getDriverRanking = async (
+  options?: RequestInit,
+): Promise<DriverRankingEntry[]> => {
+  return customFetch<DriverRankingEntry[]>(getGetDriverRankingUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDriverRankingQueryKey = () => {
+  return [`/api/drivers/ranking`] as const;
+};
+
+export const getGetDriverRankingQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDriverRanking>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriverRanking>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDriverRankingQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getDriverRanking>>
+  > = ({ signal }) => getDriverRanking({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDriverRanking>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetDriverRankingQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDriverRanking>>
+>;
+export type GetDriverRankingQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Driver ranking by deliveries
+ */
+
+export function useGetDriverRanking<
+  TData = Awaited<ReturnType<typeof getDriverRanking>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getDriverRanking>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetDriverRankingQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Mark cash collected by a driver as settled (admin only)
+ */
+export const getSettleDriverCashUrl = (id: number) => {
+  return `/api/drivers/${id}/cash-settle`;
+};
+
+export const settleDriverCash = async (
+  id: number,
+  settleCashBody: SettleCashBody,
+  options?: RequestInit,
+): Promise<Driver> => {
+  return customFetch<Driver>(getSettleDriverCashUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(settleCashBody),
+  });
+};
+
+export const getSettleDriverCashMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settleDriverCash>>,
+    TError,
+    { id: number; data: BodyType<SettleCashBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof settleDriverCash>>,
+  TError,
+  { id: number; data: BodyType<SettleCashBody> },
+  TContext
+> => {
+  const mutationKey = ["settleDriverCash"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof settleDriverCash>>,
+    { id: number; data: BodyType<SettleCashBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return settleDriverCash(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SettleDriverCashMutationResult = NonNullable<
+  Awaited<ReturnType<typeof settleDriverCash>>
+>;
+export type SettleDriverCashMutationBody = BodyType<SettleCashBody>;
+export type SettleDriverCashMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Mark cash collected by a driver as settled (admin only)
+ */
+export const useSettleDriverCash = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof settleDriverCash>>,
+    TError,
+    { id: number; data: BodyType<SettleCashBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof settleDriverCash>>,
+  TError,
+  { id: number; data: BodyType<SettleCashBody> },
+  TContext
+> => {
+  return useMutation(getSettleDriverCashMutationOptions(options));
+};
+
+/**
+ * @summary Driver record of the authenticated DRIVER user
+ */
+export const getGetMyDriverUrl = () => {
+  return `/api/me/driver`;
+};
+
+export const getMyDriver = async (options?: RequestInit): Promise<Driver> => {
+  return customFetch<Driver>(getGetMyDriverUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyDriverQueryKey = () => {
+  return [`/api/me/driver`] as const;
+};
+
+export const getGetMyDriverQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyDriver>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyDriver>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyDriverQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMyDriver>>> = ({
+    signal,
+  }) => getMyDriver({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyDriver>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyDriverQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyDriver>>
+>;
+export type GetMyDriverQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Driver record of the authenticated DRIVER user
+ */
+
+export function useGetMyDriver<
+  TData = Awaited<ReturnType<typeof getMyDriver>>,
+  TError = ErrorType<ErrorResponse>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyDriver>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyDriverQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update own operational status (DRIVER only)
+ */
+export const getUpdateMyDriverStatusUrl = () => {
+  return `/api/me/driver/status`;
+};
+
+export const updateMyDriverStatus = async (
+  updateDriverStatusBody: UpdateDriverStatusBody,
+  options?: RequestInit,
+): Promise<Driver> => {
+  return customFetch<Driver>(getUpdateMyDriverStatusUrl(), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateDriverStatusBody),
+  });
+};
+
+export const getUpdateMyDriverStatusMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyDriverStatus>>,
+    TError,
+    { data: BodyType<UpdateDriverStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyDriverStatus>>,
+  TError,
+  { data: BodyType<UpdateDriverStatusBody> },
+  TContext
+> => {
+  const mutationKey = ["updateMyDriverStatus"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyDriverStatus>>,
+    { data: BodyType<UpdateDriverStatusBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMyDriverStatus(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMyDriverStatusMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMyDriverStatus>>
+>;
+export type UpdateMyDriverStatusMutationBody = BodyType<UpdateDriverStatusBody>;
+export type UpdateMyDriverStatusMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update own operational status (DRIVER only)
+ */
+export const useUpdateMyDriverStatus = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyDriverStatus>>,
+    TError,
+    { data: BodyType<UpdateDriverStatusBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyDriverStatus>>,
+  TError,
+  { data: BodyType<UpdateDriverStatusBody> },
+  TContext
+> => {
+  return useMutation(getUpdateMyDriverStatusMutationOptions(options));
+};
+
+/**
+ * @summary List incidents (ADMIN sees all, DRIVER sees own)
+ */
+export const getListIncidentsUrl = () => {
+  return `/api/incidents`;
+};
+
+export const listIncidents = async (
+  options?: RequestInit,
+): Promise<Incident[]> => {
+  return customFetch<Incident[]>(getListIncidentsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListIncidentsQueryKey = () => {
+  return [`/api/incidents`] as const;
+};
+
+export const getListIncidentsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listIncidents>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listIncidents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListIncidentsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listIncidents>>> = ({
+    signal,
+  }) => listIncidents({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listIncidents>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListIncidentsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listIncidents>>
+>;
+export type ListIncidentsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List incidents (ADMIN sees all, DRIVER sees own)
+ */
+
+export function useListIncidents<
+  TData = Awaited<ReturnType<typeof listIncidents>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listIncidents>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListIncidentsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Report a new incident (DRIVER)
+ */
+export const getCreateIncidentUrl = () => {
+  return `/api/incidents`;
+};
+
+export const createIncident = async (
+  createIncidentBody: CreateIncidentBody,
+  options?: RequestInit,
+): Promise<Incident> => {
+  return customFetch<Incident>(getCreateIncidentUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createIncidentBody),
+  });
+};
+
+export const getCreateIncidentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createIncident>>,
+    TError,
+    { data: BodyType<CreateIncidentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createIncident>>,
+  TError,
+  { data: BodyType<CreateIncidentBody> },
+  TContext
+> => {
+  const mutationKey = ["createIncident"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createIncident>>,
+    { data: BodyType<CreateIncidentBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createIncident(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateIncidentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createIncident>>
+>;
+export type CreateIncidentMutationBody = BodyType<CreateIncidentBody>;
+export type CreateIncidentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Report a new incident (DRIVER)
+ */
+export const useCreateIncident = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createIncident>>,
+    TError,
+    { data: BodyType<CreateIncidentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createIncident>>,
+  TError,
+  { data: BodyType<CreateIncidentBody> },
+  TContext
+> => {
+  return useMutation(getCreateIncidentMutationOptions(options));
+};
+
+/**
+ * @summary Update an incident status (ADMIN)
+ */
+export const getUpdateIncidentUrl = (id: number) => {
+  return `/api/incidents/${id}`;
+};
+
+export const updateIncident = async (
+  id: number,
+  updateIncidentBody: UpdateIncidentBody,
+  options?: RequestInit,
+): Promise<Incident> => {
+  return customFetch<Incident>(getUpdateIncidentUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateIncidentBody),
+  });
+};
+
+export const getUpdateIncidentMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateIncident>>,
+    TError,
+    { id: number; data: BodyType<UpdateIncidentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateIncident>>,
+  TError,
+  { id: number; data: BodyType<UpdateIncidentBody> },
+  TContext
+> => {
+  const mutationKey = ["updateIncident"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateIncident>>,
+    { id: number; data: BodyType<UpdateIncidentBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateIncident(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateIncidentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateIncident>>
+>;
+export type UpdateIncidentMutationBody = BodyType<UpdateIncidentBody>;
+export type UpdateIncidentMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update an incident status (ADMIN)
+ */
+export const useUpdateIncident = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateIncident>>,
+    TError,
+    { id: number; data: BodyType<UpdateIncidentBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof updateIncident>>,
+  TError,
+  { id: number; data: BodyType<UpdateIncidentBody> },
+  TContext
+> => {
+  return useMutation(getUpdateIncidentMutationOptions(options));
+};
+
+/**
+ * @summary Subscription of the authenticated CLIENTE
+ */
+export const getGetMySubscriptionUrl = () => {
+  return `/api/me/subscription`;
+};
+
+export const getMySubscription = async (
+  options?: RequestInit,
+): Promise<MySubscriptionResponse> => {
+  return customFetch<MySubscriptionResponse>(getGetMySubscriptionUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMySubscriptionQueryKey = () => {
+  return [`/api/me/subscription`] as const;
+};
+
+export const getGetMySubscriptionQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMySubscription>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMySubscription>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMySubscriptionQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMySubscription>>
+  > = ({ signal }) => getMySubscription({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMySubscription>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMySubscriptionQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMySubscription>>
+>;
+export type GetMySubscriptionQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Subscription of the authenticated CLIENTE
+ */
+
+export function useGetMySubscription<
+  TData = Awaited<ReturnType<typeof getMySubscription>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMySubscription>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMySubscriptionQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List all subscriptions (ADMIN)
+ */
+export const getListSubscriptionsUrl = () => {
+  return `/api/subscriptions`;
+};
+
+export const listSubscriptions = async (
+  options?: RequestInit,
+): Promise<Subscription[]> => {
+  return customFetch<Subscription[]>(getListSubscriptionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListSubscriptionsQueryKey = () => {
+  return [`/api/subscriptions`] as const;
+};
+
+export const getListSubscriptionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listSubscriptions>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSubscriptions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListSubscriptionsQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listSubscriptions>>
+  > = ({ signal }) => listSubscriptions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listSubscriptions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListSubscriptionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listSubscriptions>>
+>;
+export type ListSubscriptionsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all subscriptions (ADMIN)
+ */
+
+export function useListSubscriptions<
+  TData = Awaited<ReturnType<typeof listSubscriptions>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listSubscriptions>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListSubscriptionsQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Subscribe or change tier (CLIENTE)
+ */
+export const getSubscribeUrl = () => {
+  return `/api/subscriptions/subscribe`;
+};
+
+export const subscribe = async (
+  subscribeBody: SubscribeBody,
+  options?: RequestInit,
+): Promise<Subscription> => {
+  return customFetch<Subscription>(getSubscribeUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(subscribeBody),
+  });
+};
+
+export const getSubscribeMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof subscribe>>,
+    TError,
+    { data: BodyType<SubscribeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof subscribe>>,
+  TError,
+  { data: BodyType<SubscribeBody> },
+  TContext
+> => {
+  const mutationKey = ["subscribe"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof subscribe>>,
+    { data: BodyType<SubscribeBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return subscribe(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SubscribeMutationResult = NonNullable<
+  Awaited<ReturnType<typeof subscribe>>
+>;
+export type SubscribeMutationBody = BodyType<SubscribeBody>;
+export type SubscribeMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Subscribe or change tier (CLIENTE)
+ */
+export const useSubscribe = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof subscribe>>,
+    TError,
+    { data: BodyType<SubscribeBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof subscribe>>,
+  TError,
+  { data: BodyType<SubscribeBody> },
+  TContext
+> => {
+  return useMutation(getSubscribeMutationOptions(options));
+};
+
+/**
+ * @summary Cash collected vs settled per driver (ADMIN)
+ */
+export const getGetCashReportUrl = () => {
+  return `/api/finance/cash-report`;
+};
+
+export const getCashReport = async (
+  options?: RequestInit,
+): Promise<CashReport> => {
+  return customFetch<CashReport>(getGetCashReportUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCashReportQueryKey = () => {
+  return [`/api/finance/cash-report`] as const;
+};
+
+export const getGetCashReportQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCashReport>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCashReport>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCashReportQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCashReport>>> = ({
+    signal,
+  }) => getCashReport({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCashReport>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetCashReportQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCashReport>>
+>;
+export type GetCashReportQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Cash collected vs settled per driver (ADMIN)
+ */
+
+export function useGetCashReport<
+  TData = Awaited<ReturnType<typeof getCashReport>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getCashReport>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCashReportQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Revenue and MRR by client (ADMIN)
+ */
+export const getGetB2BRevenueUrl = () => {
+  return `/api/finance/b2b-revenue`;
+};
+
+export const getB2BRevenue = async (
+  options?: RequestInit,
+): Promise<B2BRevenueReport> => {
+  return customFetch<B2BRevenueReport>(getGetB2BRevenueUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetB2BRevenueQueryKey = () => {
+  return [`/api/finance/b2b-revenue`] as const;
+};
+
+export const getGetB2BRevenueQueryOptions = <
+  TData = Awaited<ReturnType<typeof getB2BRevenue>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getB2BRevenue>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetB2BRevenueQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getB2BRevenue>>> = ({
+    signal,
+  }) => getB2BRevenue({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getB2BRevenue>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetB2BRevenueQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getB2BRevenue>>
+>;
+export type GetB2BRevenueQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Revenue and MRR by client (ADMIN)
+ */
+
+export function useGetB2BRevenue<
+  TData = Awaited<ReturnType<typeof getB2BRevenue>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getB2BRevenue>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetB2BRevenueQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary List delivery zones

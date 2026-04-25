@@ -48,11 +48,11 @@ export default defineConfig({
       },
     },
     output: {
-      workspace: apiZodSrc,
+      // Sin `workspace`: orval no toca lib/api-zod/src/index.ts (que escribimos a mano).
+      // Solo regenera el archivo de schemas dentro de `generated/`.
+      target: path.resolve(apiZodSrc, "generated", "api.ts"),
       client: "zod",
-      target: "generated",
-      schemas: { path: "generated/types", type: "typescript" },
-      mode: "split",
+      mode: "single",
       clean: true,
       prettier: true,
       override: {

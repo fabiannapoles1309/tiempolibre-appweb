@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useListDrivers, useCreateDriver, useUpdateDriver, useDeleteDriver, getListDriversQueryKey, ZoneName } from "@workspace/api-client-react";
+import { useListDrivers, useCreateDriver, useUpdateDriver, useDeleteDriver, useSettleDriverCash, getListDriversQueryKey, ZoneName } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,6 +24,9 @@ const driverSchema = z.object({
   vehicle: z.string().min(1, "El vehículo es requerido"),
   zones: z.array(z.nativeEnum(ZoneName)).min(1, "Selecciona al menos una zona"),
   active: z.boolean().default(true),
+  licensePlate: z.string().optional(),
+  circulationCard: z.string().optional(),
+  circulationCardExpiry: z.string().optional(),
 });
 
 export default function Drivers() {
@@ -37,6 +40,7 @@ export default function Drivers() {
   const createDriver = useCreateDriver();
   const updateDriver = useUpdateDriver();
   const deleteDriver = useDeleteDriver();
+  const settleCash = useSettleDriverCash();
 
   const form = useForm<z.infer<typeof driverSchema>>({
     resolver: zodResolver(driverSchema),
@@ -46,12 +50,24 @@ export default function Drivers() {
       vehicle: "",
       zones: [],
       active: true,
+      licensePlate: "",
+      circulationCard: "",
+      circulationCardExpiry: "",
     },
   });
 
   const handleOpenCreate = () => {
     setEditingDriver(null);
-    form.reset({ name: "", phone: "", vehicle: "", zones: [], active: true });
+    form.reset({
+      name: "",
+      phone: "",
+      vehicle: "",
+      zones: [],
+      active: true,
+      licensePlate: "",
+      circulationCard: "",
+      circulationCardExpiry: "",
+    });
     setIsCreateOpen(true);
   };
 
@@ -63,23 +79,44 @@ export default function Drivers() {
       vehicle: driver.vehicle,
       zones: driver.zones,
       active: driver.active,
+      licensePlate: driver.licensePlate ?? "",
+      circulationCard: driver.circulationCard ?? "",
+      circulationCardExpiry: driver.circulationCardExpiry ?? "",
     });
     setIsCreateOpen(true);
   };
 
   const onSubmit = async (data: z.infer<typeof driverSchema>) => {
     try {
+      const payload = {
+        ...data,
+        licensePlate: data.licensePlate?.trim() ? data.licensePlate.trim() : undefined,
+        circulationCard: data.circulationCard?.trim() ? data.circulationCard.trim() : undefined,
+        circulationCardExpiry: data.circulationCardExpiry?.trim()
+          ? data.circulationCardExpiry.trim()
+          : undefined,
+      };
       if (editingDriver) {
-        await updateDriver.mutateAsync({ id: editingDriver, data });
+        await updateDriver.mutateAsync({ id: editingDriver, data: payload as any });
         toast.success("Repartidor actualizado correctamente");
       } else {
-        await createDriver.mutateAsync({ data });
+        await createDriver.mutateAsync({ data: payload as any });
         toast.success("Repartidor creado correctamente");
       }
       queryClient.invalidateQueries({ queryKey: getListDriversQueryKey() });
       setIsCreateOpen(false);
     } catch (error: any) {
       toast.error(error?.data?.error || "Error al guardar repartidor");
+    }
+  };
+
+  const handleSettle = async (driverId: number, amount: number) => {
+    try {
+      await settleCash.mutateAsync({ id: driverId, data: { amount } });
+      toast.success("Liquidación registrada");
+      queryClient.invalidateQueries({ queryKey: getListDriversQueryKey() });
+    } catch {
+      toast.error("No se pudo liquidar");
     }
   };
 
@@ -194,6 +231,47 @@ export default function Drivers() {
                     </FormItem>
                   )}
                 />
+                <div className="grid grid-cols-2 gap-3">
+                  <FormField
+                    control={form.control}
+                    name="licensePlate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Patente</FormLabel>
+                        <FormControl>
+                          <Input placeholder="AB123CD" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="circulationCard"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cédula de circulación</FormLabel>
+                        <FormControl>
+                          <Input placeholder="N° de cédula" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={form.control}
+                  name="circulationCardExpiry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Vencimiento cédula</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <FormField
                   control={form.control}
                   name="active"
@@ -258,9 +336,10 @@ export default function Drivers() {
                 <TableRow>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Teléfono</TableHead>
-                  <TableHead>Vehículo</TableHead>
+                  <TableHead>Vehículo / Patente</TableHead>
                   <TableHead>Zonas</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead className="text-right">Efectivo a rendir</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -269,7 +348,12 @@ export default function Drivers() {
                   <TableRow key={driver.id}>
                     <TableCell className="font-medium">{driver.name}</TableCell>
                     <TableCell>{driver.phone}</TableCell>
-                    <TableCell>{driver.vehicle}</TableCell>
+                    <TableCell>
+                      <div>{driver.vehicle}</div>
+                      {driver.licensePlate ? (
+                        <div className="text-xs text-muted-foreground">Patente: {driver.licensePlate}</div>
+                      ) : null}
+                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {driver.zones.map(zone => (
@@ -283,6 +367,23 @@ export default function Drivers() {
                       ) : (
                         <Badge variant="outline" className="bg-muted text-muted-foreground"><XCircle className="mr-1 h-3 w-3" /> Inactivo</Badge>
                       )}
+                      {driver.status ? (
+                        <div className="text-[10px] text-muted-foreground mt-1">{driver.status}</div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="font-semibold">$ {Number(driver.cashPending ?? 0).toLocaleString("es-AR")}</div>
+                      {Number(driver.cashPending ?? 0) > 0 ? (
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="h-auto p-0 text-xs"
+                          onClick={() => handleSettle(driver.id, Number(driver.cashPending))}
+                          disabled={settleCash.isPending}
+                        >
+                          Liquidar todo
+                        </Button>
+                      ) : null}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(driver)}>

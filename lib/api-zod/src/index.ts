@@ -1,3 +1,3 @@
-// Only re-export zod schemas. TS types and enums live in @workspace/api-client-react
-// to avoid duplicate symbols between generated/api (zod) and generated/types (TS).
+// Re-export Zod schemas autogenerados desde el spec OpenAPI.
+// Los TS types/enums se importan desde @workspace/api-client-react.
 export * from "./generated/api";

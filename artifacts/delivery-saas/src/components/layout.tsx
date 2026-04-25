@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign, Map as MapIcon } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -22,9 +22,15 @@ const navItems: NavItem[] = [
   { title: "Mapa de zonas", href: "/map", icon: MapIcon, roles: [UserRole.ADMIN] },
   { title: "Repartidores", href: "/drivers", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Mis entregas", href: "/orders", icon: Truck, roles: [UserRole.DRIVER] },
+  { title: "Mis beneficios", href: "/driver/benefits", icon: Gift, roles: [UserRole.DRIVER] },
+  { title: "Ranking", href: "/driver/ranking", icon: Trophy, roles: [UserRole.DRIVER] },
+  { title: "Incidentes", href: "/driver/incidents", icon: AlertTriangle, roles: [UserRole.DRIVER] },
   { title: "Reportes", href: "/reports", icon: FileText, roles: [UserRole.ADMIN] },
   { title: "Finanzas", href: "/finance", icon: DollarSign, roles: [UserRole.ADMIN] },
+  { title: "Suscripciones", href: "/admin/subscriptions", icon: Crown, roles: [UserRole.ADMIN] },
+  { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
   { title: "Billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },
+  { title: "Mi suscripción", href: "/subscription", icon: Crown, roles: [UserRole.CLIENTE] },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -52,8 +58,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      <aside className="w-64 flex-shrink-0 border-r border-border bg-card flex flex-col">
-        <div className="h-20 flex items-center px-5 border-b border-border">
+      <aside className="w-64 flex-shrink-0 flex flex-col bg-[#00B5E2] text-white">
+        <div className="h-20 flex items-center px-5 bg-white border-b border-[#0096BD]">
           <Logo variant="wordmark" heightPx={36} />
         </div>
         <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
@@ -63,7 +69,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
             return (
               <Link key={item.href} href={item.href}>
                 <div className={`flex items-center gap-3 px-3 py-2.5 rounded-md transition-colors cursor-pointer ${
-                  isActive ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                  isActive
+                    ? "bg-white text-[#0096BD] font-semibold shadow-sm"
+                    : "text-white/90 hover:bg-white/15 hover:text-white"
                 }`}>
                   <Icon className="w-5 h-5" />
                   <span>{item.title}</span>
@@ -72,15 +80,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
             );
           })}
         </div>
-        <div className="p-4 border-t border-border">
+        <div className="p-4 border-t border-white/20">
           <div className="mb-4">
-            <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-primary/20 text-primary">
+            <p className="text-sm font-medium text-white truncate">{user.name}</p>
+            <p className="text-xs text-white/80 truncate">{user.email}</p>
+            <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#0096BD]">
               {user.role}
             </span>
           </div>
-          <Button variant="outline" className="w-full justify-start text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={handleLogout} disabled={logoutMutation.isPending}>
+          <Button
+            variant="outline"
+            className="w-full justify-start bg-transparent border-white/40 text-white hover:bg-white hover:text-destructive hover:border-white"
+            onClick={handleLogout}
+            disabled={logoutMutation.isPending}
+          >
             {logoutMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LogOut className="w-4 h-4 mr-2" />}
             Cerrar sesión
           </Button>

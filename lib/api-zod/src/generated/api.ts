@@ -268,6 +268,11 @@ export const ListDriversResponseItem = zod.object({
   vehicle: zod.string(),
   zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
   active: zod.boolean(),
+  licensePlate: zod.string().nullable(),
+  circulationCard: zod.string().nullable(),
+  circulationCardExpiry: zod.coerce.date().nullable(),
+  status: zod.enum(["ACTIVO", "EN_ENTREGA", "EN_PAUSA", "INACTIVO"]),
+  cashPending: zod.number(),
   createdAt: zod.coerce.date(),
 });
 export const ListDriversResponse = zod.array(ListDriversResponseItem);
@@ -282,6 +287,9 @@ export const CreateDriverBody = zod.object({
   vehicle: zod.string().min(1),
   zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])).min(1),
   active: zod.boolean().optional(),
+  licensePlate: zod.string().nullish(),
+  circulationCard: zod.string().nullish(),
+  circulationCardExpiry: zod.coerce.date().nullish(),
 });
 
 /**
@@ -299,6 +307,10 @@ export const UpdateDriverBody = zod.object({
     .array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]))
     .optional(),
   active: zod.boolean().optional(),
+  licensePlate: zod.string().nullish(),
+  circulationCard: zod.string().nullish(),
+  circulationCardExpiry: zod.coerce.date().nullish(),
+  status: zod.enum(["ACTIVO", "EN_ENTREGA", "EN_PAUSA", "INACTIVO"]).optional(),
 });
 
 export const UpdateDriverResponse = zod.object({
@@ -309,6 +321,11 @@ export const UpdateDriverResponse = zod.object({
   vehicle: zod.string(),
   zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
   active: zod.boolean(),
+  licensePlate: zod.string().nullable(),
+  circulationCard: zod.string().nullable(),
+  circulationCardExpiry: zod.coerce.date().nullable(),
+  status: zod.enum(["ACTIVO", "EN_ENTREGA", "EN_PAUSA", "INACTIVO"]),
+  cashPending: zod.number(),
   createdAt: zod.coerce.date(),
 });
 
@@ -317,6 +334,255 @@ export const UpdateDriverResponse = zod.object({
  */
 export const DeleteDriverParams = zod.object({
   id: zod.coerce.number(),
+});
+
+/**
+ * @summary Driver ranking by deliveries
+ */
+export const GetDriverRankingResponseItem = zod.object({
+  driverId: zod.number(),
+  driverName: zod.string(),
+  deliveries: zod.number(),
+  revenue: zod.number(),
+  rank: zod.number(),
+});
+export const GetDriverRankingResponse = zod.array(GetDriverRankingResponseItem);
+
+/**
+ * @summary Mark cash collected by a driver as settled (admin only)
+ */
+export const SettleDriverCashParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const settleDriverCashBodyAmountExclusiveMin = 0;
+
+export const SettleDriverCashBody = zod.object({
+  amount: zod.number().gt(settleDriverCashBodyAmountExclusiveMin),
+});
+
+export const SettleDriverCashResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number().nullable(),
+  name: zod.string(),
+  phone: zod.string(),
+  vehicle: zod.string(),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  active: zod.boolean(),
+  licensePlate: zod.string().nullable(),
+  circulationCard: zod.string().nullable(),
+  circulationCardExpiry: zod.coerce.date().nullable(),
+  status: zod.enum(["ACTIVO", "EN_ENTREGA", "EN_PAUSA", "INACTIVO"]),
+  cashPending: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Driver record of the authenticated DRIVER user
+ */
+export const GetMyDriverResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number().nullable(),
+  name: zod.string(),
+  phone: zod.string(),
+  vehicle: zod.string(),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  active: zod.boolean(),
+  licensePlate: zod.string().nullable(),
+  circulationCard: zod.string().nullable(),
+  circulationCardExpiry: zod.coerce.date().nullable(),
+  status: zod.enum(["ACTIVO", "EN_ENTREGA", "EN_PAUSA", "INACTIVO"]),
+  cashPending: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Update own operational status (DRIVER only)
+ */
+export const UpdateMyDriverStatusBody = zod.object({
+  status: zod.enum(["ACTIVO", "EN_ENTREGA", "EN_PAUSA", "INACTIVO"]),
+});
+
+export const UpdateMyDriverStatusResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number().nullable(),
+  name: zod.string(),
+  phone: zod.string(),
+  vehicle: zod.string(),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  active: zod.boolean(),
+  licensePlate: zod.string().nullable(),
+  circulationCard: zod.string().nullable(),
+  circulationCardExpiry: zod.coerce.date().nullable(),
+  status: zod.enum(["ACTIVO", "EN_ENTREGA", "EN_PAUSA", "INACTIVO"]),
+  cashPending: zod.number(),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary List incidents (ADMIN sees all, DRIVER sees own)
+ */
+export const ListIncidentsResponseItem = zod.object({
+  id: zod.number(),
+  driverId: zod.number(),
+  driverName: zod.string(),
+  orderId: zod.number().nullable(),
+  type: zod.enum([
+    "ACCIDENTE",
+    "ROBO",
+    "DEMORA",
+    "CLIENTE_AUSENTE",
+    "VEHICULO",
+    "OTRO",
+  ]),
+  description: zod.string(),
+  status: zod.enum(["ABIERTO", "EN_REVISION", "RESUELTO"]),
+  createdAt: zod.coerce.date(),
+});
+export const ListIncidentsResponse = zod.array(ListIncidentsResponseItem);
+
+/**
+ * @summary Report a new incident (DRIVER)
+ */
+
+export const CreateIncidentBody = zod.object({
+  type: zod.enum([
+    "ACCIDENTE",
+    "ROBO",
+    "DEMORA",
+    "CLIENTE_AUSENTE",
+    "VEHICULO",
+    "OTRO",
+  ]),
+  description: zod.string().min(1),
+  orderId: zod.number().nullish(),
+});
+
+/**
+ * @summary Update an incident status (ADMIN)
+ */
+export const UpdateIncidentParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const UpdateIncidentBody = zod.object({
+  status: zod.enum(["ABIERTO", "EN_REVISION", "RESUELTO"]),
+});
+
+export const UpdateIncidentResponse = zod.object({
+  id: zod.number(),
+  driverId: zod.number(),
+  driverName: zod.string(),
+  orderId: zod.number().nullable(),
+  type: zod.enum([
+    "ACCIDENTE",
+    "ROBO",
+    "DEMORA",
+    "CLIENTE_AUSENTE",
+    "VEHICULO",
+    "OTRO",
+  ]),
+  description: zod.string(),
+  status: zod.enum(["ABIERTO", "EN_REVISION", "RESUELTO"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Subscription of the authenticated CLIENTE
+ */
+export const GetMySubscriptionResponse = zod.object({
+  subscription: zod.union([
+    zod.object({
+      id: zod.number(),
+      userId: zod.number(),
+      userName: zod.string(),
+      tier: zod.enum(["ESTANDAR", "OPTIMO"]),
+      monthlyPrice: zod.number(),
+      monthlyDeliveries: zod.number(),
+      usedDeliveries: zod.number(),
+      remainingDeliveries: zod.number(),
+      periodStart: zod.coerce.date(),
+      status: zod.enum(["ACTIVA", "CANCELADA", "VENCIDA"]),
+      createdAt: zod.coerce.date(),
+    }),
+    zod.null(),
+  ]),
+});
+
+/**
+ * @summary List all subscriptions (ADMIN)
+ */
+export const ListSubscriptionsResponseItem = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  userName: zod.string(),
+  tier: zod.enum(["ESTANDAR", "OPTIMO"]),
+  monthlyPrice: zod.number(),
+  monthlyDeliveries: zod.number(),
+  usedDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  periodStart: zod.coerce.date(),
+  status: zod.enum(["ACTIVA", "CANCELADA", "VENCIDA"]),
+  createdAt: zod.coerce.date(),
+});
+export const ListSubscriptionsResponse = zod.array(
+  ListSubscriptionsResponseItem,
+);
+
+/**
+ * @summary Subscribe or change tier (CLIENTE)
+ */
+export const SubscribeBody = zod.object({
+  tier: zod.enum(["ESTANDAR", "OPTIMO"]),
+});
+
+export const SubscribeResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  userName: zod.string(),
+  tier: zod.enum(["ESTANDAR", "OPTIMO"]),
+  monthlyPrice: zod.number(),
+  monthlyDeliveries: zod.number(),
+  usedDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  periodStart: zod.coerce.date(),
+  status: zod.enum(["ACTIVA", "CANCELADA", "VENCIDA"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Cash collected vs settled per driver (ADMIN)
+ */
+export const GetCashReportResponse = zod.object({
+  totalCashPending: zod.number(),
+  totalCashCollected: zod.number(),
+  drivers: zod.array(
+    zod.object({
+      driverId: zod.number(),
+      driverName: zod.string(),
+      cashPending: zod.number(),
+    }),
+  ),
+});
+
+/**
+ * @summary Revenue and MRR by client (ADMIN)
+ */
+export const GetB2BRevenueResponse = zod.object({
+  totalRevenue: zod.number(),
+  totalMrr: zod.number(),
+  clients: zod.array(
+    zod.object({
+      customerId: zod.number(),
+      customerName: zod.string(),
+      ordersCount: zod.number(),
+      revenue: zod.number(),
+      subscriptionTier: zod.union([
+        zod.enum(["ESTANDAR", "OPTIMO"]),
+        zod.null(),
+      ]),
+    }),
+  ),
 });
 
 /**

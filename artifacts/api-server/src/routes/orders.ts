@@ -8,6 +8,7 @@ import {
   transactionsTable,
   walletsTable,
   walletTxTable,
+  subscriptionsTable,
   type Order,
 } from "@workspace/db";
 import {
@@ -261,15 +262,65 @@ router.patch(
       }
     }
 
-    const [updated] = await db
-      .update(ordersTable)
-      .set(updates)
-      .where(eq(ordersTable.id, id))
-      .returning();
+    // Transacción: actualizar pedido + side-effects (cash + suscripción) atómicamente
+    const updated = await db.transaction(async (tx) => {
+      const [previous] = await tx.select().from(ordersTable).where(eq(ordersTable.id, id));
+      if (!previous) return null;
+      const [u] = await tx
+        .update(ordersTable)
+        .set(updates)
+        .where(eq(ordersTable.id, id))
+        .returning();
+      if (!u) return null;
+
+      const becameDelivered =
+        previous.status !== "ENTREGADO" && u.status === "ENTREGADO";
+
+      if (becameDelivered) {
+        if (u.driverId != null && u.payment === "EFECTIVO") {
+          const [drv] = await tx
+            .select()
+            .from(driversTable)
+            .where(eq(driversTable.id, u.driverId));
+          if (drv) {
+            const newCash = Number(drv.cashPending) + Number(u.amount);
+            await tx
+              .update(driversTable)
+              .set({ cashPending: newCash.toFixed(2) })
+              .where(eq(driversTable.id, drv.id));
+          }
+        }
+        if (u.customerId != null) {
+          const [activeSub] = await tx
+            .select()
+            .from(subscriptionsTable)
+            .where(
+              and(
+                eq(subscriptionsTable.userId, u.customerId),
+                eq(subscriptionsTable.status, "ACTIVA"),
+              ),
+            );
+          if (activeSub) {
+            const newUsed = activeSub.usedDeliveries + 1;
+            const exhausted = newUsed >= activeSub.monthlyDeliveries;
+            await tx
+              .update(subscriptionsTable)
+              .set({
+                usedDeliveries: newUsed,
+                status: exhausted ? "VENCIDA" : activeSub.status,
+              })
+              .where(eq(subscriptionsTable.id, activeSub.id));
+          }
+        }
+      }
+      return u;
+    });
+
     if (!updated) {
       res.status(404).json({ error: "Pedido no encontrado" });
       return;
     }
+
     const [serialized] = await expandOrders([updated]);
     res.json(serialized);
   },

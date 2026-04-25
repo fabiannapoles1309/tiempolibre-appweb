@@ -93,6 +93,15 @@ export interface Zone {
   name: ZoneName;
 }
 
+export type DriverStatus = (typeof DriverStatus)[keyof typeof DriverStatus];
+
+export const DriverStatus = {
+  ACTIVO: "ACTIVO",
+  EN_ENTREGA: "EN_ENTREGA",
+  EN_PAUSA: "EN_PAUSA",
+  INACTIVO: "INACTIVO",
+} as const;
+
 export interface Driver {
   id: number;
   /** @nullable */
@@ -102,6 +111,14 @@ export interface Driver {
   vehicle: string;
   zones: ZoneName[];
   active: boolean;
+  /** @nullable */
+  licensePlate: string | null;
+  /** @nullable */
+  circulationCard: string | null;
+  /** @nullable */
+  circulationCardExpiry: string | null;
+  status: DriverStatus;
+  cashPending: number;
   createdAt: string;
 }
 
@@ -115,6 +132,12 @@ export interface CreateDriverBody {
   /** @minItems 1 */
   zones: ZoneName[];
   active?: boolean;
+  /** @nullable */
+  licensePlate?: string | null;
+  /** @nullable */
+  circulationCard?: string | null;
+  /** @nullable */
+  circulationCardExpiry?: string | null;
 }
 
 export interface UpdateDriverBody {
@@ -123,6 +146,139 @@ export interface UpdateDriverBody {
   vehicle?: string;
   zones?: ZoneName[];
   active?: boolean;
+  /** @nullable */
+  licensePlate?: string | null;
+  /** @nullable */
+  circulationCard?: string | null;
+  /** @nullable */
+  circulationCardExpiry?: string | null;
+  status?: DriverStatus;
+}
+
+export interface UpdateDriverStatusBody {
+  status: DriverStatus;
+}
+
+export interface DriverRankingEntry {
+  driverId: number;
+  driverName: string;
+  deliveries: number;
+  revenue: number;
+  rank: number;
+}
+
+export type IncidentType = (typeof IncidentType)[keyof typeof IncidentType];
+
+export const IncidentType = {
+  ACCIDENTE: "ACCIDENTE",
+  ROBO: "ROBO",
+  DEMORA: "DEMORA",
+  CLIENTE_AUSENTE: "CLIENTE_AUSENTE",
+  VEHICULO: "VEHICULO",
+  OTRO: "OTRO",
+} as const;
+
+export type IncidentStatus =
+  (typeof IncidentStatus)[keyof typeof IncidentStatus];
+
+export const IncidentStatus = {
+  ABIERTO: "ABIERTO",
+  EN_REVISION: "EN_REVISION",
+  RESUELTO: "RESUELTO",
+} as const;
+
+export interface Incident {
+  id: number;
+  driverId: number;
+  driverName: string;
+  /** @nullable */
+  orderId: number | null;
+  type: IncidentType;
+  description: string;
+  status: IncidentStatus;
+  createdAt: string;
+}
+
+export interface CreateIncidentBody {
+  type: IncidentType;
+  /** @minLength 1 */
+  description: string;
+  /** @nullable */
+  orderId?: number | null;
+}
+
+export interface UpdateIncidentBody {
+  status: IncidentStatus;
+}
+
+export interface SettleCashBody {
+  /** @exclusiveMinimum 0 */
+  amount: number;
+}
+
+export type SubscriptionTier =
+  (typeof SubscriptionTier)[keyof typeof SubscriptionTier];
+
+export const SubscriptionTier = {
+  ESTANDAR: "ESTANDAR",
+  OPTIMO: "OPTIMO",
+} as const;
+
+export type SubscriptionStatus =
+  (typeof SubscriptionStatus)[keyof typeof SubscriptionStatus];
+
+export const SubscriptionStatus = {
+  ACTIVA: "ACTIVA",
+  CANCELADA: "CANCELADA",
+  VENCIDA: "VENCIDA",
+} as const;
+
+export interface Subscription {
+  id: number;
+  userId: number;
+  userName: string;
+  tier: SubscriptionTier;
+  monthlyPrice: number;
+  monthlyDeliveries: number;
+  usedDeliveries: number;
+  remainingDeliveries: number;
+  periodStart: string;
+  status: SubscriptionStatus;
+  createdAt: string;
+}
+
+export interface SubscribeBody {
+  tier: SubscriptionTier;
+}
+
+export interface MySubscriptionResponse {
+  subscription: Subscription | null;
+}
+
+export type CashReportDriversItem = {
+  driverId: number;
+  driverName: string;
+  cashPending: number;
+};
+
+export interface CashReport {
+  totalCashPending: number;
+  totalCashCollected: number;
+  drivers: CashReportDriversItem[];
+}
+
+export interface B2BRevenueEntry {
+  customerId: number;
+  customerName: string;
+  ordersCount: number;
+  revenue: number;
+  subscriptionTier: SubscriptionTier | null;
+}
+
+export interface B2BRevenueReport {
+  totalRevenue: number;
+  totalMrr: number;
+  clients: B2BRevenueEntry[];
 }
 
 export interface Order {

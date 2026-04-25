@@ -17,6 +17,11 @@ import Reports from "@/pages/reports";
 import Finance from "@/pages/finance";
 import WalletPage from "@/pages/wallet";
 import MapPage from "@/pages/map";
+import DriverBenefits from "@/pages/driver-benefits";
+import DriverRankingPage from "@/pages/driver-ranking";
+import IncidentsPage from "@/pages/incidents";
+import SubscriptionPage from "@/pages/subscription";
+import AdminSubscriptionsPage from "@/pages/admin-subscriptions";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +73,12 @@ function Router() {
       <Route path="/reports" component={() => <ProtectedRoute component={Reports} roles={["ADMIN"]} />} />
       <Route path="/finance" component={() => <ProtectedRoute component={Finance} roles={["ADMIN"]} />} />
       <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["CLIENTE", "ADMIN"]} />} />
+      <Route path="/driver/benefits" component={() => <ProtectedRoute component={DriverBenefits} roles={["DRIVER"]} />} />
+      <Route path="/driver/ranking" component={() => <ProtectedRoute component={DriverRankingPage} roles={["DRIVER", "ADMIN"]} />} />
+      <Route path="/driver/incidents" component={() => <ProtectedRoute component={IncidentsPage} roles={["DRIVER"]} />} />
+      <Route path="/admin/incidents" component={() => <ProtectedRoute component={IncidentsPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/subscriptions" component={() => <ProtectedRoute component={AdminSubscriptionsPage} roles={["ADMIN"]} />} />
+      <Route path="/subscription" component={() => <ProtectedRoute component={SubscriptionPage} roles={["CLIENTE"]} />} />
       <Route component={NotFound} />
     </Switch>
   );

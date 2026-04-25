@@ -1,0 +1,86 @@
+Actúa como un Desarrollador Full-Stack Senior con especialidad en sistemas ERP y logística. Necesito aplicar la actualización final a la arquitectura de la plataforma "Tiempo Libre".
+
+REQUISITO GLOBAL: Toda la estructura, nombres de variables en la interfaz, mensajes, alertas y menús deben estar en Español (México) (ej. "Placas" en lugar de "Patente", "Repartos" o "Envíos" en lugar de "Órdenes").
+
+Implementa los siguientes cambios organizados por módulos:
+
+MÓDULO 1: Gestión Avanzada de Clientes (Admin y Superadmin)
+
+Nuevo Apartado "Clientes": Crea una sección dedicada para gestionar a los usuarios tipo Cliente.
+
+El Admin debe poder seleccionar a un usuario específico de una lista para editar su perfil.
+
+Gestión de Planes: Permitir elegir y activar el tipo de plan solicitado por el cliente (Estándar o Plan Óptimo).
+
+Renovación y Recargas: Opción manual para renovar el plan actual o agregar un paquete de 35 envíos extras una vez que el cliente haya agotado sus envíos incluidos.
+
+Domicilio de Recolección: Mantener vinculado el nombre del establecimiento con su dirección principal de recolección de forma fija.
+
+Asignación de Zona: Al dar de alta o editar, el Admin debe poder seleccionar la zona correspondiente (Rango del 1 al 100).
+
+MÓDULO 2: Limpieza de Interfaz para el Superadmin (Soporte)
+
+El usuario con rol Superadmin es un perfil de gestión total, por lo tanto, ELIMINA de su menú lateral y de su vista de perfil los siguientes apartados personales que no le corresponden:
+
+"Mi suscripción"
+
+"Mis pedidos"
+
+"Mis beneficios"
+
+"Mi billetera"
+
+El Superadmin debe conservar acceso total a los reportes financieros, gestión de todos los usuarios (Admin, Clientes, Drivers) y mapas.
+
+MÓDULO 3: Lógica de Saldo y Visibilidad del Cliente
+
+Restricciones del Cliente: El cliente solo puede visualizar su saldo disponible.
+
+Bloques de 35: Ajustar el contador para que el máximo visual sea de 35 envíos por bloque. Si el Admin agrega un paquete extra, el contador se reinicia o suma a los 35.
+
+Privacidad: El cliente solo ve la zona que el Admin le asignó.
+
+MÓDULO 4: Finanzas, Reportería y Excel
+
+Gráficas de Ingresos: Incluir en los reportes de ingresos por reparto y por planes los métodos de pago: Tarjeta y Cortesía.
+
+Exportación de Datos: Botón para descargar en Excel (.xlsx) reportes de entregas, volumen e ingresos, filtrables por:
+
+Cliente específico o General.
+
+Periodo: Día, Semana, Mes y Año.
+
+Reporte Contable: Exportación simplificada con ingresos y gastos totales para fines de contabilidad.
+
+MÓDULO 5: Geolocalización y Mapas (GIS)
+
+Validación de Cobertura: Al levantar un pedido, validar la dirección contra el archivo zonas.kml. Si está fuera de las zonas 1-9, lanzar alerta: "Dirección fuera de zona de cobertura".
+
+Visualización Admin: El mapa del Admin debe mostrar los polígonos del KML numerados.
+
+Corrección de Error: Asegura que los glyphs del mapa estén configurados para evitar el error string expected, undefined found.
+
+MÓDULO 6: Identidad y UI
+
+Barra Lateral: Color Turquesa.
+
+Eslogan: "Confianza y seguridad en cada kilometro".
+
+Alta de Drivers: Campos obligatorios: "Placa" y "Tarjeta de Circulación". Eliminar "Vencimiento de cédula".
+
+REQUERIMIENTOS TÉCNICOS:
+
+Utiliza exceljs para las descargas de reportes.
+
+Asegura que la base de datos sea persistente para todos los registros de Clientes y Drivers.
+
+Implementa el mensaje de bienvenida automático para Drivers con sus credenciales personalizadas.
+
+Resumen de lo que hemos logrado con esta actualización:
+Control Total: Ahora tú (como Admin o Superadmin) tienes el poder absoluto sobre quién entra, qué plan tiene y cuándo se le agregan envíos extra.
+
+Interfaz Profesional: Al limpiar el menú del Superadmin, la herramienta se siente como un software de gestión corporativa y no como una cuenta de usuario común.
+
+Localización Perfecta: Al usar términos de México (como placas y tarjeta de circulación), evitas confusiones con tus repartidores en la ZMG.
+
+Transparencia Contable: Con los reportes en Excel desglosados por día, mes o año, tendrás un control impecable de cuánto dinero entra por suscripciones y cuánto por servicios individuales de entrega.

@@ -20,7 +20,7 @@ const statusColors: Record<string, string> = {
 
 const CHART_COLORS = ['#00B5E2', '#0B1E2D', '#10b981', '#f59e0b', '#ef4444'];
 
-const ARS = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 });
+const ARS = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -67,7 +67,7 @@ export default function Dashboard() {
           <Link href="/orders/new">
             <Button size="lg" className="h-11 text-base font-semibold shadow-sm">
               <Plus className="w-5 h-5 mr-2" />
-              Crear Nuevo Pedido
+              Crear nuevo envío
             </Button>
           </Link>
         )}
@@ -76,7 +76,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pedidos Hoy</CardTitle>
+            <CardTitle className="text-sm font-medium">Envíos de hoy</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -136,7 +136,7 @@ export default function Dashboard() {
       <div className={`grid grid-cols-1 ${isAdmin(user) ? "lg:grid-cols-2" : ""} gap-6`}>
         <Card>
           <CardHeader>
-            <CardTitle>Pedidos por Estado</CardTitle>
+            <CardTitle>Envíos por estado</CardTitle>
             <CardDescription>Distribución actual de órdenes</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
@@ -170,7 +170,7 @@ export default function Dashboard() {
         {isAdmin(user) && (
           <Card>
             <CardHeader>
-              <CardTitle>Pedidos por Zona</CardTitle>
+              <CardTitle>Envíos por zona</CardTitle>
               <CardDescription>Volumen de entregas por sector</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
@@ -193,20 +193,20 @@ export default function Dashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Pedidos Recientes</CardTitle>
+          <CardTitle>Envíos recientes</CardTitle>
           <CardDescription>Últimas 5 órdenes registradas en el sistema</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {recentOrders.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">No hay pedidos recientes.</div>
+              <div className="py-8 text-center text-muted-foreground">No hay envíos recientes.</div>
             ) : (
               recentOrders.map((order) => (
                 <Link key={order.id} href={`/orders/${order.id}`}>
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className="space-y-1">
                       <div className="font-medium">
-                        Pedido #{order.id} • <span className="text-muted-foreground">{order.customerName}</span>
+                        Envío #{order.id} • <span className="text-muted-foreground">{order.customerName}</span>
                       </div>
                       <div className="text-sm text-muted-foreground line-clamp-1">
                         De: {order.pickup} → Para: {order.delivery}

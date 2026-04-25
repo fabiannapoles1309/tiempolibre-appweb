@@ -4,6 +4,7 @@ import {
   db,
   usersTable,
   driversTable,
+  customersTable,
   subscriptionsTable,
   ordersTable,
   benefitsConfigTable,
@@ -12,6 +13,7 @@ import {
 import { hashPassword } from "../lib/auth";
 import {
   AdminCreateUserBody,
+  AdminUpdateClienteBody,
   PutBenefitsConfigBody,
 } from "@workspace/api-zod";
 import {
@@ -27,6 +29,57 @@ const TIERS = {
   OPTIMO: { monthlyPrice: 25000, monthlyDeliveries: 70 },
 } as const;
 
+const RECHARGE_BLOCK = 35;
+
+type ClienteRowShape = {
+  id: number;
+  name: string;
+  email: string;
+  businessName: string | null;
+  pickupAddress: string | null;
+  clienteZone: number | null;
+  phone: string | null;
+  tier: "ESTANDAR" | "OPTIMO" | null;
+  status: string | null;
+  usedDeliveries: number;
+  monthlyDeliveries: number;
+  remainingDeliveries: number;
+  createdAt: string;
+};
+
+async function buildClienteRow(userId: number): Promise<ClienteRowShape | null> {
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+  if (!user || user.role !== "CLIENTE") return null;
+  const [customer] = await db
+    .select()
+    .from(customersTable)
+    .where(eq(customersTable.userId, userId));
+  // Pick most relevant subscription (ACTIVA most-recent first, otherwise most recent of any).
+  const subs = await db
+    .select()
+    .from(subscriptionsTable)
+    .where(eq(subscriptionsTable.userId, userId))
+    .orderBy(desc(subscriptionsTable.createdAt));
+  const sub = subs.find((s) => s.status === "ACTIVA") ?? subs[0] ?? null;
+  const used = sub?.usedDeliveries ?? 0;
+  const monthly = sub?.monthlyDeliveries ?? 0;
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    businessName: customer?.businessName ?? null,
+    pickupAddress: customer?.pickupAddress ?? null,
+    clienteZone: customer?.zone ?? null,
+    phone: customer?.phone ?? null,
+    tier: (sub?.tier as "ESTANDAR" | "OPTIMO" | undefined) ?? null,
+    status: sub?.status ?? null,
+    usedDeliveries: used,
+    monthlyDeliveries: monthly,
+    remainingDeliveries: Math.max(0, monthly - used),
+    createdAt: user.createdAt.toISOString(),
+  };
+}
+
 // =============== USERS ===============
 router.post(
   "/admin/users",
@@ -38,8 +91,21 @@ router.post(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
-    const { role, name, email, password, tier, phone, vehicle, zones, licensePlate, circulationCard } =
-      parsed.data;
+    const {
+      role,
+      name,
+      email,
+      password,
+      tier,
+      phone,
+      vehicle,
+      zones,
+      licensePlate,
+      circulationCard,
+      businessName,
+      pickupAddress,
+      clienteZone,
+    } = parsed.data;
 
     const existing = await db.select().from(usersTable).where(eq(usersTable.email, email));
     if (existing.length > 0) {
@@ -61,6 +127,19 @@ router.post(
       await db
         .insert(walletsTable)
         .values({ userId: created.id, balance: "0.00" })
+        .onConflictDoNothing();
+      // Perfil del cliente (vinculado al user). El nombre del establecimiento
+      // se mantiene atado a su dirección de recolección; ambos opcionales en alta
+      // pero se persisten cuando vienen.
+      await db
+        .insert(customersTable)
+        .values({
+          userId: created.id,
+          businessName: businessName ?? null,
+          pickupAddress: pickupAddress ?? null,
+          zone: clienteZone ?? null,
+          phone: phone ?? null,
+        })
         .onConflictDoNothing();
       if (tier) {
         const cfg = TIERS[tier as keyof typeof TIERS];
@@ -111,6 +190,210 @@ router.post(
       createdAt: created.createdAt.toISOString(),
       welcomeMessage,
     });
+  },
+);
+
+// =============== CLIENTES (gestión avanzada) ===============
+// Lista todos los CLIENTE con su perfil (customers) + suscripción activa resumida.
+router.get(
+  "/admin/clientes",
+  requireAuth,
+  requireRole("ADMIN", "SUPERUSER"),
+  async (_req, res): Promise<void> => {
+    const users = await db
+      .select()
+      .from(usersTable)
+      .where(eq(usersTable.role, "CLIENTE"));
+    const ids = users.map((u) => u.id);
+    const customers = ids.length
+      ? await db.select().from(customersTable).where(inArray(customersTable.userId, ids))
+      : [];
+    const subs = ids.length
+      ? await db
+          .select()
+          .from(subscriptionsTable)
+          .where(inArray(subscriptionsTable.userId, ids))
+          .orderBy(desc(subscriptionsTable.createdAt))
+      : [];
+    const customerByUser = new Map(customers.map((c) => [c.userId, c]));
+    const subByUser = new Map<number, typeof subs[number]>();
+    for (const s of subs) {
+      const existing = subByUser.get(s.userId);
+      if (!existing) subByUser.set(s.userId, s);
+      else if (existing.status !== "ACTIVA" && s.status === "ACTIVA") subByUser.set(s.userId, s);
+    }
+    const rows: ClienteRowShape[] = users.map((u) => {
+      const c = customerByUser.get(u.id);
+      const s = subByUser.get(u.id);
+      const used = s?.usedDeliveries ?? 0;
+      const monthly = s?.monthlyDeliveries ?? 0;
+      return {
+        id: u.id,
+        name: u.name,
+        email: u.email,
+        businessName: c?.businessName ?? null,
+        pickupAddress: c?.pickupAddress ?? null,
+        clienteZone: c?.zone ?? null,
+        phone: c?.phone ?? null,
+        tier: (s?.tier as "ESTANDAR" | "OPTIMO" | undefined) ?? null,
+        status: s?.status ?? null,
+        usedDeliveries: used,
+        monthlyDeliveries: monthly,
+        remainingDeliveries: Math.max(0, monthly - used),
+        createdAt: u.createdAt.toISOString(),
+      };
+    });
+    res.json(rows);
+  },
+);
+
+router.patch(
+  "/admin/clientes/:id",
+  requireAuth,
+  requireRole("ADMIN", "SUPERUSER"),
+  async (req, res): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const parsed = AdminUpdateClienteBody.safeParse(req.body ?? {});
+    if (!parsed.success) {
+      res.status(400).json({ error: parsed.error.message });
+      return;
+    }
+    const data = parsed.data;
+    const [user] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+    if (!user || user.role !== "CLIENTE") {
+      res.status(404).json({ error: "Cliente no encontrado" });
+      return;
+    }
+    if (data.name) {
+      await db.update(usersTable).set({ name: data.name }).where(eq(usersTable.id, id));
+    }
+    // Asegura una fila customers (compat con clientes creados antes del feature).
+    await db
+      .insert(customersTable)
+      .values({ userId: id })
+      .onConflictDoNothing();
+    const customerPatch: Record<string, unknown> = {};
+    if (data.businessName !== undefined) customerPatch.businessName = data.businessName;
+    if (data.pickupAddress !== undefined) customerPatch.pickupAddress = data.pickupAddress;
+    if (data.clienteZone !== undefined) customerPatch.zone = data.clienteZone;
+    if (data.phone !== undefined) customerPatch.phone = data.phone;
+    if (Object.keys(customerPatch).length > 0) {
+      await db.update(customersTable).set(customerPatch).where(eq(customersTable.userId, id));
+    }
+    if (data.tier) {
+      const cfg = TIERS[data.tier as keyof typeof TIERS];
+      if (cfg) {
+        // Cancelar otra ACTIVA y crear la nueva del tier solicitado.
+        await db
+          .update(subscriptionsTable)
+          .set({ status: "CANCELADA" })
+          .where(
+            and(eq(subscriptionsTable.userId, id), eq(subscriptionsTable.status, "ACTIVA")),
+          );
+        await db.insert(subscriptionsTable).values({
+          userId: id,
+          tier: data.tier,
+          monthlyPrice: cfg.monthlyPrice.toFixed(2),
+          monthlyDeliveries: cfg.monthlyDeliveries,
+          usedDeliveries: 0,
+          status: "ACTIVA",
+        });
+      }
+    }
+    const row = await buildClienteRow(id);
+    res.json(row);
+  },
+);
+
+router.post(
+  "/admin/clientes/:id/recharge",
+  requireAuth,
+  requireRole("ADMIN", "SUPERUSER"),
+  async (req, res): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const [target] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+    if (!target || target.role !== "CLIENTE") {
+      res.status(404).json({ error: "Cliente no encontrado" });
+      return;
+    }
+    const [latest] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(
+        and(
+          eq(subscriptionsTable.userId, id),
+          inArray(subscriptionsTable.status, ["ACTIVA", "VENCIDA"]),
+        ),
+      )
+      .orderBy(desc(subscriptionsTable.createdAt));
+    if (!latest) {
+      res.status(404).json({ error: "El cliente no tiene una suscripción para recargar" });
+      return;
+    }
+    await db
+      .update(subscriptionsTable)
+      .set({
+        monthlyDeliveries: latest.monthlyDeliveries + RECHARGE_BLOCK,
+        status: "ACTIVA",
+      })
+      .where(eq(subscriptionsTable.id, latest.id));
+    const row = await buildClienteRow(id);
+    res.json(row);
+  },
+);
+
+router.post(
+  "/admin/clientes/:id/renew",
+  requireAuth,
+  requireRole("ADMIN", "SUPERUSER"),
+  async (req, res): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const [target] = await db.select().from(usersTable).where(eq(usersTable.id, id));
+    if (!target || target.role !== "CLIENTE") {
+      res.status(404).json({ error: "Cliente no encontrado" });
+      return;
+    }
+    const [latest] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(eq(subscriptionsTable.userId, id))
+      .orderBy(desc(subscriptionsTable.createdAt));
+    if (!latest) {
+      res.status(404).json({ error: "El cliente no tiene una suscripción para renovar" });
+      return;
+    }
+    const cfg = TIERS[latest.tier as keyof typeof TIERS];
+    if (!cfg) {
+      res.status(400).json({ error: "Tier inválido en la suscripción actual" });
+      return;
+    }
+    // Cancelar la actual y crear una nueva ACTIVA con bloque limpio.
+    await db
+      .update(subscriptionsTable)
+      .set({ status: "CANCELADA" })
+      .where(eq(subscriptionsTable.id, latest.id));
+    await db.insert(subscriptionsTable).values({
+      userId: id,
+      tier: latest.tier,
+      monthlyPrice: cfg.monthlyPrice.toFixed(2),
+      monthlyDeliveries: cfg.monthlyDeliveries,
+      usedDeliveries: 0,
+      status: "ACTIVA",
+    });
+    const row = await buildClienteRow(id);
+    res.json(row);
   },
 );
 

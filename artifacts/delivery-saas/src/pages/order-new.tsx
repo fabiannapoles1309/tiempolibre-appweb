@@ -41,9 +41,9 @@ const orderSchema = z
   .object({
     pickup: z.string().min(1, "La dirección de recolección es requerida"),
     delivery: z.string().min(1, "La dirección de entrega es requerida"),
-    recipientPhone: z.string().min(6, "Ingresá el teléfono del destinatario"),
+    recipientPhone: z.string().min(6, "Ingresa el teléfono del destinatario"),
     payment: z.enum(ALLOWED_PAYMENTS, {
-      required_error: "Seleccioná un método de pago",
+      required_error: "Selecciona un método de pago",
     }),
     cashAmount: z.union([z.string(), z.number()]).optional(),
     cashChange: z.union([z.string(), z.number()]).optional(),
@@ -58,7 +58,7 @@ const orderSchema = z
         ctx.addIssue({
           path: ["cashAmount"],
           code: z.ZodIssueCode.custom,
-          message: "Ingresá el monto a cobrar",
+          message: "Ingresa el monto a cobrar",
         });
       }
     }
@@ -260,7 +260,7 @@ export default function NewOrder() {
         setZoneError(null);
       } else {
         setMatchedZone(null);
-        setZoneError("Pedido fuera de la zona delimitada. Elegí un punto dentro de un polígono.");
+        setZoneError("Envío fuera de la zona delimitada. Elige un punto dentro de un polígono.");
       }
     });
 
@@ -277,7 +277,7 @@ export default function NewOrder() {
       return;
     }
     if (!selectedPoint && !mapUnsupported) {
-      toast.error("Marcá el punto de entrega en el mapa.");
+      toast.error("Marca el punto de entrega en el mapa.");
       return;
     }
     try {
@@ -302,7 +302,7 @@ export default function NewOrder() {
       });
       queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
       queryClient.invalidateQueries({ queryKey: getGetDashboardQueryKey() });
-      toast.success("Pedido creado exitosamente");
+      toast.success("Envío creado exitosamente");
       setLocation("/orders");
     } catch (error: any) {
       const reason = error?.data?.reason;
@@ -311,7 +311,7 @@ export default function NewOrder() {
         setLocation("/subscription");
         return;
       }
-      toast.error(error.data?.error || "Error al crear el pedido");
+      toast.error(error.data?.error || "Error al crear el envío");
     }
   };
 
@@ -324,9 +324,9 @@ export default function NewOrder() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Nuevo Pedido</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Nuevo envío</h1>
           <p className="text-muted-foreground mt-1">
-            Marcá el destino sobre el mapa para validar la zona de cobertura.
+            Marca el destino sobre el mapa para validar la zona de cobertura.
           </p>
         </div>
       </div>
@@ -339,7 +339,7 @@ export default function NewOrder() {
               Punto de entrega en el mapa
             </CardTitle>
             <CardDescription>
-              Hacé click sobre el mapa donde se entrega el pedido. Solo se aceptan puntos dentro de las zonas delimitadas.
+              Haz clic sobre el mapa donde se entrega el envío. Solo se aceptan puntos dentro de las zonas delimitadas.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -355,7 +355,7 @@ export default function NewOrder() {
               >
                 <AlertTriangle className="w-4 h-4 mt-0.5" />
                 <span>
-                  Tu navegador no soporta el mapa interactivo. Podés crear el pedido igualmente: la zona se validará en el servidor a partir de la dirección de entrega.
+                  Tu navegador no soporta el mapa interactivo. Puedes crear el envío igualmente: la zona se validará en el servidor a partir de la dirección de entrega.
                 </span>
               </div>
             )}
@@ -385,7 +385,7 @@ export default function NewOrder() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Detalles del pedido</CardTitle>
+            <CardTitle>Detalles del envío</CardTitle>
             <CardDescription>
               Origen, destino, método de pago y datos del destinatario.
             </CardDescription>
@@ -430,7 +430,7 @@ export default function NewOrder() {
                       <FormControl>
                         <Input
                           type="tel"
-                          placeholder="+54 9 ..."
+                          placeholder="+52 ..."
                           data-testid="input-recipient-phone"
                           {...field}
                         />
@@ -539,7 +539,7 @@ export default function NewOrder() {
                     {createMutation.isPending && (
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     )}
-                    Crear pedido
+                    Crear envío
                   </Button>
                 </div>
               </form>

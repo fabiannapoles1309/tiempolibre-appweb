@@ -131,7 +131,7 @@ export default function IncidentsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">
-                    N° de pedido (opcional)
+                    N° de envío (opcional)
                   </label>
                   <Input
                     type="number"
@@ -198,7 +198,7 @@ export default function IncidentsPage() {
                       </Badge>
                       {inc.orderId ? (
                         <span className="text-xs text-muted-foreground">
-                          Pedido #{inc.orderId}
+                          Envío #{inc.orderId}
                         </span>
                       ) : null}
                     </div>

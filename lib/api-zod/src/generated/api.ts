@@ -611,6 +611,16 @@ export const SubscribeResponse = zod.object({
 });
 
 /**
+ * @summary Cliente's own customer profile (businessName, pickupAddress, zone, phone)
+ */
+export const GetMyCustomerProfileResponse = zod.object({
+  businessName: zod.string().nullable(),
+  pickupAddress: zod.string().nullable(),
+  clienteZone: zod.number().nullable(),
+  phone: zod.string().nullable(),
+});
+
+/**
  * @summary Add a 35-delivery recharge block to the active CLIENTE subscription
  */
 export const RechargeSubscriptionResponse = zod.object({
@@ -628,10 +638,143 @@ export const RechargeSubscriptionResponse = zod.object({
 });
 
 /**
+ * @summary List all CLIENTE users with their customer profile and active subscription summary (ADMIN/SUPERUSER)
+ */
+export const AdminListClientesResponseItem = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  businessName: zod.string().nullish(),
+  pickupAddress: zod.string().nullish(),
+  clienteZone: zod.number().nullish(),
+  phone: zod.string().nullish(),
+  tier: zod
+    .union([zod.literal("ESTANDAR"), zod.literal("OPTIMO"), zod.literal(null)])
+    .nullish(),
+  status: zod.string().nullish(),
+  usedDeliveries: zod.number(),
+  monthlyDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  createdAt: zod.string(),
+});
+export const AdminListClientesResponse = zod.array(
+  AdminListClientesResponseItem,
+);
+
+/**
+ * @summary Update a CLIENTE profile (name, businessName, pickupAddress, zone, phone, tier) (ADMIN/SUPERUSER)
+ */
+export const AdminUpdateClienteParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const adminUpdateClienteBodyClienteZoneMax = 100;
+
+export const AdminUpdateClienteBody = zod
+  .object({
+    name: zod.string().min(1).optional(),
+    businessName: zod.string().nullish(),
+    pickupAddress: zod.string().nullish(),
+    clienteZone: zod
+      .number()
+      .min(1)
+      .max(adminUpdateClienteBodyClienteZoneMax)
+      .nullish(),
+    phone: zod.string().nullish(),
+    tier: zod
+      .union([
+        zod.literal("ESTANDAR"),
+        zod.literal("OPTIMO"),
+        zod.literal(null),
+      ])
+      .nullish(),
+  })
+  .describe("Update fields for an existing cliente. All fields optional.");
+
+export const AdminUpdateClienteResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  businessName: zod.string().nullish(),
+  pickupAddress: zod.string().nullish(),
+  clienteZone: zod.number().nullish(),
+  phone: zod.string().nullish(),
+  tier: zod
+    .union([zod.literal("ESTANDAR"), zod.literal("OPTIMO"), zod.literal(null)])
+    .nullish(),
+  status: zod.string().nullish(),
+  usedDeliveries: zod.number(),
+  monthlyDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Add a 35-envío recharge block to a cliente's subscription (ADMIN/SUPERUSER)
+ */
+export const AdminRechargeClienteParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminRechargeClienteResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  businessName: zod.string().nullish(),
+  pickupAddress: zod.string().nullish(),
+  clienteZone: zod.number().nullish(),
+  phone: zod.string().nullish(),
+  tier: zod
+    .union([zod.literal("ESTANDAR"), zod.literal("OPTIMO"), zod.literal(null)])
+    .nullish(),
+  status: zod.string().nullish(),
+  usedDeliveries: zod.number(),
+  monthlyDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Renew/reactivate a cliente subscription with a fresh block (ADMIN/SUPERUSER)
+ */
+export const AdminRenewClienteParams = zod.object({
+  id: zod.coerce.number(),
+});
+
+export const AdminRenewClienteResponse = zod.object({
+  id: zod.number(),
+  name: zod.string(),
+  email: zod.string(),
+  businessName: zod.string().nullish(),
+  pickupAddress: zod.string().nullish(),
+  clienteZone: zod.number().nullish(),
+  phone: zod.string().nullish(),
+  tier: zod
+    .union([zod.literal("ESTANDAR"), zod.literal("OPTIMO"), zod.literal(null)])
+    .nullish(),
+  status: zod.string().nullish(),
+  usedDeliveries: zod.number(),
+  monthlyDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Download an Excel report (deliveries / plans / accounting) by period and optional cliente (ADMIN/SUPERUSER)
+ */
+export const FinanceExportExcelQueryParams = zod.object({
+  type: zod.enum(["deliveries", "plans", "accounting"]),
+  period: zod.enum(["day", "week", "month", "year"]),
+  clienteId: zod.coerce.number().optional(),
+});
+
+/**
  * @summary Create a CLIENTE (with optional plan) or DRIVER (with full account) (ADMIN)
  */
 
 export const adminCreateUserBodyPasswordMin = 6;
+
+export const adminCreateUserBodyClienteZoneMax = 100;
 
 export const AdminCreateUserBody = zod.object({
   role: zod.enum(["CLIENTE", "DRIVER"]),
@@ -640,6 +783,13 @@ export const AdminCreateUserBody = zod.object({
   password: zod.string().min(adminCreateUserBodyPasswordMin),
   tier: zod
     .union([zod.literal("ESTANDAR"), zod.literal("OPTIMO"), zod.literal(null)])
+    .nullish(),
+  businessName: zod.string().nullish(),
+  pickupAddress: zod.string().nullish(),
+  clienteZone: zod
+    .number()
+    .min(1)
+    .max(adminCreateUserBodyClienteZoneMax)
     .nullish(),
   phone: zod.string().nullish(),
   vehicle: zod.string().nullish(),

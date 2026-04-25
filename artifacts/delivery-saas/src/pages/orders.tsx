@@ -35,14 +35,14 @@ export default function OrdersList() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Pedidos</h1>
-          <p className="text-muted-foreground mt-1">Gestiona y da seguimiento a los pedidos del sistema.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Envíos</h1>
+          <p className="text-muted-foreground mt-1">Gestiona y da seguimiento a los envíos del sistema.</p>
         </div>
         {user?.role === UserRole.CLIENTE && (
           <Link href="/orders/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Nuevo Pedido
+              Nuevo envío
             </Button>
           </Link>
         )}
@@ -51,7 +51,7 @@ export default function OrdersList() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <CardTitle>Listado de pedidos</CardTitle>
+            <CardTitle>Listado de envíos</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-[180px]">
@@ -90,7 +90,7 @@ export default function OrdersList() {
           ) : !orders || orders.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <PackageIcon className="mx-auto h-12 w-12 mb-4 text-muted/50" />
-              <p>No se encontraron pedidos con estos filtros.</p>
+              <p>No se encontraron envíos con estos filtros.</p>
             </div>
           ) : (
             <div className="border rounded-md">

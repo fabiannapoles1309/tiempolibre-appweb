@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq, inArray } from "drizzle-orm";
-import { db, subscriptionsTable, usersTable } from "@workspace/db";
+import { db, subscriptionsTable, usersTable, customersTable } from "@workspace/db";
 import { SubscribeBody } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
 
@@ -36,6 +36,23 @@ export async function getActiveSubscriptionForUser(userId: number) {
     .orderBy(desc(subscriptionsTable.createdAt));
   return sub ?? null;
 }
+
+router.get("/me/customer", requireAuth, async (req, res): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: "No autenticado" });
+    return;
+  }
+  const [c] = await db
+    .select()
+    .from(customersTable)
+    .where(eq(customersTable.userId, req.user.sub));
+  res.json({
+    businessName: c?.businessName ?? null,
+    pickupAddress: c?.pickupAddress ?? null,
+    clienteZone: c?.zone ?? null,
+    phone: c?.phone ?? null,
+  });
+});
 
 router.get("/me/subscription", requireAuth, async (req, res): Promise<void> => {
   if (!req.user) {
@@ -141,7 +158,7 @@ router.post(
       .orderBy(desc(subscriptionsTable.createdAt));
     if (!latest) {
       res.status(404).json({
-        error: "No tenés una suscripción para recargar. Suscribite primero.",
+        error: "No tienes una suscripción para recargar. Suscríbete primero.",
       });
       return;
     }

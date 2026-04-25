@@ -106,7 +106,7 @@ export default function AdminBenefitsConfigPage() {
             <Skeleton className="h-24 w-full" />
           ) : levels.length === 0 ? (
             <div className="text-sm text-muted-foreground py-8 text-center">
-              Sin niveles configurados. Agregá el primero.
+              Sin niveles configurados. Agrega el primero.
             </div>
           ) : (
             levels.map((l, idx) => (

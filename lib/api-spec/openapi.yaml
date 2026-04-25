@@ -545,6 +545,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Subscription"
 
+  /me/customer:
+    get:
+      operationId: getMyCustomerProfile
+      tags: [subscriptions]
+      summary: Cliente's own customer profile (businessName, pickupAddress, zone, phone)
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerProfile"
+
   /me/subscription/recharge:
     post:
       operationId: rechargeSubscription
@@ -559,6 +572,116 @@ paths:
                 $ref: "#/components/schemas/Subscription"
 
   # ============== ADMIN MANAGEMENT ==============
+  /admin/clientes:
+    get:
+      operationId: adminListClientes
+      tags: [admin]
+      summary: List all CLIENTE users with their customer profile and active subscription summary (ADMIN/SUPERUSER)
+      responses:
+        "200":
+          description: Clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminClienteRow"
+
+  /admin/clientes/{id}:
+    patch:
+      operationId: adminUpdateCliente
+      tags: [admin]
+      summary: Update a CLIENTE profile (name, businessName, pickupAddress, zone, phone, tier) (ADMIN/SUPERUSER)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateClienteBody"
+      responses:
+        "200":
+          description: Updated cliente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClienteRow"
+
+  /admin/clientes/{id}/recharge:
+    post:
+      operationId: adminRechargeCliente
+      tags: [admin]
+      summary: Add a 35-envío recharge block to a cliente's subscription (ADMIN/SUPERUSER)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated cliente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClienteRow"
+
+  /admin/clientes/{id}/renew:
+    post:
+      operationId: adminRenewCliente
+      tags: [admin]
+      summary: Renew/reactivate a cliente subscription with a fresh block (ADMIN/SUPERUSER)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated cliente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClienteRow"
+
+  /finance/export/excel:
+    get:
+      operationId: financeExportExcel
+      tags: [finance]
+      summary: Download an Excel report (deliveries / plans / accounting) by period and optional cliente (ADMIN/SUPERUSER)
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [deliveries, plans, accounting]
+        - name: period
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month, year]
+        - name: clienteId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: XLSX file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
   /admin/users:
     post:
       operationId: adminCreateUser
@@ -1608,9 +1731,18 @@ components:
         tier:
           type: ["string", "null"]
           enum: [ESTANDAR, OPTIMO, null]
-        # DRIVER
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 100
+        # DRIVER + CLIENTE share phone
         phone:
           type: ["string", "null"]
+        # DRIVER
         vehicle:
           type: ["string", "null"]
         zones:
@@ -1622,6 +1754,72 @@ components:
         circulationCard:
           type: ["string", "null"]
       required: [role, name, email, password]
+
+    CustomerProfile:
+      type: object
+      properties:
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+        phone:
+          type: ["string", "null"]
+      required: [businessName, pickupAddress, clienteZone, phone]
+
+    AdminUpdateClienteBody:
+      type: object
+      description: Update fields for an existing cliente. All fields optional.
+      properties:
+        name:
+          type: string
+          minLength: 1
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 100
+        phone:
+          type: ["string", "null"]
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+
+    AdminClienteRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+        phone:
+          type: ["string", "null"]
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+        status:
+          type: ["string", "null"]
+        usedDeliveries:
+          type: integer
+        monthlyDeliveries:
+          type: integer
+        remainingDeliveries:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, name, email, usedDeliveries, monthlyDeliveries, remainingDeliveries, createdAt]
 
     CustomerDeliveriesRow:
       type: object

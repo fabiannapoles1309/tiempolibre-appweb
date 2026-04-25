@@ -82,7 +82,7 @@ export default function OrderDetail() {
     );
   }
 
-  if (!order) return <div>Pedido no encontrado</div>;
+  if (!order) return <div>Envío no encontrado</div>;
 
   const validDrivers = drivers?.filter(d => d.active && (order.zone ? d.zones.includes(order.zone) : true)) || [];
 
@@ -97,7 +97,7 @@ export default function OrderDetail() {
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">Pedido #{order.id}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">Envío #{order.id}</h1>
               <Badge variant="outline" className={statusColors[order.status]}>
                 {order.status}
               </Badge>
@@ -191,13 +191,13 @@ export default function OrderDetail() {
                   {order.cashAmount != null && (
                     <div>
                       <p className="text-muted-foreground">Cobrar</p>
-                      <p className="font-bold text-base">$ {Number(order.cashAmount).toLocaleString("es-AR")}</p>
+                      <p className="font-bold text-base">$ {Number(order.cashAmount).toLocaleString("es-MX")}</p>
                     </div>
                   )}
                   {order.cashChange != null && (
                     <div>
                       <p className="text-muted-foreground">Vuelto a entregar</p>
-                      <p className="font-bold text-base">$ {Number(order.cashChange).toLocaleString("es-AR")}</p>
+                      <p className="font-bold text-base">$ {Number(order.cashChange).toLocaleString("es-MX")}</p>
                     </div>
                   )}
                 </div>
@@ -208,7 +208,7 @@ export default function OrderDetail() {
           {order.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Notas del Pedido</CardTitle>
+                <CardTitle>Notas del envío</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground whitespace-pre-wrap">{order.notes}</p>

@@ -149,7 +149,7 @@ export default function Register() {
         <div className="absolute inset-0 h-full w-full bg-gradient-to-bl from-[#00B5E2] via-[#0096BD] to-[#0B1E2D] flex items-center justify-center p-12">
           <div className="text-white max-w-2xl">
             <h1 className="text-5xl font-extrabold tracking-tight mb-6">
-              Hacé crecer tu negocio con entregas rápidas.
+              Haz crecer tu negocio con entregas rápidas.
             </h1>
             <p className="text-xl opacity-90">
               Sumate a las empresas que confían en TiempoLibre para su logística de última milla.

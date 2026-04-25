@@ -1,27 +1,75 @@
 import { useState } from "react";
-import { useGetFinanceSummary, GetFinanceSummaryRange, useListTransactions, useGetCashReport, useGetB2BRevenue, useGetFinanceTodaySplit } from "@workspace/api-client-react";
+import {
+  useGetFinanceSummary,
+  GetFinanceSummaryRange,
+  useListTransactions,
+  useGetCashReport,
+  useGetB2BRevenue,
+  useGetFinanceTodaySplit,
+  useAdminListClientes,
+  financeExportExcel,
+} from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { DollarSign, TrendingUp, TrendingDown, Wallet, Activity, CreditCard, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { toast } from "sonner";
+import { DollarSign, TrendingUp, TrendingDown, Activity, CreditCard, ArrowUpRight, ArrowDownRight, FileSpreadsheet, Loader2 } from "lucide-react";
 
-const formatMoney = (val: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(val);
+const formatMoney = (val: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
+
+type ExportType = "deliveries" | "plans" | "accounting";
+type ExportPeriod = "day" | "week" | "month" | "year";
+
+const EXPORT_LABELS: Record<ExportType, string> = {
+  deliveries: "Reporte por reparto",
+  plans: "Reporte por planes",
+  accounting: "Reporte contable",
+};
 
 const COLORS = ['#f97316', '#3b82f6', '#10b981', '#8b5cf6'];
 
 export default function Finance() {
   const [range, setRange] = useState<GetFinanceSummaryRange>("week");
+  const [exportPeriod, setExportPeriod] = useState<ExportPeriod>("month");
+  const [exportClienteId, setExportClienteId] = useState<string>("");
+  const [downloading, setDownloading] = useState<ExportType | null>(null);
 
   const { data: summary, isLoading: loadingSummary } = useGetFinanceSummary({ range });
   const { data: transactions, isLoading: loadingTx } = useListTransactions();
   const { data: cashReport } = useGetCashReport();
   const { data: b2b } = useGetB2BRevenue();
   const { data: todaySplit } = useGetFinanceTodaySplit();
+  const { data: clientes } = useAdminListClientes();
+
+  const handleExport = async (type: ExportType) => {
+    setDownloading(type);
+    try {
+      const blob = await financeExportExcel({
+        type,
+        period: exportPeriod,
+        ...(exportClienteId ? { clienteId: Number(exportClienteId) } : {}),
+      });
+      const objUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = objUrl;
+      a.download = `tiempolibre_${type}_${exportPeriod}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(objUrl);
+      toast.success(`${EXPORT_LABELS[type]} descargado`);
+    } catch (e: any) {
+      toast.error(`No se pudo descargar el reporte: ${e?.message ?? "error"}`);
+    } finally {
+      setDownloading(null);
+    }
+  };
 
   const formatChartDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -49,6 +97,77 @@ export default function Finance() {
         </Select>
       </div>
 
+      <Card className="border-[#00B5E2]/40">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileSpreadsheet className="w-5 h-5 text-[#00B5E2]" />
+            Descargar reportes (Excel)
+          </CardTitle>
+          <CardDescription>
+            Elige el periodo y, opcionalmente, el cliente. El archivo se descarga en formato XLSX.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Periodo
+              </label>
+              <Select value={exportPeriod} onValueChange={(v: ExportPeriod) => setExportPeriod(v)}>
+                <SelectTrigger data-testid="select-export-period">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Día</SelectItem>
+                  <SelectItem value="week">Semana</SelectItem>
+                  <SelectItem value="month">Mes</SelectItem>
+                  <SelectItem value="year">Año</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                Cliente (opcional)
+              </label>
+              <Select
+                value={exportClienteId || "ALL"}
+                onValueChange={(v) => setExportClienteId(v === "ALL" ? "" : v)}
+              >
+                <SelectTrigger data-testid="select-export-cliente">
+                  <SelectValue placeholder="Todos los clientes" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL">Todos los clientes</SelectItem>
+                  {(clientes ?? []).map((c) => (
+                    <SelectItem key={c.id} value={String(c.id)}>
+                      {c.name} {c.businessName ? `· ${c.businessName}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(["deliveries", "plans", "accounting"] as ExportType[]).map((t) => (
+              <Button
+                key={t}
+                onClick={() => handleExport(t)}
+                disabled={downloading !== null}
+                className="bg-[#00B5E2] hover:bg-[#0096BD]"
+                data-testid={`button-export-${t}`}
+              >
+                {downloading === t ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <FileSpreadsheet className="w-4 h-4 mr-2" />
+                )}
+                {EXPORT_LABELS[t]}
+              </Button>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-[#00B5E2]/40">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -59,7 +178,7 @@ export default function Finance() {
             <div className="text-2xl font-bold text-foreground" data-testid="value-reparto-today">
               {formatMoney(todaySplit?.repartoToday ?? 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">Pedidos entregados hoy</p>
+            <p className="text-xs text-muted-foreground mt-1">Envíos entregados hoy</p>
           </CardContent>
         </Card>
         <Card className="border-[#00B5E2]/40">
@@ -127,7 +246,7 @@ export default function Finance() {
 
           <Card className="bg-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Pedidos Liquidados</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Envíos liquidados</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -266,7 +385,7 @@ export default function Finance() {
           <CardContent className="p-0">
             {!b2b || b2b.clients.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
-                Aún no hay clientes suscriptos.
+                Aún no hay clientes suscritos.
               </div>
             ) : (
               <Table>
@@ -274,7 +393,7 @@ export default function Finance() {
                   <TableRow>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Plan</TableHead>
-                    <TableHead className="text-right">Pedidos del mes</TableHead>
+                    <TableHead className="text-right">Envíos del mes</TableHead>
                     <TableHead className="text-right">Recaudación</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -333,7 +452,7 @@ export default function Finance() {
                     </TableCell>
                     <TableCell className="font-medium">
                       {tx.description}
-                      {tx.orderId && <span className="ml-2 text-xs text-muted-foreground">Ord #{tx.orderId}</span>}
+                      {tx.orderId && <span className="ml-2 text-xs text-muted-foreground">Envío #{tx.orderId}</span>}
                     </TableCell>
                     <TableCell>
                       {tx.type === "INGRESO" ? (

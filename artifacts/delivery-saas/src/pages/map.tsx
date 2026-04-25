@@ -111,7 +111,7 @@ export default function MapPage() {
         type: "symbol",
         source: "zonas",
         layout: {
-          "text-field": ["get", "name"],
+          "text-field": ["concat", "Zona ", ["get", "name"]],
           "text-size": 14,
           "text-anchor": "center",
           "text-allow-overlap": false,
@@ -130,7 +130,7 @@ export default function MapPage() {
         if (!feature) return;
         const props = feature.properties as { name?: string; description?: string };
         const html = `<div style="font-family:system-ui;font-size:13px;line-height:1.4">
-          <strong>${props.name ?? ""}</strong>
+          <strong>Zona ${props.name ?? ""}</strong>
           ${props.description ? `<div style="color:#475569;margin-top:4px;max-width:240px">${props.description}</div>` : ""}
         </div>`;
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
@@ -230,7 +230,7 @@ export default function MapPage() {
             Mapa de zonas
           </h1>
           <p className="text-muted-foreground mt-1">
-            Polígonos de cobertura cargados desde <code>zonas.kml</code>. Cada nuevo pedido valida automáticamente que la
+            Polígonos de cobertura cargados desde <code>zonas.kml</code>. Cada nuevo envío valida automáticamente que la
             dirección de entrega caiga dentro de una de estas zonas.
           </p>
         </div>
@@ -265,7 +265,7 @@ export default function MapPage() {
                       <p className="font-medium">Mapa no disponible</p>
                       <p className="text-sm text-muted-foreground mt-2">{mapError}</p>
                       <p className="text-xs text-muted-foreground mt-3">
-                        Las zonas siguen funcionando para validar pedidos. Listado completo a la derecha.
+                        Las zonas siguen funcionando para validar envíos. Listado completo a la derecha.
                       </p>
                     </div>
                   </div>
@@ -281,13 +281,13 @@ export default function MapPage() {
           </CardHeader>
           <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
             {zones.length === 0 && !loading && (
-              <p className="text-sm text-muted-foreground">Sin polígonos. Subí <code>zonas.kml</code> a la raíz.</p>
+              <p className="text-sm text-muted-foreground">Sin polígonos. Sube <code>zonas.kml</code> a la raíz.</p>
             )}
             {zones.map((z) => (
               <div key={z.name} className="flex items-start gap-3 p-2 rounded-md hover:bg-muted/50">
                 <span className="w-3 h-3 rounded-sm flex-shrink-0 mt-1.5" style={{ background: z.color }} />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium">{z.name}</p>
+                  <p className="text-sm font-medium">Zona {z.name}</p>
                   {z.description && (
                     <p className="text-xs text-muted-foreground truncate" title={z.description}>
                       {z.description}

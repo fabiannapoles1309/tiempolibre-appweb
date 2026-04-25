@@ -2,13 +2,14 @@ import {
   useGetMySubscription,
   useSubscribe,
   useRechargeSubscription,
+  useGetMyCustomerProfile,
   SubscriptionTier,
   getGetMySubscriptionQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Crown, Check, AlertTriangle, Loader2, Plus } from "lucide-react";
+import { Crown, Check, AlertTriangle, Loader2, Plus, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
 const PLANS = [
@@ -35,8 +36,61 @@ const PLANS = [
   },
 ];
 
+const BLOCK_SIZE = 35;
+
+function BlockOf35({
+  remaining,
+  monthly,
+}: {
+  remaining: number;
+  monthly: number;
+}) {
+  const used = Math.max(0, monthly - remaining);
+  // Bloque actual = los últimos `BLOCK_SIZE` envíos del cupo, o todos si total < 35.
+  const blockTotal = Math.min(BLOCK_SIZE, monthly || BLOCK_SIZE);
+  const blockRemaining = Math.min(remaining, blockTotal);
+  const blockUsed = blockTotal - blockRemaining;
+  const cells = Array.from({ length: blockTotal }, (_, i) => i < blockRemaining);
+  return (
+    <div className="space-y-3">
+      <div className="flex items-baseline justify-between">
+        <div className="text-sm font-semibold">
+          Bloque actual:{" "}
+          <span className="text-[#0096BD]">
+            {blockRemaining}/{blockTotal} restantes
+          </span>
+        </div>
+        <div className="text-xs text-muted-foreground">
+          Total del periodo: {used}/{monthly} usados
+        </div>
+      </div>
+      <div
+        className="grid gap-1"
+        style={{ gridTemplateColumns: `repeat(${Math.min(blockTotal, 35)}, minmax(0, 1fr))` }}
+        data-testid="block-35-grid"
+      >
+        {cells.map((isRemaining, i) => (
+          <div
+            key={i}
+            className={`h-3 rounded-sm transition-colors ${
+              isRemaining ? "bg-[#00B5E2]" : "bg-muted-foreground/20"
+            }`}
+            title={isRemaining ? "Disponible" : "Usado"}
+          />
+        ))}
+      </div>
+      {blockUsed > 0 && (
+        <div className="text-xs text-muted-foreground">
+          {blockUsed} {blockUsed === 1 ? "envío usado" : "envíos usados"} de este bloque.
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SubscriptionPage() {
   const { data, isLoading } = useGetMySubscription();
+  const { data: profile } = useGetMyCustomerProfile();
   const subscribe = useSubscribe();
   const recharge = useRechargeSubscription();
   const qc = useQueryClient();
@@ -71,9 +125,37 @@ export default function SubscriptionPage() {
           <Crown className="w-7 h-7 text-[#00B5E2]" /> Mi suscripción
         </h1>
         <p className="text-muted-foreground mt-1">
-          Consultá tu plan activo y la cantidad de envíos disponibles.
+          Consulta tu plan activo y la cantidad de envíos disponibles.
         </p>
       </div>
+
+      {profile && (
+        <Card className="border-muted">
+          <CardContent className="pt-6 grid sm:grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-xs text-muted-foreground">Establecimiento</div>
+              <div className="font-medium">{profile.businessName ?? "—"}</div>
+            </div>
+            <div>
+              <div className="text-xs text-muted-foreground flex items-center gap-1">
+                <MapPin className="w-3 h-3" /> Zona asignada
+              </div>
+              <div
+                className="font-medium"
+                data-testid="value-assigned-zone"
+              >
+                {profile.clienteZone != null ? `Zona ${profile.clienteZone}` : "Sin asignar"}
+              </div>
+            </div>
+            {profile.pickupAddress && (
+              <div className="sm:col-span-2">
+                <div className="text-xs text-muted-foreground">Dirección de recolección</div>
+                <div className="font-medium">{profile.pickupAddress}</div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {isLoading ? (
         <div className="flex items-center gap-2 text-muted-foreground">
@@ -87,8 +169,9 @@ export default function SubscriptionPage() {
               data-testid="alert-low-remaining"
             >
               <AlertTriangle className="w-5 h-5" />
-              ¡Atención! Te quedan <span className="font-bold">{sub.remainingDeliveries}</span> envíos.
-              Solicitá una recarga para no quedarte sin servicio.
+              ¡Atención! Te quedan{" "}
+              <span className="font-bold">{sub.remainingDeliveries}</span> envíos. Solicita una
+              recarga para no quedarte sin servicio.
             </div>
           )}
 
@@ -98,16 +181,21 @@ export default function SubscriptionPage() {
                 Plan actual: <span className="text-[#0096BD]">{sub.tier}</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              <BlockOf35
+                remaining={sub.remainingDeliveries}
+                monthly={sub.monthlyDeliveries}
+              />
+
               <div className="grid grid-cols-3 gap-3">
                 <div className="border rounded-lg p-3">
                   <div className="text-xs text-muted-foreground">Cuota mensual</div>
                   <div className="text-xl font-bold">
-                    $ {sub.monthlyPrice.toLocaleString("es-AR")}
+                    $ {sub.monthlyPrice.toLocaleString("es-MX")}
                   </div>
                 </div>
                 <div className="border rounded-lg p-3">
-                  <div className="text-xs text-muted-foreground">Envíos usados</div>
+                  <div className="text-xs text-muted-foreground">Envíos del periodo</div>
                   <div className="text-xl font-bold">
                     {sub.usedDeliveries} / {sub.monthlyDeliveries}
                   </div>
@@ -138,7 +226,7 @@ export default function SubscriptionPage() {
                   Solicitar recarga (+35 envíos)
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  Período iniciado: {new Date(sub.periodStart).toLocaleDateString("es-AR")}
+                  Periodo iniciado: {new Date(sub.periodStart).toLocaleDateString("es-MX")}
                 </p>
               </div>
             </CardContent>
@@ -147,7 +235,7 @@ export default function SubscriptionPage() {
       ) : (
         <>
           <div className="text-sm text-muted-foreground">
-            Aún no tenés un plan activo. Elegí uno para empezar a gestionar tus envíos.
+            Aún no tienes un plan activo. Elige uno para empezar a gestionar tus envíos.
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -169,7 +257,7 @@ export default function SubscriptionPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <div className="text-3xl font-bold">
-                      $ {p.price.toLocaleString("es-AR")}
+                      $ {p.price.toLocaleString("es-MX")}
                       <span className="text-sm font-normal text-muted-foreground">
                         {" "}
                         /mes

@@ -516,6 +516,16 @@ export interface AdminCreateUserBody {
   /** @nullable */
   tier?: AdminCreateUserBodyTier;
   /** @nullable */
+  businessName?: string | null;
+  /** @nullable */
+  pickupAddress?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 100
+   * @nullable
+   */
+  clienteZone?: number | null;
+  /** @nullable */
   phone?: string | null;
   /** @nullable */
   vehicle?: string | null;
@@ -524,6 +534,85 @@ export interface AdminCreateUserBody {
   licensePlate?: string | null;
   /** @nullable */
   circulationCard?: string | null;
+}
+
+export interface CustomerProfile {
+  /** @nullable */
+  businessName: string | null;
+  /** @nullable */
+  pickupAddress: string | null;
+  /** @nullable */
+  clienteZone: number | null;
+  /** @nullable */
+  phone: string | null;
+}
+
+/**
+ * @nullable
+ */
+export type AdminUpdateClienteBodyTier =
+  | (typeof AdminUpdateClienteBodyTier)[keyof typeof AdminUpdateClienteBodyTier]
+  | null;
+
+export const AdminUpdateClienteBodyTier = {
+  ESTANDAR: "ESTANDAR",
+  OPTIMO: "OPTIMO",
+} as const;
+
+/**
+ * Update fields for an existing cliente. All fields optional.
+ */
+export interface AdminUpdateClienteBody {
+  /** @minLength 1 */
+  name?: string;
+  /** @nullable */
+  businessName?: string | null;
+  /** @nullable */
+  pickupAddress?: string | null;
+  /**
+   * @minimum 1
+   * @maximum 100
+   * @nullable
+   */
+  clienteZone?: number | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  tier?: AdminUpdateClienteBodyTier;
+}
+
+/**
+ * @nullable
+ */
+export type AdminClienteRowTier =
+  | (typeof AdminClienteRowTier)[keyof typeof AdminClienteRowTier]
+  | null;
+
+export const AdminClienteRowTier = {
+  ESTANDAR: "ESTANDAR",
+  OPTIMO: "OPTIMO",
+} as const;
+
+export interface AdminClienteRow {
+  id: number;
+  name: string;
+  email: string;
+  /** @nullable */
+  businessName?: string | null;
+  /** @nullable */
+  pickupAddress?: string | null;
+  /** @nullable */
+  clienteZone?: number | null;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  tier?: AdminClienteRowTier;
+  /** @nullable */
+  status?: string | null;
+  usedDeliveries: number;
+  monthlyDeliveries: number;
+  remainingDeliveries: number;
+  createdAt: string;
 }
 
 /**
@@ -593,6 +682,31 @@ export type ListOrdersParams = {
    */
   to?: string;
 };
+
+export type FinanceExportExcelParams = {
+  type: FinanceExportExcelType;
+  period: FinanceExportExcelPeriod;
+  clienteId?: number;
+};
+
+export type FinanceExportExcelType =
+  (typeof FinanceExportExcelType)[keyof typeof FinanceExportExcelType];
+
+export const FinanceExportExcelType = {
+  deliveries: "deliveries",
+  plans: "plans",
+  accounting: "accounting",
+} as const;
+
+export type FinanceExportExcelPeriod =
+  (typeof FinanceExportExcelPeriod)[keyof typeof FinanceExportExcelPeriod];
+
+export const FinanceExportExcelPeriod = {
+  day: "day",
+  week: "week",
+  month: "month",
+  year: "year",
+} as const;
 
 export type PutBenefitsConfigBody = {
   levels: BenefitLevelInput[];

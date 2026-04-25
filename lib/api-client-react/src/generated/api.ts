@@ -17,8 +17,10 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AdminClienteRow,
   AdminCreateUserBody,
   AdminCreatedUser,
+  AdminUpdateClienteBody,
   AssignManualBody,
   AuthSession,
   AutoAssignResult,
@@ -30,12 +32,14 @@ import type {
   CreateIncidentBody,
   CreateOrderBody,
   CustomerDeliveriesRow,
+  CustomerProfile,
   DashboardData,
   DeliveriesPoint,
   Driver,
   DriverPerformance,
   DriverRankingEntry,
   ErrorResponse,
+  FinanceExportExcelParams,
   FinanceSummary,
   GetDeliveriesReportParams,
   GetDriversReportParams,
@@ -2120,6 +2124,81 @@ export const useSubscribe = <
 };
 
 /**
+ * @summary Cliente's own customer profile (businessName, pickupAddress, zone, phone)
+ */
+export const getGetMyCustomerProfileUrl = () => {
+  return `/api/me/customer`;
+};
+
+export const getMyCustomerProfile = async (
+  options?: RequestInit,
+): Promise<CustomerProfile> => {
+  return customFetch<CustomerProfile>(getGetMyCustomerProfileUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetMyCustomerProfileQueryKey = () => {
+  return [`/api/me/customer`] as const;
+};
+
+export const getGetMyCustomerProfileQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMyCustomerProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyCustomerProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMyCustomerProfileQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getMyCustomerProfile>>
+  > = ({ signal }) => getMyCustomerProfile({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getMyCustomerProfile>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetMyCustomerProfileQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMyCustomerProfile>>
+>;
+export type GetMyCustomerProfileQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Cliente's own customer profile (businessName, pickupAddress, zone, phone)
+ */
+
+export function useGetMyCustomerProfile<
+  TData = Awaited<ReturnType<typeof getMyCustomerProfile>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getMyCustomerProfile>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMyCustomerProfileQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
  * @summary Add a 35-delivery recharge block to the active CLIENTE subscription
  */
 export const getRechargeSubscriptionUrl = () => {
@@ -2199,6 +2278,433 @@ export const useRechargeSubscription = <
 > => {
   return useMutation(getRechargeSubscriptionMutationOptions(options));
 };
+
+/**
+ * @summary List all CLIENTE users with their customer profile and active subscription summary (ADMIN/SUPERUSER)
+ */
+export const getAdminListClientesUrl = () => {
+  return `/api/admin/clientes`;
+};
+
+export const adminListClientes = async (
+  options?: RequestInit,
+): Promise<AdminClienteRow[]> => {
+  return customFetch<AdminClienteRow[]>(getAdminListClientesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminListClientesQueryKey = () => {
+  return [`/api/admin/clientes`] as const;
+};
+
+export const getAdminListClientesQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminListClientes>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminListClientes>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminListClientesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminListClientes>>
+  > = ({ signal }) => adminListClientes({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminListClientes>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminListClientesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminListClientes>>
+>;
+export type AdminListClientesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List all CLIENTE users with their customer profile and active subscription summary (ADMIN/SUPERUSER)
+ */
+
+export function useAdminListClientes<
+  TData = Awaited<ReturnType<typeof adminListClientes>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminListClientes>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminListClientesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Update a CLIENTE profile (name, businessName, pickupAddress, zone, phone, tier) (ADMIN/SUPERUSER)
+ */
+export const getAdminUpdateClienteUrl = (id: number) => {
+  return `/api/admin/clientes/${id}`;
+};
+
+export const adminUpdateCliente = async (
+  id: number,
+  adminUpdateClienteBody: AdminUpdateClienteBody,
+  options?: RequestInit,
+): Promise<AdminClienteRow> => {
+  return customFetch<AdminClienteRow>(getAdminUpdateClienteUrl(id), {
+    ...options,
+    method: "PATCH",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminUpdateClienteBody),
+  });
+};
+
+export const getAdminUpdateClienteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateCliente>>,
+    TError,
+    { id: number; data: BodyType<AdminUpdateClienteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminUpdateCliente>>,
+  TError,
+  { id: number; data: BodyType<AdminUpdateClienteBody> },
+  TContext
+> => {
+  const mutationKey = ["adminUpdateCliente"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminUpdateCliente>>,
+    { id: number; data: BodyType<AdminUpdateClienteBody> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return adminUpdateCliente(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminUpdateClienteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminUpdateCliente>>
+>;
+export type AdminUpdateClienteMutationBody = BodyType<AdminUpdateClienteBody>;
+export type AdminUpdateClienteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Update a CLIENTE profile (name, businessName, pickupAddress, zone, phone, tier) (ADMIN/SUPERUSER)
+ */
+export const useAdminUpdateCliente = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminUpdateCliente>>,
+    TError,
+    { id: number; data: BodyType<AdminUpdateClienteBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminUpdateCliente>>,
+  TError,
+  { id: number; data: BodyType<AdminUpdateClienteBody> },
+  TContext
+> => {
+  return useMutation(getAdminUpdateClienteMutationOptions(options));
+};
+
+/**
+ * @summary Add a 35-envío recharge block to a cliente's subscription (ADMIN/SUPERUSER)
+ */
+export const getAdminRechargeClienteUrl = (id: number) => {
+  return `/api/admin/clientes/${id}/recharge`;
+};
+
+export const adminRechargeCliente = async (
+  id: number,
+  options?: RequestInit,
+): Promise<AdminClienteRow> => {
+  return customFetch<AdminClienteRow>(getAdminRechargeClienteUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAdminRechargeClienteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminRechargeCliente>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminRechargeCliente>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["adminRechargeCliente"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminRechargeCliente>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return adminRechargeCliente(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminRechargeClienteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminRechargeCliente>>
+>;
+
+export type AdminRechargeClienteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a 35-envío recharge block to a cliente's subscription (ADMIN/SUPERUSER)
+ */
+export const useAdminRechargeCliente = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminRechargeCliente>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminRechargeCliente>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getAdminRechargeClienteMutationOptions(options));
+};
+
+/**
+ * @summary Renew/reactivate a cliente subscription with a fresh block (ADMIN/SUPERUSER)
+ */
+export const getAdminRenewClienteUrl = (id: number) => {
+  return `/api/admin/clientes/${id}/renew`;
+};
+
+export const adminRenewCliente = async (
+  id: number,
+  options?: RequestInit,
+): Promise<AdminClienteRow> => {
+  return customFetch<AdminClienteRow>(getAdminRenewClienteUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAdminRenewClienteMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminRenewCliente>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminRenewCliente>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  const mutationKey = ["adminRenewCliente"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminRenewCliente>>,
+    { id: number }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return adminRenewCliente(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminRenewClienteMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminRenewCliente>>
+>;
+
+export type AdminRenewClienteMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Renew/reactivate a cliente subscription with a fresh block (ADMIN/SUPERUSER)
+ */
+export const useAdminRenewCliente = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminRenewCliente>>,
+    TError,
+    { id: number },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminRenewCliente>>,
+  TError,
+  { id: number },
+  TContext
+> => {
+  return useMutation(getAdminRenewClienteMutationOptions(options));
+};
+
+/**
+ * @summary Download an Excel report (deliveries / plans / accounting) by period and optional cliente (ADMIN/SUPERUSER)
+ */
+export const getFinanceExportExcelUrl = (params: FinanceExportExcelParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/finance/export/excel?${stringifiedParams}`
+    : `/api/finance/export/excel`;
+};
+
+export const financeExportExcel = async (
+  params: FinanceExportExcelParams,
+  options?: RequestInit,
+): Promise<Blob> => {
+  return customFetch<Blob>(getFinanceExportExcelUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getFinanceExportExcelQueryKey = (
+  params?: FinanceExportExcelParams,
+) => {
+  return [`/api/finance/export/excel`, ...(params ? [params] : [])] as const;
+};
+
+export const getFinanceExportExcelQueryOptions = <
+  TData = Awaited<ReturnType<typeof financeExportExcel>>,
+  TError = ErrorType<unknown>,
+>(
+  params: FinanceExportExcelParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof financeExportExcel>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getFinanceExportExcelQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof financeExportExcel>>
+  > = ({ signal }) => financeExportExcel(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof financeExportExcel>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type FinanceExportExcelQueryResult = NonNullable<
+  Awaited<ReturnType<typeof financeExportExcel>>
+>;
+export type FinanceExportExcelQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Download an Excel report (deliveries / plans / accounting) by period and optional cliente (ADMIN/SUPERUSER)
+ */
+
+export function useFinanceExportExcel<
+  TData = Awaited<ReturnType<typeof financeExportExcel>>,
+  TError = ErrorType<unknown>,
+>(
+  params: FinanceExportExcelParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof financeExportExcel>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getFinanceExportExcelQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Create a CLIENTE (with optional plan) or DRIVER (with full account) (ADMIN)

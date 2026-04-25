@@ -1,6 +1,7 @@
 export * from "./users";
 export * from "./zones";
 export * from "./drivers";
+export * from "./customers";
 export * from "./orders";
 export * from "./transactions";
 export * from "./wallets";

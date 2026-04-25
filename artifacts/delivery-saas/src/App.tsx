@@ -26,6 +26,7 @@ import AdminUsersPage from "@/pages/admin-users";
 import AdminCustomerDeliveriesPage from "@/pages/admin-customer-deliveries";
 import AdminCashByCustomerPage from "@/pages/admin-cash-by-customer";
 import AdminBenefitsConfigPage from "@/pages/admin-benefits-config";
+import AdminClientesPage from "@/pages/admin-clientes";
 
 const queryClient = new QueryClient();
 
@@ -86,6 +87,7 @@ function Router() {
       <Route path="/admin/customer-deliveries" component={() => <ProtectedRoute component={AdminCustomerDeliveriesPage} roles={["ADMIN"]} />} />
       <Route path="/admin/cash-by-customer" component={() => <ProtectedRoute component={AdminCashByCustomerPage} roles={["ADMIN"]} />} />
       <Route path="/admin/benefits-config" component={() => <ProtectedRoute component={AdminBenefitsConfigPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/clientes" component={() => <ProtectedRoute component={AdminClientesPage} roles={["ADMIN"]} />} />
       <Route path="/subscription" component={() => <ProtectedRoute component={SubscriptionPage} roles={["CLIENTE"]} />} />
       <Route component={NotFound} />
     </Switch>

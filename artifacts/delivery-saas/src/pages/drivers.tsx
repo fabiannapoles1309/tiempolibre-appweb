@@ -316,7 +316,7 @@ export default function Drivers() {
                 <TableRow>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Teléfono</TableHead>
-                  <TableHead>Vehículo / Patente</TableHead>
+                  <TableHead>Vehículo / Placas</TableHead>
                   <TableHead>Zonas</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Efectivo a rendir</TableHead>
@@ -331,7 +331,7 @@ export default function Drivers() {
                     <TableCell>
                       <div>{driver.vehicle}</div>
                       {driver.licensePlate ? (
-                        <div className="text-xs text-muted-foreground">Patente: {driver.licensePlate}</div>
+                        <div className="text-xs text-muted-foreground">Placas: {driver.licensePlate}</div>
                       ) : null}
                     </TableCell>
                     <TableCell>

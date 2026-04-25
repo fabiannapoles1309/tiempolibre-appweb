@@ -10,6 +10,7 @@ import reportsRouter from "./reports";
 import incidentsRouter from "./incidents";
 import subscriptionsRouter from "./subscriptions";
 import financeExtraRouter from "./finance-extra";
+import financeExportRouter from "./finance-export";
 import adminRouter from "./admin";
 
 const router: IRouter = Router();
@@ -25,6 +26,7 @@ router.use(reportsRouter);
 router.use(incidentsRouter);
 router.use(subscriptionsRouter);
 router.use(financeExtraRouter);
+router.use(financeExportRouter);
 router.use(adminRouter);
 
 export default router;

@@ -39,8 +39,19 @@ const schema = z.object({
   password: z.string().min(6, "Mínimo 6 caracteres"),
   // Cliente
   tier: z.nativeEnum(SubscriptionTier).optional(),
-  // Driver
+  businessName: z.string().optional(),
+  pickupAddress: z.string().optional(),
+  clienteZone: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((v) => (v === "" || v === undefined ? undefined : Number(v)))
+    .refine(
+      (v) => v === undefined || (Number.isInteger(v) && v >= 1 && v <= 100),
+      "Zona entre 1 y 100",
+    ),
+  // Driver + Cliente
   phone: z.string().optional(),
+  // Driver
   vehicle: z.string().optional(),
   zones: z.array(z.nativeEnum(ZoneName)).optional(),
   licensePlate: z.string().optional(),
@@ -73,7 +84,7 @@ export default function AdminUsersPage() {
       toast.success("Mensaje copiado al portapapeles");
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      toast.error("No se pudo copiar. Seleccioná el texto manualmente.");
+      toast.error("No se pudo copiar. Selecciona el texto manualmente.");
     }
   };
 
@@ -85,6 +96,9 @@ export default function AdminUsersPage() {
       email: "",
       password: "",
       tier: SubscriptionTier.ESTANDAR,
+      businessName: "",
+      pickupAddress: "",
+      clienteZone: undefined,
       phone: "",
       vehicle: "",
       zones: [],
@@ -105,6 +119,10 @@ export default function AdminUsersPage() {
       };
       if (data.role === AdminCreateUserBodyRole.CLIENTE) {
         if (data.tier) payload.tier = data.tier;
+        if (data.businessName) payload.businessName = data.businessName;
+        if (data.pickupAddress) payload.pickupAddress = data.pickupAddress;
+        if (data.clienteZone !== undefined) payload.clienteZone = data.clienteZone;
+        if (data.phone) payload.phone = data.phone;
       }
       if (data.role === AdminCreateUserBodyRole.DRIVER) {
         payload.phone = data.phone ?? "";
@@ -127,6 +145,9 @@ export default function AdminUsersPage() {
         email: "",
         password: "",
         tier: SubscriptionTier.ESTANDAR,
+        businessName: "",
+        pickupAddress: "",
+        clienteZone: undefined,
         phone: "",
         vehicle: "",
         zones: [],
@@ -153,7 +174,7 @@ export default function AdminUsersPage() {
         <CardHeader>
           <CardTitle>Datos del usuario</CardTitle>
           <CardDescription>
-            Elegí el rol y completá los campos requeridos.
+            Elige el rol y completa los campos requeridos.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -242,34 +263,106 @@ export default function AdminUsersPage() {
               />
 
               {role === AdminCreateUserBodyRole.CLIENTE && (
-                <FormField
-                  control={form.control}
-                  name="tier"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Plan inicial (opcional)</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ""}
-                      >
+                <>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="businessName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre del establecimiento</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Tacos Don Pepe" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Teléfono de contacto</FormLabel>
+                          <FormControl>
+                            <Input placeholder="+52 55 ..." {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="pickupAddress"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dirección de recolección</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Sin plan" />
-                          </SelectTrigger>
+                          <Input
+                            placeholder="Calle, número, colonia, alcaldía"
+                            {...field}
+                          />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value={SubscriptionTier.ESTANDAR}>
-                            Estándar — 35 envíos / $15.000
-                          </SelectItem>
-                          <SelectItem value={SubscriptionTier.OPTIMO}>
-                            Óptimo — 70 envíos / $25.000
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="clienteZone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Zona asignada (1-100)</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min={1}
+                              max={100}
+                              placeholder="Ej. 12"
+                              value={field.value ?? ""}
+                              onChange={(e) =>
+                                field.onChange(
+                                  e.target.value === "" ? undefined : e.target.value,
+                                )
+                              }
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="tier"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Plan inicial (opcional)</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value ?? ""}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Sin plan" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value={SubscriptionTier.ESTANDAR}>
+                                Estándar — 35 envíos / $15,000
+                              </SelectItem>
+                              <SelectItem value={SubscriptionTier.OPTIMO}>
+                                Óptimo — 70 envíos / $25,000
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </>
               )}
 
               {role === AdminCreateUserBodyRole.DRIVER && (
@@ -282,7 +375,7 @@ export default function AdminUsersPage() {
                         <FormItem>
                           <FormLabel>Teléfono</FormLabel>
                           <FormControl>
-                            <Input placeholder="+54 9 11 ..." {...field} />
+                            <Input placeholder="+52 55 ..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -403,7 +496,7 @@ export default function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>Mensaje de bienvenida para {welcomeDriverName || "el repartidor"}</DialogTitle>
             <DialogDescription>
-              Copialo y enviáselo por SMS o WhatsApp. Incluye sus accesos y el link a la app.
+              Cópialo y envíaselo por SMS o WhatsApp. Incluye sus accesos y el enlace a la app.
             </DialogDescription>
           </DialogHeader>
           <Textarea

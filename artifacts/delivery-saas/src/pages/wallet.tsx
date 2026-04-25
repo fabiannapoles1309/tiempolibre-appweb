@@ -155,7 +155,7 @@ export default function WalletPage() {
           ) : !transactions || transactions.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">
               <Wallet className="mx-auto h-12 w-12 opacity-20 mb-4" />
-              Aún no tenés movimientos en tu billetera.
+              Aún no tienes movimientos en tu billetera.
             </div>
           ) : (
             <Table>

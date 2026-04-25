@@ -15,9 +15,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard, roles: [UserRole.ADMIN, UserRole.CLIENTE, UserRole.DRIVER] },
-  { title: "Mis pedidos", href: "/orders", icon: Package, roles: [UserRole.CLIENTE] },
-  { title: "Crear pedido", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
-  { title: "Pedidos", href: "/orders", icon: Package, roles: [UserRole.ADMIN] },
+  { title: "Mis envíos", href: "/orders", icon: Package, roles: [UserRole.CLIENTE] },
+  { title: "Crear envío", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
+  { title: "Repartos", href: "/orders", icon: Package, roles: [UserRole.ADMIN] },
   { title: "Asignación", href: "/admin", icon: Settings, roles: [UserRole.ADMIN] },
   { title: "Mapa de zonas", href: "/map", icon: MapIcon, roles: [UserRole.ADMIN] },
   { title: "Repartidores", href: "/drivers", icon: Users, roles: [UserRole.ADMIN] },
@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
   { title: "Incidentes", href: "/driver/incidents", icon: AlertTriangle, roles: [UserRole.DRIVER] },
   { title: "Reportes", href: "/reports", icon: FileText, roles: [UserRole.ADMIN] },
   { title: "Finanzas", href: "/finance", icon: DollarSign, roles: [UserRole.ADMIN] },
+  { title: "Clientes", href: "/admin/clientes", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Suscripciones", href: "/admin/subscriptions", icon: Crown, roles: [UserRole.ADMIN] },
   { title: "Envíos por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
   { title: "Cash por cliente", href: "/admin/cash-by-customer", icon: Banknote, roles: [UserRole.ADMIN] },
@@ -54,10 +55,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // SUPERUSER ve todo el menú; cualquier otro rol se filtra por su rol.
+  // SUPERUSER (Soporte): perfil de gestión, no operativo. Sólo ve lo que
+  // ve un ADMIN. Excluye ítems personales (Mi suscripción, Mis pedidos,
+  // Mis beneficios, Billetera) y específicos de DRIVER/CLIENTE.
   const filteredNav =
     user.role === "SUPERUSER"
-      ? navItems
+      ? navItems.filter((item) => item.roles.includes(UserRole.ADMIN))
       : navItems.filter((item) => item.roles.includes(user.role));
 
   return (

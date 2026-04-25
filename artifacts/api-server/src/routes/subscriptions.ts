@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { db, subscriptionsTable, usersTable } from "@workspace/db";
 import { SubscribeBody } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
@@ -114,6 +114,51 @@ router.post(
       return;
     }
     res.json(serializeSubscription(sub, (req.user as any).name ?? "Cliente"));
+  },
+);
+
+// Recarga: agrega un bloque de 35 envíos a la última suscripción del cliente.
+// Acepta ACTIVA o VENCIDA (el cliente puede recargar cuando se le agotaron envíos).
+// Si la sub estaba VENCIDA, la reactiva a ACTIVA.
+router.post(
+  "/me/subscription/recharge",
+  requireAuth,
+  requireRole("CLIENTE", "SUPERUSER"),
+  async (req, res): Promise<void> => {
+    if (!req.user) {
+      res.status(401).json({ error: "No autenticado" });
+      return;
+    }
+    const [latest] = await db
+      .select()
+      .from(subscriptionsTable)
+      .where(
+        and(
+          eq(subscriptionsTable.userId, req.user.sub),
+          inArray(subscriptionsTable.status, ["ACTIVA", "VENCIDA"]),
+        ),
+      )
+      .orderBy(desc(subscriptionsTable.createdAt));
+    if (!latest) {
+      res.status(404).json({
+        error: "No tenés una suscripción para recargar. Suscribite primero.",
+      });
+      return;
+    }
+    const RECHARGE_BLOCK = 35;
+    const [updated] = await db
+      .update(subscriptionsTable)
+      .set({
+        monthlyDeliveries: latest.monthlyDeliveries + RECHARGE_BLOCK,
+        status: "ACTIVA",
+      })
+      .where(eq(subscriptionsTable.id, latest.id))
+      .returning();
+    if (!updated) {
+      res.status(500).json({ error: "No se pudo recargar la suscripción" });
+      return;
+    }
+    res.json(serializeSubscription(updated, (req.user as any).name ?? "Cliente"));
   },
 );
 

@@ -18,7 +18,7 @@ import {
 } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { serializeOrder } from "../lib/serializers";
-import { validarZona } from "../lib/mapService";
+import { validarZona, validarPunto } from "../lib/mapService";
 
 const router: IRouter = Router();
 
@@ -134,22 +134,79 @@ router.post(
 
     const amount = parsed.data.amount ?? 0;
 
-    // Validación geográfica: la dirección de entrega debe caer dentro de algún polígono KML.
-    const validation = await validarZona(parsed.data.delivery);
-    if (!validation.ok) {
-      const reason = validation.reason ?? "FUERA_DE_ZONA";
-      const message =
-        reason === "ZONAS_NO_CARGADAS"
-          ? "El servicio de zonas no está disponible. Contactá a soporte."
-          : reason === "DIRECCION_NO_GEOCODIFICADA"
-          ? "No pudimos ubicar la dirección de entrega. Verificá que esté completa."
-          : "Dirección fuera de zona de cobertura";
-      res.status(400).json({ error: message, reason });
-      return;
+    // Validación geográfica:
+    // Si el cliente envió un punto explícito (pickeado en el mapa), validamos ese punto
+    // contra los polígonos KML server-side, así no confiamos sólo en el cliente.
+    // Si no, caemos al flujo de geocodificación de la dirección.
+    let computedZone: string | null = null;
+    let deliveryLat: string | null = null;
+    let deliveryLng: string | null = null;
+
+    if (parsed.data.deliveryLat != null && parsed.data.deliveryLng != null) {
+      const lat = Number(parsed.data.deliveryLat);
+      const lng = Number(parsed.data.deliveryLng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
+        res.status(400).json({ error: "Coordenadas inválidas", reason: "INVALID_COORDS" });
+        return;
+      }
+      const r = validarPunto(lat, lng);
+      if (!r.zone) {
+        res.status(400).json({
+          error: "El punto seleccionado está fuera de la zona de cobertura.",
+          reason: "FUERA_DE_ZONA",
+        });
+        return;
+      }
+      computedZone = r.zone;
+      deliveryLat = String(lat);
+      deliveryLng = String(lng);
+    } else {
+      const validation = await validarZona(parsed.data.delivery);
+      if (!validation.ok) {
+        const reason = validation.reason ?? "FUERA_DE_ZONA";
+        const message =
+          reason === "ZONAS_NO_CARGADAS"
+            ? "El servicio de zonas no está disponible. Contactá a soporte."
+            : reason === "DIRECCION_NO_GEOCODIFICADA"
+            ? "No pudimos ubicar la dirección de entrega. Verificá que esté completa."
+            : "Dirección fuera de zona de cobertura";
+        res.status(400).json({ error: message, reason });
+        return;
+      }
+      computedZone = validation.zone;
+      deliveryLat = validation.point ? String(validation.point.lat) : null;
+      deliveryLng = validation.point ? String(validation.point.lng) : null;
     }
-    const computedZone = validation.zone;
-    const deliveryLat = validation.point ? String(validation.point.lat) : null;
-    const deliveryLng = validation.point ? String(validation.point.lng) : null;
+
+    // El cliente debe tener una suscripción ACTIVA con envíos restantes
+    // para poder crear un pedido (excepto SUPERUSER).
+    if (req.user!.role === "CLIENTE") {
+      const [activeSub] = await db
+        .select()
+        .from(subscriptionsTable)
+        .where(
+          and(
+            eq(subscriptionsTable.userId, req.user!.sub),
+            eq(subscriptionsTable.status, "ACTIVA"),
+          ),
+        );
+      if (!activeSub) {
+        res.status(402).json({
+          error: "Necesitás una suscripción activa para solicitar pedidos.",
+          reason: "NO_SUBSCRIPTION",
+        });
+        return;
+      }
+      const remaining = activeSub.monthlyDeliveries - activeSub.usedDeliveries;
+      if (remaining <= 0) {
+        res.status(402).json({
+          error:
+            "Tu suscripción no tiene envíos restantes. Solicitá una recarga para continuar.",
+          reason: "NO_DELIVERIES_LEFT",
+        });
+        return;
+      }
+    }
 
     // Wallet payment: deduct balance now
     if (parsed.data.payment === "BILLETERA") {
@@ -185,6 +242,17 @@ router.post(
         amount: String(amount),
         deliveryLat,
         deliveryLng,
+        recipientPhone: parsed.data.recipientPhone ?? null,
+        // Solo persistimos cashAmount/cashChange cuando el método es EFECTIVO.
+        // Para otros métodos los forzamos a null aunque el cliente los envíe.
+        cashAmount:
+          parsed.data.payment === "EFECTIVO" && parsed.data.cashAmount != null
+            ? String(Math.max(0, Number(parsed.data.cashAmount)))
+            : null,
+        cashChange:
+          parsed.data.payment === "EFECTIVO" && parsed.data.cashChange != null
+            ? String(Math.max(0, Number(parsed.data.cashChange)))
+            : null,
         notes: parsed.data.notes ?? null,
         status: "PENDIENTE",
       })

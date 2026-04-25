@@ -42,6 +42,8 @@ export const PaymentMethod = {
   EFECTIVO: "EFECTIVO",
   TRANSFERENCIA: "TRANSFERENCIA",
   BILLETERA: "BILLETERA",
+  TARJETA: "TARJETA",
+  CORTESIA: "CORTESIA",
 } as const;
 
 export type ZoneName = (typeof ZoneName)[keyof typeof ZoneName];
@@ -55,6 +57,7 @@ export const ZoneName = {
   NUMBER_6: "6",
   NUMBER_7: "7",
   NUMBER_8: "8",
+  NUMBER_9: "9",
 } as const;
 
 export interface User {
@@ -297,6 +300,16 @@ export interface Order {
   driverName: string | null;
   /** @nullable */
   notes: string | null;
+  /** @nullable */
+  recipientPhone?: string | null;
+  /** @nullable */
+  cashAmount?: number | null;
+  /** @nullable */
+  cashChange?: number | null;
+  /** @nullable */
+  deliveryLat?: number | null;
+  /** @nullable */
+  deliveryLng?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -312,6 +325,16 @@ export interface CreateOrderBody {
   amount?: number;
   /** @nullable */
   notes?: string | null;
+  /** @nullable */
+  recipientPhone?: string | null;
+  /** @nullable */
+  cashAmount?: number | null;
+  /** @nullable */
+  cashChange?: number | null;
+  /** @nullable */
+  deliveryLat?: number | null;
+  /** @nullable */
+  deliveryLng?: number | null;
 }
 
 export interface UpdateOrderBody {
@@ -451,6 +474,99 @@ export interface DashboardData {
   recentOrders: Order[];
 }
 
+export type AdminCreateUserBodyRole =
+  (typeof AdminCreateUserBodyRole)[keyof typeof AdminCreateUserBodyRole];
+
+export const AdminCreateUserBodyRole = {
+  CLIENTE: "CLIENTE",
+  DRIVER: "DRIVER",
+} as const;
+
+/**
+ * @nullable
+ */
+export type AdminCreateUserBodyTier =
+  | (typeof AdminCreateUserBodyTier)[keyof typeof AdminCreateUserBodyTier]
+  | null;
+
+export const AdminCreateUserBodyTier = {
+  ESTANDAR: "ESTANDAR",
+  OPTIMO: "OPTIMO",
+} as const;
+
+export interface AdminCreateUserBody {
+  role: AdminCreateUserBodyRole;
+  /** @minLength 1 */
+  name: string;
+  email: string;
+  /** @minLength 6 */
+  password: string;
+  /** @nullable */
+  tier?: AdminCreateUserBodyTier;
+  /** @nullable */
+  phone?: string | null;
+  /** @nullable */
+  vehicle?: string | null;
+  zones?: ZoneName[];
+  /** @nullable */
+  licensePlate?: string | null;
+  /** @nullable */
+  circulationCard?: string | null;
+}
+
+/**
+ * @nullable
+ */
+export type CustomerDeliveriesRowTier =
+  | (typeof CustomerDeliveriesRowTier)[keyof typeof CustomerDeliveriesRowTier]
+  | null;
+
+export const CustomerDeliveriesRowTier = {
+  ESTANDAR: "ESTANDAR",
+  OPTIMO: "OPTIMO",
+} as const;
+
+export interface CustomerDeliveriesRow {
+  customerId: number;
+  customerName: string;
+  /** @nullable */
+  tier: CustomerDeliveriesRowTier;
+  usedDeliveries: number;
+  monthlyDeliveries: number;
+  remainingDeliveries: number;
+  /** @nullable */
+  status: string | null;
+}
+
+export interface CashByCustomerRow {
+  customerId: number;
+  customerName: string;
+  ordersCount: number;
+  cashPending: number;
+}
+
+export interface BenefitLevel {
+  id: number;
+  level: number;
+  name: string;
+  deliveriesRequired: number;
+}
+
+export interface BenefitLevelInput {
+  /** @minimum 1 */
+  level: number;
+  /** @minLength 1 */
+  name: string;
+  /** @minimum 0 */
+  deliveriesRequired: number;
+}
+
+export interface TodaySplit {
+  repartoToday: number;
+  planesToday: number;
+  total: number;
+}
+
 export type ListOrdersParams = {
   status?: OrderStatus;
   zone?: ZoneName;
@@ -464,6 +580,10 @@ export type ListOrdersParams = {
    * ISO date filter (createdAt <=)
    */
   to?: string;
+};
+
+export type PutBenefitsConfigBody = {
+  levels: BenefitLevelInput[];
 };
 
 export type GetFinanceSummaryParams = {

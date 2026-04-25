@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
-import { ArrowLeft, MapPin, Map, Package, Clock, DollarSign, User, Truck, Loader2 } from "lucide-react";
+import { ArrowLeft, MapPin, Map, Package, Clock, DollarSign, User, Truck, Loader2, Phone } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 
@@ -29,8 +29,14 @@ export default function OrderDetail() {
   const queryClient = useQueryClient();
   const [selectedDriverId, setSelectedDriverId] = useState<string>("");
 
+  // Polling para que el cliente vea cambios de estado del repartidor casi en vivo.
   const { data: order, isLoading: loadingOrder } = useGetOrder(id, {
-    query: { enabled: !!id, queryKey: getGetOrderQueryKey(id) },
+    query: {
+      enabled: !!id,
+      queryKey: getGetOrderQueryKey(id),
+      refetchInterval: 5000,
+      refetchOnWindowFocus: true,
+    },
   });
 
   const { data: drivers, isLoading: loadingDrivers } = useListDrivers({
@@ -118,13 +124,23 @@ export default function OrderDetail() {
         {user?.role === UserRole.DRIVER && (
           <div className="flex gap-2">
              {order.status === OrderStatus.ASIGNADO && (
-               <Button onClick={() => handleStatusChange(OrderStatus.EN_RUTA)}>
-                 Marcar En Ruta
+               <Button
+                 size="lg"
+                 className="bg-[#00B5E2] hover:bg-[#0096BD]"
+                 onClick={() => handleStatusChange(OrderStatus.EN_RUTA)}
+                 data-testid="button-recoleccion"
+               >
+                 <Truck className="w-4 h-4 mr-2" /> Recolección
                </Button>
              )}
              {order.status === OrderStatus.EN_RUTA && (
-               <Button variant="default" className="bg-green-600 hover:bg-green-700" onClick={() => handleStatusChange(OrderStatus.ENTREGADO)}>
-                 Marcar Entregado
+               <Button
+                 size="lg"
+                 className="bg-green-600 hover:bg-green-700"
+                 onClick={() => handleStatusChange(OrderStatus.ENTREGADO)}
+                 data-testid="button-entregado"
+               >
+                 Entregado
                </Button>
              )}
           </div>
@@ -154,12 +170,38 @@ export default function OrderDetail() {
                 <div className="bg-primary/10 p-3 rounded-full mt-1">
                   <Map className="h-5 w-5 text-primary" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <h4 className="font-semibold text-sm text-muted-foreground mb-1">Entrega</h4>
                   <p className="text-foreground">{order.delivery}</p>
                   <p className="text-sm text-muted-foreground mt-1">Zona: {order.zone}</p>
+                  {order.recipientPhone && (
+                    <p className="text-sm mt-2 flex items-center gap-1.5">
+                      <Phone className="h-3.5 w-3.5 text-[#00B5E2]" />
+                      <span className="font-medium" data-testid="value-recipient-phone">
+                        {order.recipientPhone}
+                      </span>
+                      <span className="text-muted-foreground text-xs">(destinatario)</span>
+                    </p>
+                  )}
                 </div>
               </div>
+
+              {order.payment === "EFECTIVO" && (order.cashAmount != null || order.cashChange != null) && (
+                <div className="border-t pt-4 grid grid-cols-2 gap-4 text-sm">
+                  {order.cashAmount != null && (
+                    <div>
+                      <p className="text-muted-foreground">Cobrar</p>
+                      <p className="font-bold text-base">$ {Number(order.cashAmount).toLocaleString("es-AR")}</p>
+                    </div>
+                  )}
+                  {order.cashChange != null && (
+                    <div>
+                      <p className="text-muted-foreground">Vuelto a entregar</p>
+                      <p className="font-bold text-base">$ {Number(order.cashChange).toLocaleString("es-AR")}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 

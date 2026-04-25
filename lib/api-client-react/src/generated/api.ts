@@ -17,14 +17,18 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AdminCreateUserBody,
   AssignManualBody,
   AuthSession,
   AutoAssignResult,
   B2BRevenueReport,
+  BenefitLevel,
+  CashByCustomerRow,
   CashReport,
   CreateDriverBody,
   CreateIncidentBody,
   CreateOrderBody,
+  CustomerDeliveriesRow,
   DashboardData,
   DeliveriesPoint,
   Driver,
@@ -42,17 +46,20 @@ import type {
   MeResponse,
   MySubscriptionResponse,
   Order,
+  PutBenefitsConfigBody,
   RegisterBody,
   SettleCashBody,
   SimpleOk,
   SubscribeBody,
   Subscription,
+  TodaySplit,
   TopUpBody,
   Transaction,
   UpdateDriverBody,
   UpdateDriverStatusBody,
   UpdateIncidentBody,
   UpdateOrderBody,
+  User,
   Wallet,
   WalletTx,
   Zone,
@@ -2111,6 +2118,560 @@ export const useSubscribe = <
 > => {
   return useMutation(getSubscribeMutationOptions(options));
 };
+
+/**
+ * @summary Add a 35-delivery recharge block to the active CLIENTE subscription
+ */
+export const getRechargeSubscriptionUrl = () => {
+  return `/api/me/subscription/recharge`;
+};
+
+export const rechargeSubscription = async (
+  options?: RequestInit,
+): Promise<Subscription> => {
+  return customFetch<Subscription>(getRechargeSubscriptionUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRechargeSubscriptionMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rechargeSubscription>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof rechargeSubscription>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = ["rechargeSubscription"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof rechargeSubscription>>,
+    void
+  > = () => {
+    return rechargeSubscription(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RechargeSubscriptionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof rechargeSubscription>>
+>;
+
+export type RechargeSubscriptionMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Add a 35-delivery recharge block to the active CLIENTE subscription
+ */
+export const useRechargeSubscription = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof rechargeSubscription>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof rechargeSubscription>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getRechargeSubscriptionMutationOptions(options));
+};
+
+/**
+ * @summary Create a CLIENTE (with optional plan) or DRIVER (with full account) (ADMIN)
+ */
+export const getAdminCreateUserUrl = () => {
+  return `/api/admin/users`;
+};
+
+export const adminCreateUser = async (
+  adminCreateUserBody: AdminCreateUserBody,
+  options?: RequestInit,
+): Promise<User> => {
+  return customFetch<User>(getAdminCreateUserUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(adminCreateUserBody),
+  });
+};
+
+export const getAdminCreateUserMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCreateUser>>,
+    TError,
+    { data: BodyType<AdminCreateUserBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof adminCreateUser>>,
+  TError,
+  { data: BodyType<AdminCreateUserBody> },
+  TContext
+> => {
+  const mutationKey = ["adminCreateUser"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof adminCreateUser>>,
+    { data: BodyType<AdminCreateUserBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return adminCreateUser(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AdminCreateUserMutationResult = NonNullable<
+  Awaited<ReturnType<typeof adminCreateUser>>
+>;
+export type AdminCreateUserMutationBody = BodyType<AdminCreateUserBody>;
+export type AdminCreateUserMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a CLIENTE (with optional plan) or DRIVER (with full account) (ADMIN)
+ */
+export const useAdminCreateUser = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof adminCreateUser>>,
+    TError,
+    { data: BodyType<AdminCreateUserBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof adminCreateUser>>,
+  TError,
+  { data: BodyType<AdminCreateUserBody> },
+  TContext
+> => {
+  return useMutation(getAdminCreateUserMutationOptions(options));
+};
+
+/**
+ * @summary Per-customer remaining deliveries (ADMIN)
+ */
+export const getAdminCustomerDeliveriesUrl = () => {
+  return `/api/admin/customer-deliveries`;
+};
+
+export const adminCustomerDeliveries = async (
+  options?: RequestInit,
+): Promise<CustomerDeliveriesRow[]> => {
+  return customFetch<CustomerDeliveriesRow[]>(getAdminCustomerDeliveriesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminCustomerDeliveriesQueryKey = () => {
+  return [`/api/admin/customer-deliveries`] as const;
+};
+
+export const getAdminCustomerDeliveriesQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCustomerDeliveries>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminCustomerDeliveries>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getAdminCustomerDeliveriesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminCustomerDeliveries>>
+  > = ({ signal }) => adminCustomerDeliveries({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminCustomerDeliveries>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminCustomerDeliveriesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCustomerDeliveries>>
+>;
+export type AdminCustomerDeliveriesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Per-customer remaining deliveries (ADMIN)
+ */
+
+export function useAdminCustomerDeliveries<
+  TData = Awaited<ReturnType<typeof adminCustomerDeliveries>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminCustomerDeliveries>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminCustomerDeliveriesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Cash pending by customer (drivers owe per restaurant) (ADMIN)
+ */
+export const getAdminCashByCustomerUrl = () => {
+  return `/api/admin/cash-by-customer`;
+};
+
+export const adminCashByCustomer = async (
+  options?: RequestInit,
+): Promise<CashByCustomerRow[]> => {
+  return customFetch<CashByCustomerRow[]>(getAdminCashByCustomerUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAdminCashByCustomerQueryKey = () => {
+  return [`/api/admin/cash-by-customer`] as const;
+};
+
+export const getAdminCashByCustomerQueryOptions = <
+  TData = Awaited<ReturnType<typeof adminCashByCustomer>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminCashByCustomer>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAdminCashByCustomerQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof adminCashByCustomer>>
+  > = ({ signal }) => adminCashByCustomer({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof adminCashByCustomer>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type AdminCashByCustomerQueryResult = NonNullable<
+  Awaited<ReturnType<typeof adminCashByCustomer>>
+>;
+export type AdminCashByCustomerQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Cash pending by customer (drivers owe per restaurant) (ADMIN)
+ */
+
+export function useAdminCashByCustomer<
+  TData = Awaited<ReturnType<typeof adminCashByCustomer>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof adminCashByCustomer>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getAdminCashByCustomerQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get configurable benefit levels for drivers (ADMIN)
+ */
+export const getGetBenefitsConfigUrl = () => {
+  return `/api/admin/benefits-config`;
+};
+
+export const getBenefitsConfig = async (
+  options?: RequestInit,
+): Promise<BenefitLevel[]> => {
+  return customFetch<BenefitLevel[]>(getGetBenefitsConfigUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetBenefitsConfigQueryKey = () => {
+  return [`/api/admin/benefits-config`] as const;
+};
+
+export const getGetBenefitsConfigQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBenefitsConfig>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getBenefitsConfig>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetBenefitsConfigQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getBenefitsConfig>>
+  > = ({ signal }) => getBenefitsConfig({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBenefitsConfig>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetBenefitsConfigQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBenefitsConfig>>
+>;
+export type GetBenefitsConfigQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get configurable benefit levels for drivers (ADMIN)
+ */
+
+export function useGetBenefitsConfig<
+  TData = Awaited<ReturnType<typeof getBenefitsConfig>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getBenefitsConfig>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetBenefitsConfigQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Replace benefit-level configuration (ADMIN)
+ */
+export const getPutBenefitsConfigUrl = () => {
+  return `/api/admin/benefits-config`;
+};
+
+export const putBenefitsConfig = async (
+  putBenefitsConfigBody: PutBenefitsConfigBody,
+  options?: RequestInit,
+): Promise<BenefitLevel[]> => {
+  return customFetch<BenefitLevel[]>(getPutBenefitsConfigUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(putBenefitsConfigBody),
+  });
+};
+
+export const getPutBenefitsConfigMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof putBenefitsConfig>>,
+    TError,
+    { data: BodyType<PutBenefitsConfigBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof putBenefitsConfig>>,
+  TError,
+  { data: BodyType<PutBenefitsConfigBody> },
+  TContext
+> => {
+  const mutationKey = ["putBenefitsConfig"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof putBenefitsConfig>>,
+    { data: BodyType<PutBenefitsConfigBody> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return putBenefitsConfig(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type PutBenefitsConfigMutationResult = NonNullable<
+  Awaited<ReturnType<typeof putBenefitsConfig>>
+>;
+export type PutBenefitsConfigMutationBody = BodyType<PutBenefitsConfigBody>;
+export type PutBenefitsConfigMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Replace benefit-level configuration (ADMIN)
+ */
+export const usePutBenefitsConfig = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof putBenefitsConfig>>,
+    TError,
+    { data: BodyType<PutBenefitsConfigBody> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof putBenefitsConfig>>,
+  TError,
+  { data: BodyType<PutBenefitsConfigBody> },
+  TContext
+> => {
+  return useMutation(getPutBenefitsConfigMutationOptions(options));
+};
+
+/**
+ * @summary Today's revenue split between deliveries and subscription plans (ADMIN)
+ */
+export const getGetFinanceTodaySplitUrl = () => {
+  return `/api/finance/today-split`;
+};
+
+export const getFinanceTodaySplit = async (
+  options?: RequestInit,
+): Promise<TodaySplit> => {
+  return customFetch<TodaySplit>(getGetFinanceTodaySplitUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetFinanceTodaySplitQueryKey = () => {
+  return [`/api/finance/today-split`] as const;
+};
+
+export const getGetFinanceTodaySplitQueryOptions = <
+  TData = Awaited<ReturnType<typeof getFinanceTodaySplit>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getFinanceTodaySplit>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetFinanceTodaySplitQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof getFinanceTodaySplit>>
+  > = ({ signal }) => getFinanceTodaySplit({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getFinanceTodaySplit>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetFinanceTodaySplitQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getFinanceTodaySplit>>
+>;
+export type GetFinanceTodaySplitQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Today's revenue split between deliveries and subscription plans (ADMIN)
+ */
+
+export function useGetFinanceTodaySplit<
+  TData = Awaited<ReturnType<typeof getFinanceTodaySplit>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof getFinanceTodaySplit>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetFinanceTodaySplitQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Cash collected vs settled per driver (ADMIN)

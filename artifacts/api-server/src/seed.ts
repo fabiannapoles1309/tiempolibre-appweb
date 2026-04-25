@@ -6,7 +6,7 @@ async function main() {
   console.log("Seeding base data...");
 
   // Zones — numeric 1-8
-  const zoneNames = ["1", "2", "3", "4", "5", "6", "7", "8"];
+  const zoneNames = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
   for (const name of zoneNames) {
     await db.insert(zonesTable).values({ name }).onConflictDoNothing();
   }

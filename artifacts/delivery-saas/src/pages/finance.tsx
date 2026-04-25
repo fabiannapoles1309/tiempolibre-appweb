@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useGetFinanceSummary, GetFinanceSummaryRange, useListTransactions, useGetCashReport, useGetB2BRevenue } from "@workspace/api-client-react";
+import { useGetFinanceSummary, GetFinanceSummaryRange, useListTransactions, useGetCashReport, useGetB2BRevenue, useGetFinanceTodaySplit } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -21,6 +21,7 @@ export default function Finance() {
   const { data: transactions, isLoading: loadingTx } = useListTransactions();
   const { data: cashReport } = useGetCashReport();
   const { data: b2b } = useGetB2BRevenue();
+  const { data: todaySplit } = useGetFinanceTodaySplit();
 
   const formatChartDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -46,6 +47,44 @@ export default function Finance() {
             <SelectItem value="month">Este mes</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-[#00B5E2]/40">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Ingresos por Reparto (hoy)</CardTitle>
+            <ArrowUpRight className="h-4 w-4 text-[#00B5E2]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground" data-testid="value-reparto-today">
+              {formatMoney(todaySplit?.repartoToday ?? 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Pedidos entregados hoy</p>
+          </CardContent>
+        </Card>
+        <Card className="border-[#00B5E2]/40">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">Ingresos por Planes (hoy)</CardTitle>
+            <ArrowUpRight className="h-4 w-4 text-[#00B5E2]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-foreground" data-testid="value-planes-today">
+              {formatMoney(todaySplit?.planesToday ?? 0)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Suscripciones contratadas hoy</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-primary/10 border-primary/20">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-bold text-primary">Total hoy</CardTitle>
+            <DollarSign className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-extrabold text-primary">
+              {formatMoney(todaySplit?.total ?? 0)}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {!summary || loadingSummary ? (

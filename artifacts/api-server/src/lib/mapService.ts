@@ -149,6 +149,22 @@ export interface ValidationResult {
   displayName?: string;
 }
 
+/**
+ * Validar un punto explícito (lat/lng) contra los polígonos KML.
+ * Devuelve la zona que contiene el punto o null si está fuera de cobertura.
+ */
+export function validarPunto(lat: number, lng: number): { zone: string | null } {
+  const s = loadZones();
+  if (!s) return { zone: null };
+  const pt: Feature<Point> = point([lng, lat]);
+  for (const f of s.features) {
+    if (booleanPointInPolygon(pt, f)) {
+      return { zone: f.properties.name };
+    }
+  }
+  return { zone: null };
+}
+
 export async function validarZona(direccion: string): Promise<ValidationResult> {
   const s = loadZones();
   if (!s) return { ok: false, zone: null, reason: "ZONAS_NO_CARGADAS" };

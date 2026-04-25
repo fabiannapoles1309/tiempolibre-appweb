@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -28,6 +28,10 @@ const navItems: NavItem[] = [
   { title: "Reportes", href: "/reports", icon: FileText, roles: [UserRole.ADMIN] },
   { title: "Finanzas", href: "/finance", icon: DollarSign, roles: [UserRole.ADMIN] },
   { title: "Suscripciones", href: "/admin/subscriptions", icon: Crown, roles: [UserRole.ADMIN] },
+  { title: "Envíos por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
+  { title: "Cash por cliente", href: "/admin/cash-by-customer", icon: Banknote, roles: [UserRole.ADMIN] },
+  { title: "Beneficios", href: "/admin/benefits-config", icon: Award, roles: [UserRole.ADMIN] },
+  { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
   { title: "Billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },
   { title: "Mi suscripción", href: "/subscription", icon: Crown, roles: [UserRole.CLIENTE] },

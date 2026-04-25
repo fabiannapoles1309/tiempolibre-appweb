@@ -20,6 +20,10 @@ export const ordersTable = pgTable("orders", {
   driverId: integer("driver_id"),
   deliveryLat: numeric("delivery_lat", { precision: 10, scale: 7 }),
   deliveryLng: numeric("delivery_lng", { precision: 10, scale: 7 }),
+  // Datos de contacto y cobro adicionales
+  recipientPhone: varchar("recipient_phone", { length: 64 }),
+  cashAmount: numeric("cash_amount", { precision: 12, scale: 2 }),
+  cashChange: numeric("cash_change", { precision: 12, scale: 2 }),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })

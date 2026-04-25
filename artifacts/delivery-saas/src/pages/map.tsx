@@ -167,7 +167,7 @@ export default function MapPage() {
             },
           },
           layers: [{ id: "osm", type: "raster", source: "osm" }],
-          glyphs: undefined,
+          glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
         },
         center: [-103.42, 20.66],
         zoom: 11,

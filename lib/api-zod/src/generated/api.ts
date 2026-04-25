@@ -77,7 +77,7 @@ export const ListOrdersQueryParams = zod.object({
   status: zod
     .enum(["PENDIENTE", "ASIGNADO", "EN_RUTA", "ENTREGADO", "CANCELADO"])
     .optional(),
-  zone: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]).optional(),
+  zone: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]).optional(),
   customerId: zod.coerce.number().optional(),
   driverId: zod.coerce.number().optional(),
   from: zod.date().optional().describe("ISO date filter (createdAt >=)"),
@@ -91,10 +91,16 @@ export const ListOrdersResponseItem = zod.object({
   pickup: zod.string(),
   delivery: zod.string(),
   zone: zod.union([
-    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
     zod.null(),
   ]),
-  payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+  payment: zod.enum([
+    "EFECTIVO",
+    "TRANSFERENCIA",
+    "BILLETERA",
+    "TARJETA",
+    "CORTESIA",
+  ]),
   amount: zod.number(),
   status: zod.enum([
     "PENDIENTE",
@@ -106,6 +112,11 @@ export const ListOrdersResponseItem = zod.object({
   driverId: zod.number().nullable(),
   driverName: zod.string().nullable(),
   notes: zod.string().nullable(),
+  recipientPhone: zod.string().nullish(),
+  cashAmount: zod.number().nullish(),
+  cashChange: zod.number().nullish(),
+  deliveryLat: zod.number().nullish(),
+  deliveryLng: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -121,11 +132,25 @@ export const CreateOrderBody = zod.object({
   pickup: zod.string().min(1),
   delivery: zod.string().min(1),
   zone: zod
-    .union([zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]), zod.null()])
+    .union([
+      zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
+      zod.null(),
+    ])
     .optional(),
-  payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+  payment: zod.enum([
+    "EFECTIVO",
+    "TRANSFERENCIA",
+    "BILLETERA",
+    "TARJETA",
+    "CORTESIA",
+  ]),
   amount: zod.number().min(createOrderBodyAmountMin).optional(),
   notes: zod.string().nullish(),
+  recipientPhone: zod.string().nullish(),
+  cashAmount: zod.number().nullish(),
+  cashChange: zod.number().nullish(),
+  deliveryLat: zod.number().nullish(),
+  deliveryLng: zod.number().nullish(),
 });
 
 /**
@@ -142,10 +167,16 @@ export const GetOrderResponse = zod.object({
   pickup: zod.string(),
   delivery: zod.string(),
   zone: zod.union([
-    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
     zod.null(),
   ]),
-  payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+  payment: zod.enum([
+    "EFECTIVO",
+    "TRANSFERENCIA",
+    "BILLETERA",
+    "TARJETA",
+    "CORTESIA",
+  ]),
   amount: zod.number(),
   status: zod.enum([
     "PENDIENTE",
@@ -157,6 +188,11 @@ export const GetOrderResponse = zod.object({
   driverId: zod.number().nullable(),
   driverName: zod.string().nullable(),
   notes: zod.string().nullable(),
+  recipientPhone: zod.string().nullish(),
+  cashAmount: zod.number().nullish(),
+  cashChange: zod.number().nullish(),
+  deliveryLat: zod.number().nullish(),
+  deliveryLng: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -182,10 +218,16 @@ export const UpdateOrderResponse = zod.object({
   pickup: zod.string(),
   delivery: zod.string(),
   zone: zod.union([
-    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
     zod.null(),
   ]),
-  payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+  payment: zod.enum([
+    "EFECTIVO",
+    "TRANSFERENCIA",
+    "BILLETERA",
+    "TARJETA",
+    "CORTESIA",
+  ]),
   amount: zod.number(),
   status: zod.enum([
     "PENDIENTE",
@@ -197,6 +239,11 @@ export const UpdateOrderResponse = zod.object({
   driverId: zod.number().nullable(),
   driverName: zod.string().nullable(),
   notes: zod.string().nullable(),
+  recipientPhone: zod.string().nullish(),
+  cashAmount: zod.number().nullish(),
+  cashChange: zod.number().nullish(),
+  deliveryLat: zod.number().nullish(),
+  deliveryLng: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -212,7 +259,7 @@ export const AssignOrdersAutoResponse = zod.object({
       orderId: zod.number(),
       driverId: zod.number().nullable(),
       zone: zod.union([
-        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
         zod.null(),
       ]),
       status: zod.string(),
@@ -238,10 +285,16 @@ export const AssignOrderManualResponse = zod.object({
   pickup: zod.string(),
   delivery: zod.string(),
   zone: zod.union([
-    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+    zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
     zod.null(),
   ]),
-  payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+  payment: zod.enum([
+    "EFECTIVO",
+    "TRANSFERENCIA",
+    "BILLETERA",
+    "TARJETA",
+    "CORTESIA",
+  ]),
   amount: zod.number(),
   status: zod.enum([
     "PENDIENTE",
@@ -253,6 +306,11 @@ export const AssignOrderManualResponse = zod.object({
   driverId: zod.number().nullable(),
   driverName: zod.string().nullable(),
   notes: zod.string().nullable(),
+  recipientPhone: zod.string().nullish(),
+  cashAmount: zod.number().nullish(),
+  cashChange: zod.number().nullish(),
+  deliveryLat: zod.number().nullish(),
+  deliveryLng: zod.number().nullish(),
   createdAt: zod.coerce.date(),
   updatedAt: zod.coerce.date(),
 });
@@ -266,7 +324,7 @@ export const ListDriversResponseItem = zod.object({
   name: zod.string(),
   phone: zod.string(),
   vehicle: zod.string(),
-  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"])),
   active: zod.boolean(),
   licensePlate: zod.string().nullable(),
   circulationCard: zod.string().nullable(),
@@ -285,7 +343,9 @@ export const CreateDriverBody = zod.object({
   name: zod.string().min(1),
   phone: zod.string().min(1),
   vehicle: zod.string().min(1),
-  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])).min(1),
+  zones: zod
+    .array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]))
+    .min(1),
   active: zod.boolean().optional(),
   licensePlate: zod.string().nullish(),
   circulationCard: zod.string().nullish(),
@@ -304,7 +364,7 @@ export const UpdateDriverBody = zod.object({
   phone: zod.string().optional(),
   vehicle: zod.string().optional(),
   zones: zod
-    .array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]))
+    .array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]))
     .optional(),
   active: zod.boolean().optional(),
   licensePlate: zod.string().nullish(),
@@ -319,7 +379,7 @@ export const UpdateDriverResponse = zod.object({
   name: zod.string(),
   phone: zod.string(),
   vehicle: zod.string(),
-  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"])),
   active: zod.boolean(),
   licensePlate: zod.string().nullable(),
   circulationCard: zod.string().nullable(),
@@ -367,7 +427,7 @@ export const SettleDriverCashResponse = zod.object({
   name: zod.string(),
   phone: zod.string(),
   vehicle: zod.string(),
-  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"])),
   active: zod.boolean(),
   licensePlate: zod.string().nullable(),
   circulationCard: zod.string().nullable(),
@@ -386,7 +446,7 @@ export const GetMyDriverResponse = zod.object({
   name: zod.string(),
   phone: zod.string(),
   vehicle: zod.string(),
-  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"])),
   active: zod.boolean(),
   licensePlate: zod.string().nullable(),
   circulationCard: zod.string().nullable(),
@@ -409,7 +469,7 @@ export const UpdateMyDriverStatusResponse = zod.object({
   name: zod.string(),
   phone: zod.string(),
   vehicle: zod.string(),
-  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"])),
   active: zod.boolean(),
   licensePlate: zod.string().nullable(),
   circulationCard: zod.string().nullable(),
@@ -551,6 +611,127 @@ export const SubscribeResponse = zod.object({
 });
 
 /**
+ * @summary Add a 35-delivery recharge block to the active CLIENTE subscription
+ */
+export const RechargeSubscriptionResponse = zod.object({
+  id: zod.number(),
+  userId: zod.number(),
+  userName: zod.string(),
+  tier: zod.enum(["ESTANDAR", "OPTIMO"]),
+  monthlyPrice: zod.number(),
+  monthlyDeliveries: zod.number(),
+  usedDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  periodStart: zod.coerce.date(),
+  status: zod.enum(["ACTIVA", "CANCELADA", "VENCIDA"]),
+  createdAt: zod.coerce.date(),
+});
+
+/**
+ * @summary Create a CLIENTE (with optional plan) or DRIVER (with full account) (ADMIN)
+ */
+
+export const adminCreateUserBodyPasswordMin = 6;
+
+export const AdminCreateUserBody = zod.object({
+  role: zod.enum(["CLIENTE", "DRIVER"]),
+  name: zod.string().min(1),
+  email: zod.string(),
+  password: zod.string().min(adminCreateUserBodyPasswordMin),
+  tier: zod
+    .union([zod.literal("ESTANDAR"), zod.literal("OPTIMO"), zod.literal(null)])
+    .nullish(),
+  phone: zod.string().nullish(),
+  vehicle: zod.string().nullish(),
+  zones: zod
+    .array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]))
+    .optional(),
+  licensePlate: zod.string().nullish(),
+  circulationCard: zod.string().nullish(),
+});
+
+/**
+ * @summary Per-customer remaining deliveries (ADMIN)
+ */
+export const AdminCustomerDeliveriesResponseItem = zod.object({
+  customerId: zod.number(),
+  customerName: zod.string(),
+  tier: zod
+    .union([zod.literal("ESTANDAR"), zod.literal("OPTIMO"), zod.literal(null)])
+    .nullable(),
+  usedDeliveries: zod.number(),
+  monthlyDeliveries: zod.number(),
+  remainingDeliveries: zod.number(),
+  status: zod.string().nullable(),
+});
+export const AdminCustomerDeliveriesResponse = zod.array(
+  AdminCustomerDeliveriesResponseItem,
+);
+
+/**
+ * @summary Cash pending by customer (drivers owe per restaurant) (ADMIN)
+ */
+export const AdminCashByCustomerResponseItem = zod.object({
+  customerId: zod.number(),
+  customerName: zod.string(),
+  ordersCount: zod.number(),
+  cashPending: zod.number(),
+});
+export const AdminCashByCustomerResponse = zod.array(
+  AdminCashByCustomerResponseItem,
+);
+
+/**
+ * @summary Get configurable benefit levels for drivers (ADMIN)
+ */
+export const GetBenefitsConfigResponseItem = zod.object({
+  id: zod.number(),
+  level: zod.number(),
+  name: zod.string(),
+  deliveriesRequired: zod.number(),
+});
+export const GetBenefitsConfigResponse = zod.array(
+  GetBenefitsConfigResponseItem,
+);
+
+/**
+ * @summary Replace benefit-level configuration (ADMIN)
+ */
+
+export const putBenefitsConfigBodyLevelsItemDeliveriesRequiredMin = 0;
+
+export const PutBenefitsConfigBody = zod.object({
+  levels: zod.array(
+    zod.object({
+      level: zod.number().min(1),
+      name: zod.string().min(1),
+      deliveriesRequired: zod
+        .number()
+        .min(putBenefitsConfigBodyLevelsItemDeliveriesRequiredMin),
+    }),
+  ),
+});
+
+export const PutBenefitsConfigResponseItem = zod.object({
+  id: zod.number(),
+  level: zod.number(),
+  name: zod.string(),
+  deliveriesRequired: zod.number(),
+});
+export const PutBenefitsConfigResponse = zod.array(
+  PutBenefitsConfigResponseItem,
+);
+
+/**
+ * @summary Today's revenue split between deliveries and subscription plans (ADMIN)
+ */
+export const GetFinanceTodaySplitResponse = zod.object({
+  repartoToday: zod.number(),
+  planesToday: zod.number(),
+  total: zod.number(),
+});
+
+/**
  * @summary Cash collected vs settled per driver (ADMIN)
  */
 export const GetCashReportResponse = zod.object({
@@ -590,7 +771,7 @@ export const GetB2BRevenueResponse = zod.object({
  */
 export const ListZonesResponseItem = zod.object({
   id: zod.number(),
-  name: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+  name: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
 });
 export const ListZonesResponse = zod.array(ListZonesResponseItem);
 
@@ -610,7 +791,13 @@ export const GetFinanceSummaryResponse = zod.object({
   avgTicket: zod.number(),
   byMethod: zod.array(
     zod.object({
-      method: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+      method: zod.enum([
+        "EFECTIVO",
+        "TRANSFERENCIA",
+        "BILLETERA",
+        "TARJETA",
+        "CORTESIA",
+      ]),
       total: zod.number(),
       count: zod.number(),
     }),
@@ -632,7 +819,13 @@ export const ListTransactionsResponseItem = zod.object({
   orderId: zod.number().nullable(),
   amount: zod.number(),
   type: zod.enum(["INGRESO", "GASTO"]),
-  method: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+  method: zod.enum([
+    "EFECTIVO",
+    "TRANSFERENCIA",
+    "BILLETERA",
+    "TARJETA",
+    "CORTESIA",
+  ]),
   description: zod.string(),
   createdAt: zod.coerce.date(),
 });
@@ -654,7 +847,13 @@ export const topUpWalletBodyAmountExclusiveMin = 0;
 
 export const TopUpWalletBody = zod.object({
   amount: zod.number().gt(topUpWalletBodyAmountExclusiveMin),
-  method: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+  method: zod.enum([
+    "EFECTIVO",
+    "TRANSFERENCIA",
+    "BILLETERA",
+    "TARJETA",
+    "CORTESIA",
+  ]),
 });
 
 export const TopUpWalletResponse = zod.object({
@@ -683,7 +882,7 @@ export const ListWalletTransactionsResponse = zod.array(
  */
 export const GetDeliveriesReportQueryParams = zod.object({
   range: zod.enum(["day", "week", "month"]),
-  zone: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]).optional(),
+  zone: zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]).optional(),
 });
 
 export const GetDeliveriesReportResponseItem = zod.object({
@@ -705,7 +904,7 @@ export const GetDriversReportQueryParams = zod.object({
 export const GetDriversReportResponseItem = zod.object({
   driverId: zod.number(),
   driverName: zod.string(),
-  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"])),
+  zones: zod.array(zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"])),
   deliveries: zod.number(),
   revenue: zod.number(),
   active: zod.boolean(),
@@ -739,7 +938,7 @@ export const GetDashboardResponse = zod.object({
   ordersByZone: zod.array(
     zod.object({
       zone: zod.union([
-        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
         zod.null(),
       ]),
       count: zod.number(),
@@ -754,10 +953,16 @@ export const GetDashboardResponse = zod.object({
       pickup: zod.string(),
       delivery: zod.string(),
       zone: zod.union([
-        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8"]),
+        zod.enum(["1", "2", "3", "4", "5", "6", "7", "8", "9"]),
         zod.null(),
       ]),
-      payment: zod.enum(["EFECTIVO", "TRANSFERENCIA", "BILLETERA"]),
+      payment: zod.enum([
+        "EFECTIVO",
+        "TRANSFERENCIA",
+        "BILLETERA",
+        "TARJETA",
+        "CORTESIA",
+      ]),
       amount: zod.number(),
       status: zod.enum([
         "PENDIENTE",
@@ -769,6 +974,11 @@ export const GetDashboardResponse = zod.object({
       driverId: zod.number().nullable(),
       driverName: zod.string().nullable(),
       notes: zod.string().nullable(),
+      recipientPhone: zod.string().nullish(),
+      cashAmount: zod.number().nullish(),
+      cashChange: zod.number().nullish(),
+      deliveryLat: zod.number().nullish(),
+      deliveryLng: zod.number().nullish(),
       createdAt: zod.coerce.date(),
       updatedAt: zod.coerce.date(),
     }),

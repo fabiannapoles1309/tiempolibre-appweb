@@ -545,6 +545,122 @@ paths:
               schema:
                 $ref: "#/components/schemas/Subscription"
 
+  /me/subscription/recharge:
+    post:
+      operationId: rechargeSubscription
+      tags: [subscriptions]
+      summary: Add a 35-delivery recharge block to the active CLIENTE subscription
+      responses:
+        "200":
+          description: Updated subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  # ============== ADMIN MANAGEMENT ==============
+  /admin/users:
+    post:
+      operationId: adminCreateUser
+      tags: [admin]
+      summary: Create a CLIENTE (with optional plan) or DRIVER (with full account) (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserBody"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /admin/customer-deliveries:
+    get:
+      operationId: adminCustomerDeliveries
+      tags: [admin]
+      summary: Per-customer remaining deliveries (ADMIN)
+      responses:
+        "200":
+          description: Rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerDeliveriesRow"
+
+  /admin/cash-by-customer:
+    get:
+      operationId: adminCashByCustomer
+      tags: [admin]
+      summary: Cash pending by customer (drivers owe per restaurant) (ADMIN)
+      responses:
+        "200":
+          description: Rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CashByCustomerRow"
+
+  /admin/benefits-config:
+    get:
+      operationId: getBenefitsConfig
+      tags: [admin]
+      summary: Get configurable benefit levels for drivers (ADMIN)
+      responses:
+        "200":
+          description: Levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenefitLevel"
+    put:
+      operationId: putBenefitsConfig
+      tags: [admin]
+      summary: Replace benefit-level configuration (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                levels:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/BenefitLevelInput"
+              required: [levels]
+      responses:
+        "200":
+          description: Updated levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenefitLevel"
+
+  /finance/today-split:
+    get:
+      operationId: getFinanceTodaySplit
+      tags: [finance]
+      summary: Today's revenue split between deliveries and subscription plans (ADMIN)
+      responses:
+        "200":
+          description: Today split
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodaySplit"
+
   # ============== ADMIN FINANCE EXTRAS ==============
   /finance/cash-report:
     get:
@@ -767,11 +883,11 @@ components:
 
     PaymentMethod:
       type: string
-      enum: [EFECTIVO, TRANSFERENCIA, BILLETERA]
+      enum: [EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA, CORTESIA]
 
     ZoneName:
       type: string
-      enum: ["1", "2", "3", "4", "5", "6", "7", "8"]
+      enum: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
     User:
       type: object
@@ -1170,6 +1286,16 @@ components:
           type: ["string", "null"]
         notes:
           type: ["string", "null"]
+        recipientPhone:
+          type: ["string", "null"]
+        cashAmount:
+          type: ["number", "null"]
+        cashChange:
+          type: ["number", "null"]
+        deliveryLat:
+          type: ["number", "null"]
+        deliveryLng:
+          type: ["number", "null"]
         createdAt:
           type: string
           format: date-time
@@ -1212,6 +1338,16 @@ components:
           minimum: 0
         notes:
           type: ["string", "null"]
+        recipientPhone:
+          type: ["string", "null"]
+        cashAmount:
+          type: ["number", "null"]
+        cashChange:
+          type: ["number", "null"]
+        deliveryLat:
+          type: ["number", "null"]
+        deliveryLng:
+          type: ["number", "null"]
       required: [pickup, delivery, payment]
 
     UpdateOrderBody:
@@ -1435,3 +1571,108 @@ components:
           items:
             $ref: "#/components/schemas/Order"
       required: [kpis, ordersByStatus, ordersByZone, recentOrders]
+
+    AdminCreateUserBody:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [CLIENTE, DRIVER]
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        # CLIENTE
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+        # DRIVER
+        phone:
+          type: ["string", "null"]
+        vehicle:
+          type: ["string", "null"]
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneName"
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+      required: [role, name, email, password]
+
+    CustomerDeliveriesRow:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+        usedDeliveries:
+          type: integer
+        monthlyDeliveries:
+          type: integer
+        remainingDeliveries:
+          type: integer
+        status:
+          type: ["string", "null"]
+      required: [customerId, customerName, tier, usedDeliveries, monthlyDeliveries, remainingDeliveries, status]
+
+    CashByCustomerRow:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        ordersCount:
+          type: integer
+        cashPending:
+          type: number
+      required: [customerId, customerName, ordersCount, cashPending]
+
+    BenefitLevel:
+      type: object
+      properties:
+        id:
+          type: integer
+        level:
+          type: integer
+        name:
+          type: string
+        deliveriesRequired:
+          type: integer
+      required: [id, level, name, deliveriesRequired]
+
+    BenefitLevelInput:
+      type: object
+      properties:
+        level:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+        deliveriesRequired:
+          type: integer
+          minimum: 0
+      required: [level, name, deliveriesRequired]
+
+    TodaySplit:
+      type: object
+      properties:
+        repartoToday:
+          type: number
+        planesToday:
+          type: number
+        total:
+          type: number
+      required: [repartoToday, planesToday, total]
+

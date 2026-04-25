@@ -1,0 +1,63 @@
+Actúa como un desarrollador Full-Stack Senior. Necesito realizar una actualización profunda en la plataforma logística "Tiempo Libre". Implementa los siguientes cambios organizados por módulos, asegurando que la base de datos se actualice para registrar a todos los clientes y drivers de manera independiente.
+
+1. Corrección de Errores Técnicos (Prioridad Alta):
+
+Corrige el error glyphs: string expected, undefined found. Este error suele ocurrir en la configuración de MapLibre/Mapbox cuando el style no tiene definida una URL de fuentes válida. Asegúrate de que el objeto de estilo del mapa tenga un campo glyphs apuntando a una URL estándar (ej. https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf).
+
+2. Módulo de Administración y Superadmin:
+
+Gestión de Usuarios: Crea un menú para que el Admin dé de alta usuarios manualmente. Debe permitir asignar:
+
+Clientes: Seleccionar tipo de plan (Standar o Plan Optimo).
+
+Drivers: Crear usuario y contraseña personalizada.
+
+Dashboard Financiero: Modifica el apartado "Ingresos hoy". Ahora debe haber dos secciones:
+
+Ingresos por Reparto: Suma de los servicios realizados.
+
+Ingresos por Planes: Suma de los paquetes de envíos contratados por los clientes.
+
+Monitoreo Logístico: El Admin y Superadmin deben visualizar los "Envíos restantes" de cada cliente de forma independiente en una tabla de control.
+
+Control de Efectivo: Visualizar el monto en efectivo pendiente por entregar de cada driver (individual y gran total). Generar un reporte por cliente del efectivo que los drivers tienen pendiente de entregarles.
+
+Configuración de Beneficios: Crea un espacio para que el Admin defina el número de entregas necesarias para que un repartidor desbloquee cada nivel de beneficio.
+
+3. Módulo de Clientes (Restaurantes):
+
+Suscripciones de 35 envíos: Cambia el contador base de 70 a 35 envíos.
+
+El cliente solo puede ver qué plan tiene activo y cuántos envíos le quedan.
+
+Genera una alerta visual cuando el contador llegue a 5 envíos.
+
+Recargas: Agrega un botón de "Solicitud de recarga de envíos" que añada bloques de 35 envíos adicionales.
+
+Formulario de Pedido:
+
+Agrega campos obligatorios: Número de teléfono del destinatario, Monto a cobrar y Cambio necesario (si el pago es en efectivo).
+
+Métodos de Pago: Añadir las opciones "Tarjeta" y "Cortesía".
+
+Validación de Mapa: Al solicitar un servicio, si la dirección está fuera de los polígonos del archivo zonas.kml (Zonas 1-9), mostrar alerta: "Pedido fuera de la zona delimitada".
+
+4. Módulo de Repartidores (Drivers):
+
+Actualización de Campos: En el formulario de alta, cambia "Patente" por Placa y "Cédula" por Tarjeta de Circulación. Elimina el campo "Vencimiento de cédula".
+
+Seguimiento de Pedido: >   - Mientras el servicio esté activo, el driver debe ver el número de teléfono del cliente final.
+
+Al asignar una entrega, activar botones de estatus: Recolección, En ruta y Entregado. El cambio de estatus debe notificarse al cliente en tiempo real.
+
+Panel de Control: >   - Visualizar su propio "Efectivo pendiente" por entregar al establecimiento.
+
+Sección de Mis Beneficios (basado en el ranking de entregas y metas del Admin).
+
+Visualizar el Ranking de mejores repartidores.
+
+5. Base de Datos y Requerimientos:
+
+Asegúrate de que cada Cliente y cada Driver tenga un registro único y persistente en la base de datos con todos sus campos históricos.
+
+Instala las librerías necesarias para la gestión de KML y cálculos espaciales (turf, xmldom, togeojson).

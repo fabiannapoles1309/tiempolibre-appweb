@@ -82,4 +82,15 @@ Re-run the seed (idempotent): `pnpm dlx tsx artifacts/api-server/src/seed.ts`
 - `GET /api/drivers` is admin-only; drivers consult their own profile via `GET /api/me/driver`.
 - `lib/api-zod/src/index.ts` re-exports zod schemas only (`export * from "./generated/api"`); TS interfaces come from `@workspace/api-client-react` to avoid duplicate-symbol errors.
 - Currency formatted as ARS via `Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' })`.
+
+## Latest spec extensions (April 2026)
+
+- Order payment methods now include `EFECTIVO`, `TRANSFERENCIA`, `TARJETA`, `CORTESIA`. `cashAmount`/`cashChange` are persisted only when `payment === EFECTIVO` (server forces null otherwise).
+- Order create accepts optional `deliveryLat`/`deliveryLng`. When provided, the server runs point-in-polygon validation against `zonas.kml` (`mapService.validarPunto`) and rejects out-of-zone points with HTTP 400 `FUERA_DE_ZONA`. When absent, falls back to address geocoding via `validarZona`.
+- Cliente order creation requires an active subscription with `remainingDeliveries > 0` (HTTP 402 `NO_SUBSCRIPTION` / `NO_DELIVERIES_LEFT`).
+- `POST /me/subscription/recharge` adds a 35-envíos block to the latest subscription regardless of whether it is `ACTIVA` or `VENCIDA`, and reactivates it.
+- Admin endpoints: `POST /admin/users` (creates CLIENTE w/ tier or DRIVER w/ profile), `GET /admin/customer-deliveries`, `GET /admin/cash-by-customer` (sums `cashAmount` falling back to `amount`), `GET|PUT /admin/benefits-config`, `GET /finance/today-split` (Reparto vs Planes).
+- Cliente order detail polls every 5s (React Query `refetchInterval: 5000`) for near-real-time status updates.
+- Driver-facing labels: `Patente → Placa`, `Cédula → Tarjeta de Circulación`. The `circulationCardExpiry` column is preserved in the DB but no longer surfaced/edited in the UI.
+- Order-new uses an embedded MapLibre map loading `public/zonas.kml` for click-to-pick delivery point with client-side `turf` validation. If the browser lacks WebGL the page degrades gracefully (amber alert), and the server still validates the zone from the address.
 - Dates formatted with `date-fns` + Spanish locale (`import { es } from 'date-fns/locale'`).

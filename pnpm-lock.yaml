@@ -241,6 +241,16 @@ importers:
         version: 3.1.0
 
   artifacts/delivery-saas:
+    dependencies:
+      '@tmcw/togeojson':
+        specifier: ^7.1.2
+        version: 7.1.2
+      '@turf/turf':
+        specifier: ^7.3.5
+        version: 7.3.5
+      '@xmldom/xmldom':
+        specifier: ^0.9.10
+        version: 0.9.10
     devDependencies:
       '@hookform/resolvers':
         specifier: ^3.10.0

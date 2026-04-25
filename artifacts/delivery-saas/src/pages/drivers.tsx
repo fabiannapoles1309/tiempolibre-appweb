@@ -26,7 +26,6 @@ const driverSchema = z.object({
   active: z.boolean().default(true),
   licensePlate: z.string().optional(),
   circulationCard: z.string().optional(),
-  circulationCardExpiry: z.string().optional(),
 });
 
 export default function Drivers() {
@@ -52,7 +51,6 @@ export default function Drivers() {
       active: true,
       licensePlate: "",
       circulationCard: "",
-      circulationCardExpiry: "",
     },
   });
 
@@ -66,7 +64,6 @@ export default function Drivers() {
       active: true,
       licensePlate: "",
       circulationCard: "",
-      circulationCardExpiry: "",
     });
     setIsCreateOpen(true);
   };
@@ -81,7 +78,6 @@ export default function Drivers() {
       active: driver.active,
       licensePlate: driver.licensePlate ?? "",
       circulationCard: driver.circulationCard ?? "",
-      circulationCardExpiry: driver.circulationCardExpiry ?? "",
     });
     setIsCreateOpen(true);
   };
@@ -92,9 +88,6 @@ export default function Drivers() {
         ...data,
         licensePlate: data.licensePlate?.trim() ? data.licensePlate.trim() : undefined,
         circulationCard: data.circulationCard?.trim() ? data.circulationCard.trim() : undefined,
-        circulationCardExpiry: data.circulationCardExpiry?.trim()
-          ? data.circulationCardExpiry.trim()
-          : undefined,
       };
       if (editingDriver) {
         await updateDriver.mutateAsync({ id: editingDriver, data: payload as any });
@@ -237,9 +230,9 @@ export default function Drivers() {
                     name="licensePlate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Patente</FormLabel>
+                        <FormLabel>Placa</FormLabel>
                         <FormControl>
-                          <Input placeholder="AB123CD" {...field} />
+                          <Input placeholder="ABC-1234" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -250,28 +243,15 @@ export default function Drivers() {
                     name="circulationCard"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cédula de circulación</FormLabel>
+                        <FormLabel>Tarjeta de Circulación</FormLabel>
                         <FormControl>
-                          <Input placeholder="N° de cédula" {...field} />
+                          <Input placeholder="N° de tarjeta" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                <FormField
-                  control={form.control}
-                  name="circulationCardExpiry"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Vencimiento cédula</FormLabel>
-                      <FormControl>
-                        <Input type="date" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
                 <FormField
                   control={form.control}
                   name="active"

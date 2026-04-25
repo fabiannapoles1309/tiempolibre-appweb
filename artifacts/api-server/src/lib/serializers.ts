@@ -18,6 +18,11 @@ export function serializeOrder(
     driverId: o.driverId,
     driverName,
     notes: o.notes,
+    recipientPhone: o.recipientPhone ?? null,
+    cashAmount: o.cashAmount != null ? Number(o.cashAmount) : null,
+    cashChange: o.cashChange != null ? Number(o.cashChange) : null,
+    deliveryLat: o.deliveryLat != null ? Number(o.deliveryLat) : null,
+    deliveryLng: o.deliveryLng != null ? Number(o.deliveryLng) : null,
     createdAt: o.createdAt.toISOString(),
     updatedAt: o.updatedAt.toISOString(),
   };

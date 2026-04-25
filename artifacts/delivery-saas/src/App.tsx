@@ -17,6 +17,7 @@ import Drivers from "@/pages/drivers";
 import Reports from "@/pages/reports";
 import Finance from "@/pages/finance";
 import WalletPage from "@/pages/wallet";
+import MapPage from "@/pages/map";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ function Router() {
       <Route path="/orders/:id" component={() => <ProtectedRoute component={OrderDetail} />} />
       <Route path="/admin" component={() => <ProtectedRoute component={AdminDispatch} roles={["ADMIN"]} />} />
       <Route path="/drivers" component={() => <ProtectedRoute component={Drivers} roles={["ADMIN"]} />} />
+      <Route path="/map" component={() => <ProtectedRoute component={MapPage} roles={["ADMIN"]} />} />
       <Route path="/reports" component={() => <ProtectedRoute component={Reports} roles={["ADMIN"]} />} />
       <Route path="/finance" component={() => <ProtectedRoute component={Finance} roles={["ADMIN"]} />} />
       <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["CLIENTE", "ADMIN"]} />} />

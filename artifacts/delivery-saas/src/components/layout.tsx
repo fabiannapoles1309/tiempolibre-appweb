@@ -2,7 +2,7 @@ import React from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, Wallet, LogOut, Loader2, Users, DollarSign, Map as MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { title: "Crear pedido", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
   { title: "Pedidos", href: "/orders", icon: Package, roles: [UserRole.ADMIN] },
   { title: "Asignación", href: "/admin", icon: Settings, roles: [UserRole.ADMIN] },
+  { title: "Mapa de zonas", href: "/map", icon: MapIcon, roles: [UserRole.ADMIN] },
   { title: "Repartidores", href: "/drivers", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Mis entregas", href: "/orders", icon: Truck, roles: [UserRole.DRIVER] },
   { title: "Reportes", href: "/reports", icon: FileText, roles: [UserRole.ADMIN] },

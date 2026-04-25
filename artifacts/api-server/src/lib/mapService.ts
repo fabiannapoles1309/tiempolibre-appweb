@@ -112,7 +112,8 @@ export async function geocodeNominatim(direccion: string): Promise<GeocodeResult
   url.searchParams.set("q", q);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "1");
-  url.searchParams.set("countrycodes", "ar");
+  // Cobertura actual del KML: zona metropolitana de Guadalajara, México.
+  url.searchParams.set("countrycodes", "mx");
   url.searchParams.set("addressdetails", "0");
   try {
     const res = await fetch(url, {

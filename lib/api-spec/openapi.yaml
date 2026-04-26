@@ -1,0 +1,2328 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Tiempo Libre - SaaS B2B de Entregas a Domicilio
+servers:
+  - url: /api
+    description: Base API path
+
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication and session
+  - name: orders
+    description: Order management
+  - name: drivers
+    description: Driver management
+  - name: zones
+    description: Delivery zones
+  - name: finance
+    description: Financial reports and KPIs
+  - name: wallet
+    description: Customer digital wallet
+  - name: reports
+    description: Analytical reports
+  - name: pricing
+    description: Editable pricing for plans and extra packages
+  - name: admin
+    description: Admin / SUPERUSER operations
+  - name: me
+    description: Current user (cliente / driver) operations
+
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  # ============== AUTH ==============
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterBody"
+      responses:
+        "201":
+          description: User created and logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Authenticate a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Log out current user
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimpleOk"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current authenticated user
+      responses:
+        "200":
+          description: Current user (or null if not signed in)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MeResponse"
+
+  # ============== ORDERS ==============
+  /orders:
+    get:
+      operationId: listOrders
+      tags: [orders]
+      summary: List orders with optional filters
+      parameters:
+        - in: query
+          name: status
+          schema:
+            $ref: "#/components/schemas/OrderStatus"
+        - in: query
+          name: zone
+          schema:
+            $ref: "#/components/schemas/ZoneName"
+        - in: query
+          name: customerId
+          schema:
+            type: integer
+        - in: query
+          name: driverId
+          schema:
+            type: integer
+        - in: query
+          name: from
+          description: ISO date filter (createdAt >=)
+          schema:
+            type: string
+            format: date-time
+        - in: query
+          name: to
+          description: ISO date filter (createdAt <=)
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: List of orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Order"
+    post:
+      operationId: createOrder
+      tags: [orders]
+      summary: Create a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOrderBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "400":
+          description: Invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders/{id}:
+    get:
+      operationId: getOrder
+      tags: [orders]
+      summary: Get a single order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    patch:
+      operationId: updateOrder
+      tags: [orders]
+      summary: Update order status or assignment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOrderBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /orders/assign-auto:
+    post:
+      operationId: assignOrdersAuto
+      tags: [orders]
+      summary: Auto-assign all pending orders to active drivers by zone (least-loaded)
+      responses:
+        "200":
+          description: Result of auto-assignment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AutoAssignResult"
+
+  /orders/{id}/assign-manual:
+    post:
+      operationId: assignOrderManual
+      tags: [orders]
+      summary: Manually assign a driver to an order
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignManualBody"
+      responses:
+        "200":
+          description: Updated order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Order"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # ============== DRIVERS ==============
+  /drivers:
+    get:
+      operationId: listDrivers
+      tags: [drivers]
+      summary: List drivers
+      responses:
+        "200":
+          description: Drivers list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Driver"
+    post:
+      operationId: createDriver
+      tags: [drivers]
+      summary: Create a driver
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDriverBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /drivers/{id}:
+    patch:
+      operationId: updateDriver
+      tags: [drivers]
+      summary: Update a driver
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDriverBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteDriver
+      tags: [drivers]
+      summary: Delete a driver
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /drivers/ranking:
+    get:
+      operationId: getDriverRanking
+      tags: [drivers]
+      summary: Driver ranking by deliveries
+      responses:
+        "200":
+          description: Ranking
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DriverRankingEntry"
+
+  /drivers/{id}/cash-settle:
+    post:
+      operationId: settleDriverCash
+      tags: [drivers]
+      summary: Mark cash collected by a driver as settled (admin only)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettleCashBody"
+      responses:
+        "200":
+          description: Updated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  /me/driver:
+    get:
+      operationId: getMyDriver
+      tags: [drivers]
+      summary: Driver record of the authenticated DRIVER user
+      responses:
+        "200":
+          description: Driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /me/driver/status:
+    patch:
+      operationId: updateMyDriverStatus
+      tags: [drivers]
+      summary: Update own operational status (DRIVER only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDriverStatusBody"
+      responses:
+        "200":
+          description: Driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Driver"
+
+  # ============== INCIDENTS ==============
+  /incidents:
+    get:
+      operationId: listIncidents
+      tags: [incidents]
+      summary: List incidents (ADMIN sees all, DRIVER sees own)
+      responses:
+        "200":
+          description: Incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Incident"
+    post:
+      operationId: createIncident
+      tags: [incidents]
+      summary: Report a new incident (DRIVER)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateIncidentBody"
+      responses:
+        "201":
+          description: Incident created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  /incidents/{id}:
+    patch:
+      operationId: updateIncident
+      tags: [incidents]
+      summary: Update an incident status (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateIncidentBody"
+      responses:
+        "200":
+          description: Incident
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  # ============== SUBSCRIPTIONS ==============
+  /me/subscription:
+    get:
+      operationId: getMySubscription
+      tags: [subscriptions]
+      summary: Subscription of the authenticated CLIENTE
+      responses:
+        "200":
+          description: Subscription wrapper
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MySubscriptionResponse"
+
+  /subscriptions:
+    get:
+      operationId: listSubscriptions
+      tags: [subscriptions]
+      summary: List all subscriptions (ADMIN)
+      responses:
+        "200":
+          description: Subscriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subscription"
+
+  /subscriptions/subscribe:
+    post:
+      operationId: subscribe
+      tags: [subscriptions]
+      summary: Subscribe or change tier (CLIENTE)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscribeBody"
+      responses:
+        "200":
+          description: Active subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  /me/customer:
+    get:
+      operationId: getMyCustomerProfile
+      tags: [subscriptions]
+      summary: Cliente's own customer profile (businessName, pickupAddress, zone, phone)
+      responses:
+        "200":
+          description: Profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CustomerProfile"
+
+  /me/subscription/recharge:
+    post:
+      operationId: rechargeSubscription
+      tags: [subscriptions]
+      summary: Add a 35-delivery recharge block to the active CLIENTE subscription
+      responses:
+        "200":
+          description: Updated subscription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subscription"
+
+  # ============== ADMIN MANAGEMENT ==============
+  /admin/clientes:
+    get:
+      operationId: adminListClientes
+      tags: [admin]
+      summary: List all CLIENTE users with their customer profile and active subscription summary (ADMIN/SUPERUSER)
+      responses:
+        "200":
+          description: Clientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminClienteRow"
+
+  /admin/clientes/{id}:
+    patch:
+      operationId: adminUpdateCliente
+      tags: [admin]
+      summary: Update a CLIENTE profile (name, businessName, pickupAddress, zone, phone, tier) (ADMIN/SUPERUSER)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUpdateClienteBody"
+      responses:
+        "200":
+          description: Updated cliente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClienteRow"
+
+  /admin/clientes/{id}/recharge:
+    post:
+      operationId: adminRechargeCliente
+      tags: [admin]
+      summary: Add a 35-envío recharge block to a cliente's subscription (ADMIN/SUPERUSER)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated cliente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClienteRow"
+
+  /admin/clientes/{id}/renew:
+    post:
+      operationId: adminRenewCliente
+      tags: [admin]
+      summary: Renew/reactivate a cliente subscription with a fresh block (ADMIN/SUPERUSER)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated cliente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClienteRow"
+
+  /finance/export/excel:
+    get:
+      operationId: financeExportExcel
+      tags: [finance]
+      summary: Download an Excel report (deliveries / plans / accounting) by period and optional cliente (ADMIN/SUPERUSER)
+      parameters:
+        - name: type
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [deliveries, plans, accounting]
+        - name: period
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month, year]
+        - name: clienteId
+          in: query
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: XLSX file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /admin/users:
+    post:
+      operationId: adminCreateUser
+      tags: [admin]
+      summary: Create a CLIENTE (with optional plan) or DRIVER (with full account) (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminCreateUserBody"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCreatedUser"
+
+  /admin/customer-deliveries:
+    get:
+      operationId: adminCustomerDeliveries
+      tags: [admin]
+      summary: Per-customer remaining deliveries (ADMIN)
+      responses:
+        "200":
+          description: Rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CustomerDeliveriesRow"
+
+  /admin/cash-by-customer:
+    get:
+      operationId: adminCashByCustomer
+      tags: [admin]
+      summary: Cash pending by customer (drivers owe per restaurant) (ADMIN)
+      responses:
+        "200":
+          description: Rows
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CashByCustomerRow"
+
+  /me/driver/benefits:
+    get:
+      operationId: getMyDriverBenefits
+      tags: [drivers]
+      summary: Driver self-service progress and unlocked benefits
+      parameters:
+        - in: query
+          name: year
+          schema: { type: integer }
+        - in: query
+          name: month
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: Progress summary for the authenticated driver
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DriverBenefitsProgress"
+
+  /admin/benefit-items:
+    get:
+      operationId: listBenefitItems
+      tags: [admin]
+      summary: List concrete benefit items per level (ADMIN)
+      responses:
+        "200":
+          description: Items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenefitItem"
+    post:
+      operationId: createBenefitItem
+      tags: [admin]
+      summary: Create a benefit item for a level (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BenefitItemInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenefitItem"
+  /admin/benefit-items/{id}:
+    delete:
+      operationId: deleteBenefitItem
+      tags: [admin]
+      summary: Delete a benefit item (ADMIN)
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/benefits-tracking:
+    get:
+      operationId: getBenefitsTracking
+      tags: [admin]
+      summary: Monthly benefits tracking dashboard (ADMIN)
+      parameters:
+        - in: query
+          name: year
+          schema: { type: integer }
+        - in: query
+          name: month
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: Tracking rows for the requested period
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BenefitsTrackingResponse"
+
+  /admin/benefits-tracking/claim:
+    post:
+      operationId: setBenefitClaim
+      tags: [admin]
+      summary: Mark a benefit item as delivered or pending for a driver in a month (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                driverId: { type: integer }
+                benefitItemId: { type: integer }
+                year: { type: integer }
+                month: { type: integer, minimum: 1, maximum: 12 }
+                delivered: { type: boolean }
+              required: [driverId, benefitItemId, year, month, delivered]
+      responses:
+        "200":
+          description: Updated claim status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                required: [ok]
+
+  /admin/benefits-tracking/export:
+    get:
+      operationId: exportBenefitsTracking
+      tags: [admin]
+      summary: Export winning drivers and pending benefits to Excel (ADMIN)
+      parameters:
+        - in: query
+          name: year
+          schema: { type: integer }
+        - in: query
+          name: month
+          schema: { type: integer, minimum: 1, maximum: 12 }
+      responses:
+        "200":
+          description: XLSX file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  /admin/benefits-config:
+    get:
+      operationId: getBenefitsConfig
+      tags: [admin]
+      summary: Get configurable benefit levels for drivers (ADMIN)
+      responses:
+        "200":
+          description: Levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenefitLevel"
+    put:
+      operationId: putBenefitsConfig
+      tags: [admin]
+      summary: Replace benefit-level configuration (ADMIN)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                levels:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/BenefitLevelInput"
+              required: [levels]
+      responses:
+        "200":
+          description: Updated levels
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BenefitLevel"
+
+  /finance/today-split:
+    get:
+      operationId: getFinanceTodaySplit
+      tags: [finance]
+      summary: Today's revenue split between deliveries and subscription plans (ADMIN)
+      responses:
+        "200":
+          description: Today split
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TodaySplit"
+
+  # ============== ADMIN FINANCE EXTRAS ==============
+  /finance/cash-report:
+    get:
+      operationId: getCashReport
+      tags: [finance]
+      summary: Cash collected vs settled per driver (ADMIN)
+      responses:
+        "200":
+          description: Cash report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CashReport"
+
+  /finance/b2b-revenue:
+    get:
+      operationId: getB2BRevenue
+      tags: [finance]
+      summary: Revenue and MRR by client (ADMIN)
+      responses:
+        "200":
+          description: B2B revenue report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/B2BRevenueReport"
+
+  # ============== ZONES ==============
+  /zones:
+    get:
+      operationId: listZones
+      tags: [zones]
+      summary: List delivery zones
+      responses:
+        "200":
+          description: Zones
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Zone"
+
+  # ============== FINANCE ==============
+  /finance/summary:
+    get:
+      operationId: getFinanceSummary
+      tags: [finance]
+      summary: KPIs by range (day, week, month)
+      parameters:
+        - in: query
+          name: range
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month]
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FinanceSummary"
+
+  /finance/transactions:
+    get:
+      operationId: listTransactions
+      tags: [finance]
+      summary: List financial transactions
+      responses:
+        "200":
+          description: Transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+
+  # ============== WALLET ==============
+  /wallet:
+    get:
+      operationId: getWallet
+      tags: [wallet]
+      summary: Get the current user's wallet
+      responses:
+        "200":
+          description: Wallet info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallet/topup:
+    post:
+      operationId: topUpWallet
+      tags: [wallet]
+      summary: Add funds to the user's wallet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TopUpBody"
+      responses:
+        "200":
+          description: Updated wallet
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Wallet"
+
+  /wallet/transactions:
+    get:
+      operationId: listWalletTransactions
+      tags: [wallet]
+      summary: List wallet transactions for the current user
+      responses:
+        "200":
+          description: Wallet movements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WalletTx"
+
+  # ============== PRICING SETTINGS ==============
+  /pricing-settings:
+    get:
+      operationId: getPricingSettings
+      tags: [pricing]
+      summary: Read editable pricing for plans and the extra-package add-on
+      responses:
+        "200":
+          description: Current pricing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingSettings"
+
+  /admin/pricing-settings:
+    put:
+      operationId: updatePricingSettings
+      tags: [pricing]
+      summary: Update plan + extra-package prices (ADMIN/SUPERUSER)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePricingSettingsBody"
+      responses:
+        "200":
+          description: Updated pricing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PricingSettings"
+
+  # ============== REPORTS ==============
+  /reports/deliveries:
+    get:
+      operationId: getDeliveriesReport
+      tags: [reports]
+      summary: Deliveries grouped by day for a window
+      parameters:
+        - in: query
+          name: range
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month]
+        - in: query
+          name: zone
+          schema:
+            $ref: "#/components/schemas/ZoneName"
+      responses:
+        "200":
+          description: Deliveries report
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DeliveriesPoint"
+
+  /reports/drivers:
+    get:
+      operationId: getDriversReport
+      tags: [reports]
+      summary: Driver performance leaderboard
+      parameters:
+        - in: query
+          name: range
+          required: true
+          schema:
+            type: string
+            enum: [day, week, month]
+      responses:
+        "200":
+          description: Driver leaderboard
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DriverPerformance"
+
+  /reports/dashboard:
+    get:
+      operationId: getDashboard
+      tags: [reports]
+      summary: Aggregate dashboard KPIs and recent activity
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardData"
+
+  # ============== STAFF (ADMIN/SUPERUSER directory) ==============
+  /admin/staff-users:
+    get:
+      operationId: listStaffUsers
+      tags: [admin]
+      summary: List ADMIN and SUPERUSER staff with their email addresses.
+      responses:
+        "200":
+          description: Staff users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StaffUser"
+
+  # ============== COMBINED EXCEL REPORT ==============
+  /admin/reports/combined:
+    get:
+      operationId: downloadCombinedReport
+      tags: [reports]
+      summary: Combined Excel report (envíos + cash) per cliente, grouped by period.
+      parameters:
+        - in: query
+          name: period
+          required: true
+          schema:
+            type: string
+            enum: [DAY, WEEK, MONTH, YEAR]
+        - in: query
+          name: from
+          required: false
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Excel file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+
+  # ============== FEEDBACK (Quejas y Sugerencias) ==============
+  /me/feedback:
+    post:
+      operationId: createMyFeedback
+      tags: [me]
+      summary: Submit a complaint or suggestion. Notifies admins by email.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateFeedbackBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Feedback"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/feedback:
+    get:
+      operationId: listFeedback
+      tags: [admin]
+      summary: Admin list of all feedback (quejas + sugerencias).
+      responses:
+        "200":
+          description: Feedback list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminFeedbackRow"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    SimpleOk:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required: [ok]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    UserRole:
+      type: string
+      enum: [SUPERUSER, ADMIN, CLIENTE, DRIVER]
+
+    OrderStatus:
+      type: string
+      enum: [PENDIENTE, ASIGNADO, EN_RUTA, ENTREGADO, CANCELADO]
+
+    PaymentMethod:
+      type: string
+      enum: [EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA, CORTESIA]
+
+    ZoneName:
+      type: string
+      enum: ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+      required: [id, email, name, role, createdAt]
+
+    AdminCreatedUser:
+      type: object
+      description: User devuelto al crear desde el panel de admin. Incluye welcomeMessage cuando el rol es DRIVER.
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        createdAt:
+          type: string
+        welcomeMessage:
+          type: string
+          nullable: true
+      required: [id, email, name, role, createdAt]
+
+    AuthSession:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+      required: [user, token]
+
+    MeResponse:
+      type: object
+      properties:
+        user:
+          oneOf:
+            - $ref: "#/components/schemas/User"
+            - type: "null"
+      required: [user]
+
+    RegisterBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+          minLength: 1
+        password:
+          type: string
+          minLength: 6
+        role:
+          $ref: "#/components/schemas/UserRole"
+      required: [email, name, password]
+
+    LoginBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+
+    Zone:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          $ref: "#/components/schemas/ZoneName"
+      required: [id, name]
+
+    DriverStatus:
+      type: string
+      enum: [ACTIVO, EN_ENTREGA, EN_PAUSA, INACTIVO]
+
+    Driver:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: ["integer", "null"]
+        name:
+          type: string
+        phone:
+          type: string
+        vehicle:
+          type: string
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneName"
+        active:
+          type: boolean
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+        circulationCardExpiry:
+          type: ["string", "null"]
+          format: date
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+        cashPending:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - name
+        - phone
+        - vehicle
+        - zones
+        - active
+        - licensePlate
+        - circulationCard
+        - circulationCardExpiry
+        - status
+        - cashPending
+        - createdAt
+
+    CreateDriverBody:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        phone:
+          type: string
+          minLength: 1
+        vehicle:
+          type: string
+          minLength: 1
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneName"
+          minItems: 1
+        active:
+          type: boolean
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+        circulationCardExpiry:
+          type: ["string", "null"]
+          format: date
+      required: [name, phone, vehicle, zones]
+
+    UpdateDriverBody:
+      type: object
+      properties:
+        name:
+          type: string
+        phone:
+          type: string
+        vehicle:
+          type: string
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneName"
+        active:
+          type: boolean
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+        circulationCardExpiry:
+          type: ["string", "null"]
+          format: date
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+
+    UpdateDriverStatusBody:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/DriverStatus"
+      required: [status]
+
+    DriverRankingEntry:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        driverName:
+          type: string
+        deliveries:
+          type: integer
+        revenue:
+          type: number
+        rank:
+          type: integer
+      required: [driverId, driverName, deliveries, revenue, rank]
+
+    IncidentType:
+      type: string
+      enum: [ACCIDENTE, ROBO, DEMORA, CLIENTE_AUSENTE, VEHICULO, OTRO]
+
+    IncidentStatus:
+      type: string
+      enum: [ABIERTO, EN_REVISION, RESUELTO]
+
+    Incident:
+      type: object
+      properties:
+        id:
+          type: integer
+        driverId:
+          type: integer
+        driverName:
+          type: string
+        orderId:
+          type: ["integer", "null"]
+        type:
+          $ref: "#/components/schemas/IncidentType"
+        description:
+          type: string
+        status:
+          $ref: "#/components/schemas/IncidentStatus"
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, driverId, driverName, orderId, type, description, status, createdAt]
+
+    CreateIncidentBody:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/IncidentType"
+        description:
+          type: string
+          minLength: 1
+        orderId:
+          type: ["integer", "null"]
+      required: [type, description]
+
+    UpdateIncidentBody:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/IncidentStatus"
+      required: [status]
+
+    SettleCashBody:
+      type: object
+      properties:
+        amount:
+          type: number
+          exclusiveMinimum: 0
+      required: [amount]
+
+    SubscriptionTier:
+      type: string
+      enum: [ESTANDAR, OPTIMO]
+
+    SubscriptionStatus:
+      type: string
+      enum: [ACTIVA, CANCELADA, VENCIDA]
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        userName:
+          type: string
+        tier:
+          $ref: "#/components/schemas/SubscriptionTier"
+        monthlyPrice:
+          type: number
+        monthlyDeliveries:
+          type: integer
+        usedDeliveries:
+          type: integer
+        remainingDeliveries:
+          type: integer
+        periodStart:
+          type: string
+          format: date-time
+        status:
+          $ref: "#/components/schemas/SubscriptionStatus"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - userName
+        - tier
+        - monthlyPrice
+        - monthlyDeliveries
+        - usedDeliveries
+        - remainingDeliveries
+        - periodStart
+        - status
+        - createdAt
+
+    SubscribeBody:
+      type: object
+      properties:
+        tier:
+          $ref: "#/components/schemas/SubscriptionTier"
+      required: [tier]
+
+    MySubscriptionResponse:
+      type: object
+      properties:
+        subscription:
+          oneOf:
+            - $ref: "#/components/schemas/Subscription"
+            - type: "null"
+      required: [subscription]
+
+    CashReport:
+      type: object
+      properties:
+        totalCashPending:
+          type: number
+        totalCashCollected:
+          type: number
+        drivers:
+          type: array
+          items:
+            type: object
+            properties:
+              driverId:
+                type: integer
+              driverName:
+                type: string
+              cashPending:
+                type: number
+            required: [driverId, driverName, cashPending]
+      required: [totalCashPending, totalCashCollected, drivers]
+
+    B2BRevenueEntry:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        ordersCount:
+          type: integer
+        revenue:
+          type: number
+        subscriptionTier:
+          oneOf:
+            - $ref: "#/components/schemas/SubscriptionTier"
+            - type: "null"
+      required: [customerId, customerName, ordersCount, revenue, subscriptionTier]
+
+    B2BRevenueReport:
+      type: object
+      properties:
+        totalRevenue:
+          type: number
+        totalMrr:
+          type: number
+        clients:
+          type: array
+          items:
+            $ref: "#/components/schemas/B2BRevenueEntry"
+      required: [totalRevenue, totalMrr, clients]
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        pickup:
+          type: string
+        delivery:
+          type: string
+        zone:
+          oneOf:
+            - $ref: "#/components/schemas/ZoneName"
+            - type: "null"
+        payment:
+          $ref: "#/components/schemas/PaymentMethod"
+        amount:
+          type: number
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        driverId:
+          type: ["integer", "null"]
+        driverName:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        recipientPhone:
+          type: ["string", "null"]
+        recipientEmail:
+          type: ["string", "null"]
+        cashAmount:
+          type: ["number", "null"]
+        cashChange:
+          type: ["number", "null"]
+        deliveryLat:
+          type: ["number", "null"]
+        deliveryLng:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - customerId
+        - customerName
+        - pickup
+        - delivery
+        - zone
+        - payment
+        - amount
+        - status
+        - driverId
+        - driverName
+        - notes
+        - createdAt
+        - updatedAt
+
+    CreateOrderBody:
+      type: object
+      properties:
+        pickup:
+          type: string
+          minLength: 1
+        delivery:
+          type: string
+          minLength: 1
+        zone:
+          oneOf:
+            - $ref: "#/components/schemas/ZoneName"
+            - type: "null"
+        payment:
+          $ref: "#/components/schemas/PaymentMethod"
+        amount:
+          type: number
+          minimum: 0
+        notes:
+          type: ["string", "null"]
+        recipientPhone:
+          type: ["string", "null"]
+        recipientEmail:
+          type: ["string", "null"]
+        cashAmount:
+          type: ["number", "null"]
+        cashChange:
+          type: ["number", "null"]
+        deliveryLat:
+          type: ["number", "null"]
+        deliveryLng:
+          type: ["number", "null"]
+      required: [pickup, delivery, payment]
+
+    UpdateOrderBody:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/OrderStatus"
+        driverId:
+          type: ["integer", "null"]
+
+    AssignManualBody:
+      type: object
+      properties:
+        driverId:
+          type: integer
+      required: [driverId]
+
+    AutoAssignResult:
+      type: object
+      properties:
+        assigned:
+          type: integer
+        skipped:
+          type: integer
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              orderId:
+                type: integer
+              driverId:
+                type: ["integer", "null"]
+              zone:
+                oneOf:
+                  - $ref: "#/components/schemas/ZoneName"
+                  - type: "null"
+              status:
+                type: string
+            required: [orderId, driverId, zone, status]
+      required: [assigned, skipped, details]
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        orderId:
+          type: ["integer", "null"]
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [INGRESO, GASTO]
+        method:
+          $ref: "#/components/schemas/PaymentMethod"
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, orderId, amount, type, method, description, createdAt]
+
+    FinanceSummary:
+      type: object
+      properties:
+        range:
+          type: string
+        income:
+          type: number
+        expenses:
+          type: number
+        profit:
+          type: number
+        ordersCount:
+          type: integer
+        avgTicket:
+          type: number
+        byMethod:
+          type: array
+          items:
+            type: object
+            properties:
+              method:
+                $ref: "#/components/schemas/PaymentMethod"
+              total:
+                type: number
+              count:
+                type: integer
+            required: [method, total, count]
+        timeline:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+              income:
+                type: number
+              expenses:
+                type: number
+            required: [date, income, expenses]
+      required: [range, income, expenses, profit, ordersCount, avgTicket, byMethod, timeline]
+
+    Wallet:
+      type: object
+      properties:
+        userId:
+          type: integer
+        balance:
+          type: number
+        updatedAt:
+          type: string
+          format: date-time
+      required: [userId, balance, updatedAt]
+
+    TopUpBody:
+      type: object
+      properties:
+        amount:
+          type: number
+          exclusiveMinimum: 0
+        method:
+          $ref: "#/components/schemas/PaymentMethod"
+      required: [amount, method]
+
+    WalletTx:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        amount:
+          type: number
+        type:
+          type: string
+          enum: [TOPUP, PAGO, REEMBOLSO]
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, amount, type, description, createdAt]
+
+    PricingSettings:
+      type: object
+      properties:
+        estandarPrice:
+          type: number
+        optimoPrice:
+          type: number
+        extraPackagePrice:
+          type: number
+      required: [estandarPrice, optimoPrice, extraPackagePrice]
+
+    UpdatePricingSettingsBody:
+      type: object
+      properties:
+        estandarPrice:
+          type: number
+          minimum: 0
+        optimoPrice:
+          type: number
+          minimum: 0
+        extraPackagePrice:
+          type: number
+          minimum: 0
+      required: [estandarPrice, optimoPrice, extraPackagePrice]
+
+    DeliveriesPoint:
+      type: object
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+        revenue:
+          type: number
+      required: [date, count, revenue]
+
+    DriverPerformance:
+      type: object
+      properties:
+        driverId:
+          type: integer
+        driverName:
+          type: string
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneName"
+        deliveries:
+          type: integer
+        revenue:
+          type: number
+        active:
+          type: boolean
+      required: [driverId, driverName, zones, deliveries, revenue, active]
+
+    DashboardData:
+      type: object
+      properties:
+        kpis:
+          type: object
+          properties:
+            todayOrders:
+              type: integer
+            pendingOrders:
+              type: integer
+            inRouteOrders:
+              type: integer
+            deliveredToday:
+              type: integer
+            todayRevenue:
+              type: number
+            activeDrivers:
+              type: integer
+          required: [todayOrders, pendingOrders, inRouteOrders, deliveredToday, todayRevenue, activeDrivers]
+        ordersByStatus:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                $ref: "#/components/schemas/OrderStatus"
+              count:
+                type: integer
+            required: [status, count]
+        ordersByZone:
+          type: array
+          items:
+            type: object
+            properties:
+              zone:
+                oneOf:
+                  - $ref: "#/components/schemas/ZoneName"
+                  - type: "null"
+              count:
+                type: integer
+              revenue:
+                type: number
+            required: [zone, count, revenue]
+        recentOrders:
+          type: array
+          items:
+            $ref: "#/components/schemas/Order"
+      required: [kpis, ordersByStatus, ordersByZone, recentOrders]
+
+    AdminCreateUserBody:
+      type: object
+      properties:
+        role:
+          type: string
+          enum: [CLIENTE, DRIVER]
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+        password:
+          type: string
+          minLength: 6
+        # CLIENTE
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 100
+        # DRIVER + CLIENTE share phone
+        phone:
+          type: ["string", "null"]
+        # DRIVER
+        vehicle:
+          type: ["string", "null"]
+        zones:
+          type: array
+          items:
+            $ref: "#/components/schemas/ZoneName"
+        licensePlate:
+          type: ["string", "null"]
+        circulationCard:
+          type: ["string", "null"]
+      required: [role, name, email, password]
+
+    CustomerProfile:
+      type: object
+      properties:
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+        phone:
+          type: ["string", "null"]
+      required: [businessName, pickupAddress, clienteZone, phone]
+
+    AdminUpdateClienteBody:
+      type: object
+      description: Update fields for an existing cliente. All fields optional.
+      properties:
+        name:
+          type: string
+          minLength: 1
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+          minimum: 1
+          maximum: 100
+        phone:
+          type: ["string", "null"]
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+
+    AdminClienteRow:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        businessName:
+          type: ["string", "null"]
+        pickupAddress:
+          type: ["string", "null"]
+        clienteZone:
+          type: ["integer", "null"]
+        phone:
+          type: ["string", "null"]
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+        status:
+          type: ["string", "null"]
+        usedDeliveries:
+          type: integer
+        monthlyDeliveries:
+          type: integer
+        remainingDeliveries:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, name, email, usedDeliveries, monthlyDeliveries, remainingDeliveries, createdAt]
+
+    CustomerDeliveriesRow:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        tier:
+          type: ["string", "null"]
+          enum: [ESTANDAR, OPTIMO, null]
+        usedDeliveries:
+          type: integer
+        monthlyDeliveries:
+          type: integer
+        remainingDeliveries:
+          type: integer
+        status:
+          type: ["string", "null"]
+      required: [customerId, customerName, tier, usedDeliveries, monthlyDeliveries, remainingDeliveries, status]
+
+    CashByCustomerRow:
+      type: object
+      properties:
+        customerId:
+          type: integer
+        customerName:
+          type: string
+        ordersCount:
+          type: integer
+        cashPending:
+          type: number
+      required: [customerId, customerName, ordersCount, cashPending]
+
+    BenefitLevel:
+      type: object
+      properties:
+        id:
+          type: integer
+        level:
+          type: integer
+        name:
+          type: string
+        deliveriesRequired:
+          type: integer
+      required: [id, level, name, deliveriesRequired]
+
+    BenefitLevelInput:
+      type: object
+      properties:
+        level:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+        deliveriesRequired:
+          type: integer
+          minimum: 0
+      required: [level, name, deliveriesRequired]
+
+    TodaySplit:
+      type: object
+      properties:
+        repartoToday:
+          type: number
+        planesToday:
+          type: number
+        total:
+          type: number
+      required: [repartoToday, planesToday, total]
+
+
+    BenefitItem:
+      type: object
+      properties:
+        id: { type: integer }
+        level: { type: integer }
+        name: { type: string }
+        icon: { type: string }
+        description: { type: string, nullable: true }
+      required: [id, level, name, icon]
+
+    BenefitItemInput:
+      type: object
+      properties:
+        level: { type: integer, minimum: 1 }
+        name: { type: string, minLength: 1 }
+        icon: { type: string, minLength: 1 }
+        description: { type: string, nullable: true }
+      required: [level, name, icon]
+
+    BenefitsTrackingBenefit:
+      type: object
+      properties:
+        benefitItemId: { type: integer }
+        level: { type: integer }
+        name: { type: string }
+        icon: { type: string }
+        status:
+          type: string
+          enum: [POR_RECLAMAR, ENTREGADO]
+        deliveredAt: { type: string, format: date-time, nullable: true }
+      required: [benefitItemId, level, name, icon, status]
+
+    BenefitsTrackingRow:
+      type: object
+      properties:
+        driverId: { type: integer }
+        driverName: { type: string }
+        deliveries: { type: integer }
+        currentLevel: { type: integer }
+        currentLevelName: { type: string, nullable: true }
+        nextLevel: { type: integer, nullable: true }
+        nextLevelName: { type: string, nullable: true }
+        nextLevelTarget: { type: integer, nullable: true }
+        progressPct: { type: number }
+        benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/BenefitsTrackingBenefit"
+      required: [driverId, driverName, deliveries, currentLevel, progressPct, benefits]
+
+    BenefitsTrackingResponse:
+      type: object
+      properties:
+        year: { type: integer }
+        month: { type: integer }
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/BenefitsTrackingRow"
+      required: [year, month, rows]
+
+    DriverBenefitsProgress:
+      type: object
+      properties:
+        year: { type: integer }
+        month: { type: integer }
+        driverName: { type: string }
+        deliveries: { type: integer }
+        currentLevel: { type: integer }
+        currentLevelName: { type: string, nullable: true }
+        nextLevel: { type: integer, nullable: true }
+        nextLevelName: { type: string, nullable: true }
+        nextLevelTarget: { type: integer, nullable: true }
+        remainingForNext: { type: integer, nullable: true }
+        progressPct: { type: number }
+        benefits:
+          type: array
+          items:
+            $ref: "#/components/schemas/BenefitsTrackingBenefit"
+      required: [year, month, driverName, deliveries, currentLevel, progressPct, benefits]
+
+    StaffUser:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        role:
+          type: string
+          enum: [ADMIN, SUPERUSER]
+        createdAt: { type: string, format: date-time }
+      required: [id, name, email, role, createdAt]
+
+    FeedbackType:
+      type: string
+      enum: [QUEJA, SUGERENCIA]
+
+    CreateFeedbackBody:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/FeedbackType"
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+        message:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required: [type, subject, message]
+
+    Feedback:
+      type: object
+      properties:
+        id: { type: integer }
+        type:
+          $ref: "#/components/schemas/FeedbackType"
+        subject: { type: string }
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, type, subject, message, createdAt]
+
+    AdminFeedbackRow:
+      type: object
+      properties:
+        id: { type: integer }
+        userId: { type: integer }
+        userName: { type: string }
+        userEmail: { type: string }
+        userRole:
+          $ref: "#/components/schemas/UserRole"
+        type:
+          $ref: "#/components/schemas/FeedbackType"
+        subject: { type: string }
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, userId, userName, userEmail, userRole, type, subject, message, createdAt]
+

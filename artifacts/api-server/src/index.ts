@@ -1,4 +1,4 @@
-iimport app from "./app";
+import app from "./app";
   import { logger } from "./lib/logger";
 
   // Google Cloud usa el puerto 8080 por defecto

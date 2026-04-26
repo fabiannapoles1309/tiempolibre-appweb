@@ -5,9 +5,10 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
-    "build": "pnpm install && vite build",
+    "build": "cd . && pnpm install --frozen-lockfile && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

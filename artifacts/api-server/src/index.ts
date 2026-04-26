@@ -1,25 +1,13 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 
-const rawPort = process.env["PORT"];
+// 1. Definimos un puerto por defecto (8080) si no existe la variable
+const port = Number(process.env.PORT) || 8080;
 
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
-
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
-  logger.info({ port }, "Server listening");
+// 2. Quitamos los "throws" que detienen el servidor para que siempre intente arrancar
+app.listen(port, "0.0.0.0", () => {
+  logger.info({ port }, "🚀 Servidor de Tiempo Libre iniciado correctamente");
+}).on('error', (err) => {
+  logger.error({ err }, "❌ Error al iniciar el servidor");
+  process.exit(1);
 });

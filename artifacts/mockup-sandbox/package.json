@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "gcp-build": "pnpm install && pnpm run build"
+    "gcp-build": "pnpm install --no-frozen-lockfile && pnpm run build",
+    "preinstall": "echo 'Skipping preinstall'"
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.10.0",

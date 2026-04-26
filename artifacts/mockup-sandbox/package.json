@@ -3,9 +3,9 @@
   "version": "2.0.0",
   "type": "module",
   "private": true,
-  "scripts": "build": "PORT=8080 vite build"
+  "scripts": {
     "dev": "vite dev",
-    "build": "vite build",
+    "build": "PORT=8080 vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

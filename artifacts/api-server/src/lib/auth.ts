@@ -11,7 +11,7 @@ if (!JWT_SECRET) {
 
 const SECRET: string = JWT_SECRET;
 
-export const COOKIE_NAME = "rapidoo_session";
+export const COOKIE_NAME = "tiempolibre_session";
 export const TOKEN_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 
 export type Role = "SUPERUSER" | "ADMIN" | "CLIENTE" | "DRIVER";

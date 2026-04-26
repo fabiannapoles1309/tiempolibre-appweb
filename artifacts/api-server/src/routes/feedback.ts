@@ -73,7 +73,7 @@ router.post(
           to: recipients,
           subject: `[${tag}] ${user.name}: ${subject}`,
           text: [
-            `Nueva ${tag.toLowerCase()} recibida en Tiempo Libre.`,
+            `Nueva ${tag.toLowerCase()} recibida en Rapidoo.`,
             "",
             `De: ${user.name} <${user.email}> (${user.role})`,
             `Asunto: ${subject}`,

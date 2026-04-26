@@ -1,8 +1,8 @@
-# Tiempo Libre — SaaS de Entregas B2B
+# Rapidoo — SaaS de Entregas B2B
 
 ## Overview
 
-Tiempo Libre is a production-ready B2B last-mile delivery management platform. It aims to be a leading SaaS provider by offering a comprehensive solution for businesses to manage their delivery operations, including order handling, driver assignment, subscription management, financial tracking, and incident reporting. The project's vision is to streamline last-mile logistics, improve efficiency for B2B clients, and provide a robust, scalable platform in the delivery market.
+Rapidoo is a production-ready B2B last-mile delivery management platform designed to streamline and manage delivery operations. It provides a comprehensive solution for businesses requiring efficient last-mile logistics, supporting various user roles like administrators, clients, and drivers. Key capabilities include order management, driver assignment, subscription handling, financial tracking, and incident reporting. The project aims to capture the B2B last-mile delivery market with a reliable and scalable SaaS offering, poised for significant growth in urban logistics.
 
 ## User Preferences
 
@@ -63,7 +63,8 @@ Tiempo Libre is a production-ready B2B last-mile delivery management platform. I
 - Email service + Sendgrid:
   - `services/emailService.ts` exports `sendEmail({to, subject, text, html?})`. Calls Sendgrid via the Replit Connectors REST endpoint (`/api/v2/connection?include_secrets=true&connector_names=sendgrid`) to fetch an `api_key`, then sends with `@sendgrid/mail`. If no token / no key / send fails, it logs `[email-fallback] recipients=N subject="…" bodyChars=N` (metadata only, no body to avoid PII leaks) and returns `{sent:false, reason}` — never throws.
   - `notifyAdminsPackageRequest` was refactored to call `sendEmail` instead of `console.log`, so package-request notifications now go to admin emails the moment Sendgrid is connected (until then, the same console fallback works).
-  - `TIEMPOLIBRE_EMAIL_FROM` env var overrides the default `no-reply@tiempolibre.app` From address.
+  - `RAPIDOO_EMAIL_FROM` env var overrides the default `no-reply@rapidoo.app` From address.
+  - **Status**: the user dismissed the Sendgrid Replit integration on 2026-04-25, so the fallback is the only path live right now. To enable real email later: either retry the Sendgrid connector proposal, or ask the user for a Sendgrid API key and store it as a secret + adapt `getSendgridClient()` to read it.
 - Quejas y sugerencias (feedback):
   - DB: `feedback` table (`id`, `user_id` int, `type` varchar QUEJA|SUGERENCIA, `subject` varchar(255), `message` text, `created_at` timestamptz).
   - `POST /api/me/feedback` (any logged-in user): validates type ∈ {QUEJA, SUGERENCIA}, subject 1..255 chars, message 1..4000 chars; persists then asynchronously emails all ADMIN+SUPERUSER addresses via `sendEmail` (subject `[Queja|Sugerencia] {user}: {subject}`, body includes user identity, full message and a deep-link to `/admin/feedback`). Notification failure never blocks the 201 response.
@@ -90,33 +91,33 @@ Tiempo Libre is a production-ready B2B last-mile delivery management platform. I
 
 ## System Architecture
 
-The project is a monorepo using `pnpm workspaces`, consisting of an `artifacts/api-server` (Express 5 + Drizzle ORM for Postgres) and an `artifacts/delivery-saas` (React + Vite + Tailwind + shadcn UI frontend). Shared libraries (`lib/api-spec`, `lib/api-zod`, `lib/api-client-react`, `lib/db`) ensure consistent API definitions and typed hooks across the stack.
+The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts/api-server` (Express 5 + Drizzle ORM for Postgres) and an `artifacts/delivery-saas` (React + Vite + Tailwind + shadcn UI frontend). Shared libraries (`lib/api-spec`, `lib/api-zod`, `lib/api-client-react`, `lib/db`) ensure consistent API definitions and typed hooks.
 
-**Core Features & Technical Implementations:**
+**Core Features:**
 
--   **Domain Model:** Comprehensive data models for Users, Zones, Drivers, Orders, Transactions, Wallets, Incidents, Subscriptions, Recipients, and Package Requests.
--   **Authentication & Authorization:** JWT (HS256) with httpOnly cookies for session management, bcryptjs for secure password hashing, and role-based access control (RBAC) enforced via middleware and server-side checks.
--   **Order Management:** Supports both automatic and manual driver assignment, featuring atomic state transitions for reliable order processing.
--   **Financial System:** Integrated ledger, user-specific prepaid wallets, and detailed financial reporting, including dynamic pricing settings. Transactions for subscriptions and package requests are managed atomically.
--   **Benefit Tracking:** Dedicated system for managing driver benefits, tracking progress, and processing claims.
--   **Recipient Management:** Stores recipient contact details and marketing consents, with autofill capabilities on the client-side and server-side upsert logic.
--   **Package Request Workflow:** Client-initiated requests for new delivery blocks are handled through an atomic approval/rejection process by administrators.
--   **Feedback System:** A complaints and suggestions system accessible to all user roles, with administrative review and email notification capabilities.
--   **UI/UX Design:** Features a light theme with a cyan primary color, fully localized for Spanish (Argentina), and dynamic role-based widget visibility. Built with Tailwind CSS and shadcn UI for a consistent and modern aesthetic.
--   **Geospatial Capabilities:** Interactive map-based delivery point selection using MapLibre, leveraging `public/zonas.kml` and `turf.js` for client-side zone validation. Server-side point-in-polygon checks and geocoding provide robust validation.
--   **Notification Service:** A centralized `notificationService` handles automated communications, such as driver welcome messages and administrative alerts for package requests.
--   **Reporting:** Generates detailed combined Excel reports for administrators, providing insights into financial performance and delivery metrics.
+-   **Domain Model:** Includes Users, Zones, Drivers, Orders, Transactions, Wallet (with `wallets` and `wallet_tx`), Incidents, Subscriptions, Recipients, and Package Requests.
+-   **Authentication:** JWT (HS256) via httpOnly cookies, bcryptjs for password hashing, and RBAC middleware for route protection.
+-   **Order Management:** Supports automatic and manual driver assignment, with atomic state transitions for order delivery that trigger financial and subscription updates.
+-   **Financial Tracking:** Comprehensive ledger, user-specific prepaid wallets, and detailed financial reporting, including configurable pricing settings.
+-   **Benefit Tracking:** Manages driver benefits, tracking progress and claims.
+-   **Recipient Management:** Stores recipient details, including marketing consents, supporting autofill and server-side upsert logic.
+-   **Package Requests:** Allows clients to request new delivery blocks, with an atomic approval/rejection process for administrators.
+-   **Feedback System:** Implements a complaints and suggestions system for all user roles, with admin review capabilities and email notifications.
+-   **UI/UX:** Light theme with cyan primary color, localized for Spanish (Argentina), with role-based widget visibility. Uses Tailwind CSS and shadcn UI.
+-   **Geospatial Features:** Interactive delivery point selection using client-side MapLibre with `public/zonas.kml` and `turf` for zone validation. Server-side validation handles point-in-polygon checks and geocoding.
+-   **Notification System:** `notificationService` for driver welcome messages and admin package request notifications (logging only, with Sendgrid integration planned).
+-   **Reporting:** Generates combined Excel reports for administrators with detailed financial and delivery metrics.
 
 ## External Dependencies
 
--   **PostgreSQL:** Primary relational database for all application data.
--   **Express 5:** Backend web application framework.
--   **React + Vite:** Frontend development stack.
--   **Tailwind CSS + shadcn UI:** Utility-first CSS framework and UI component library.
--   **Orval:** OpenAPI spec to Zod schemas and React Query hooks generator.
--   **bcryptjs:** Library for hashing and comparing passwords.
--   **date-fns:** JavaScript date utility library.
--   **MapLibre:** Open-source library for interactive maps.
--   **turf.js:** Advanced geospatial analysis library for browser and Node.js.
--   **exceljs:** Library for reading, writing, and manipulating XLSX files.
--   **Sendgrid:** Email communication service, with a fallback logging mechanism if not fully integrated.
+-   **PostgreSQL:** Primary database for all application data.
+-   **Express 5:** Backend framework handling API routes and business logic.
+-   **React + Vite:** Frontend framework for building the user interface.
+-   **Tailwind CSS + shadcn UI:** Utility-first CSS framework and UI component library for styling.
+-   **Orval:** Tool for generating Zod schemas and React Query hooks from OpenAPI specifications.
+-   **bcryptjs:** Library for hashing and comparing passwords securely.
+-   **date-fns:** Comprehensive utility library for date manipulation.
+-   **MapLibre:** Open-source library for interactive maps, used for delivery point selection.
+-   **turf.js:** JavaScript library for geospatial analysis, used for client-side zone validation.
+-   **exceljs:** Library for reading, writing, and manipulating XLSX files for report generation.
+-   **Sendgrid:** Email communication platform for notifications (currently using a fallback logging mechanism due to connector status).

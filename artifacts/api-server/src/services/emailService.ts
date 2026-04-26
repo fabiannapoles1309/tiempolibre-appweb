@@ -20,7 +20,7 @@ type SendEmailInput = {
 type SendEmailResult = { sent: boolean; reason?: string };
 
 const DEFAULT_FROM =
-  process.env.TIEMPOLIBRE_EMAIL_FROM?.trim() || "no-reply@tiempolibre.app";
+  process.env.RAPIDOO_EMAIL_FROM?.trim() || "no-reply@rapidoo.app";
 
 /**
  * Resolves a Sendgrid client using Replit's integration token (if available).

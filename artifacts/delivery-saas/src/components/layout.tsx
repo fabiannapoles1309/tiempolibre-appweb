@@ -42,8 +42,8 @@ const navItems: NavItem[] = [
   { title: "Reporte combinado", href: "/admin/reports-combined", icon: FileSpreadsheet, roles: [UserRole.ADMIN] },
   { title: "Buzón de quejas", href: "/admin/feedback", icon: Inbox, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
-  // Quejas y sugerencias: sólo visible para cliente. El panel de driver no la incluye.
-  { title: "Quejas y sugerencias", href: "/feedback", icon: MessageSquareWarning, roles: [UserRole.CLIENTE] },
+  // Quejas y sugerencias accesible a cualquier usuario logueado (cliente / driver / admin).
+  { title: "Quejas y sugerencias", href: "/feedback", icon: MessageSquareWarning, roles: [UserRole.CLIENTE, UserRole.DRIVER] },
   // El CLIENTE accede a "Mi billetera" para ver el saldo acumulado por
   // cobros en efectivo que los repartidores hacen al entregar sus envíos.
   // No puede recargar ni gastar saldo: es sólo visualización de cobranza.

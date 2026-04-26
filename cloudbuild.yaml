@@ -1,0 +1,26 @@
+steps:
+# 1. Instalar pnpm globalmente para que Google lo reconozca
+- name: 'node:20'
+  entrypoint: 'npm'
+  args: ['install', '-g', 'pnpm@9']
+
+# 2. Instalar las librerías de tu proyecto Tiempo Libre
+- name: 'node:20'
+  entrypoint: 'pnpm'
+  args: ['install', '--no-frozen-lockfile']
+
+# 3. Crear la versión final de la App
+- name: 'node:20'
+  entrypoint: 'pnpm'
+  args: ['run', 'build']
+
+# 4. Mandar todo a Cloud Run
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: 'gcloud'
+  args:
+    - 'run'
+    - 'deploy'
+    - 'tiempolibre-appweb'
+    - '--source=.'
+    - '--region=us-central1'
+    - '--allow-unauthenticated'

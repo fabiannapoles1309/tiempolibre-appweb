@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
-    "build": "pnpm install --no-frozen-lockfile && vite build",
+    "build": "pnpm install --no-frozen-lockfile && pnpm store prune && vite build",
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },

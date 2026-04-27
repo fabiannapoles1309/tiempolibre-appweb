@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@sendgrid/mail": "^8.1.6",
+    "@tanstack/react-query": "catalog:",
     "@tmcw/togeojson": "^7.1.2",
     "@turf/turf": "^7.3.5",
     "@workspace/api-zod": "workspace:*",

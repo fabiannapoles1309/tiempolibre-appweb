@@ -12,7 +12,11 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     rollupOptions: {
-      external: ['@workspace/api-client-react'],
+      external: [
+        '@workspace/api-client-react',
+        '@tanstack/react-query',
+        '@tailwindcss/typography'
+      ],
     },
   },
 })

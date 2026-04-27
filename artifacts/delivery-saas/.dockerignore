@@ -4,3 +4,13 @@ node_modules
 dist
 .git
 .gitignore
+replit.nix
+EOf
+cat <<EOF > .dockerignore
+node_modules
+.replit
+.replit-logs
+dist
+.git
+.gitignore
+replit.nix

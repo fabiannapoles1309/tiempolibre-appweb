@@ -1,0 +1,6 @@
+node_modules
+.replit
+.replit-logs
+dist
+.git
+.gitignore

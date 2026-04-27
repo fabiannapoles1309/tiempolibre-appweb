@@ -12,6 +12,6 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    sourcemap: false, // Desactivamos esto para evitar más errores de mapas
+    sourcemap: false,
   },
 });

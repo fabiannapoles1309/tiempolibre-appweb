@@ -1,0 +1,53 @@
+# nginx config for the Rapidoo SPA on Cloud Run.
+#
+# - ${PORT} is provided by Cloud Run and substituted by the nginx:alpine
+#   entrypoint via envsubst at container startup.
+# - SPA fallback: any unknown path renders index.html so wouter / client
+#   routing works on hard-reload.
+# - Hashed assets under /assets/ are cached forever (Vite emits content-hashed
+#   filenames). The HTML shell is never cached so deploys take effect on the
+#   next request.
+
+server {
+    listen       ${PORT};
+    server_name  _;
+
+    root   /usr/share/nginx/html;
+    index  index.html;
+
+    # gzip is cheap on text assets; brotli is not in nginx:alpine by default.
+    gzip               on;
+    gzip_vary          on;
+    gzip_min_length    1024;
+    gzip_proxied       any;
+    gzip_comp_level    6;
+    gzip_types         text/plain text/css application/json application/javascript
+                       application/xml text/xml text/javascript image/svg+xml;
+
+    # Cloud Run health probe.
+    location = /healthz {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 'ok';
+    }
+
+    # Long-lived cache for hashed assets emitted by vite build.
+    location /assets/ {
+        try_files $uri =404;
+        access_log off;
+        add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    # Static files outside /assets get a short cache so deploys propagate.
+    location ~* \.(?:ico|gif|jpe?g|png|webp|svg|woff2?|ttf|eot)$ {
+        try_files $uri =404;
+        access_log off;
+        add_header Cache-Control "public, max-age=86400";
+    }
+
+    # SPA fallback.
+    location / {
+        try_files $uri $uri/ /index.html;
+        add_header Cache-Control "no-cache";
+    }
+}

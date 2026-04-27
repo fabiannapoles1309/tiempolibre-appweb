@@ -89,6 +89,30 @@ Rapidoo is a production-ready B2B last-mile delivery management platform designe
   - `routes/package-requests.ts` approve transaction also UPSERTS the cliente's wallet row, deducts `extraPackagePrice` via atomic `balance = balance - X` SQL, and inserts a `wallet_tx` PAGO with description `"Cargo por paquete extra de 35 envíos"`. Negative balance is allowed by design (B2B accounts; cliente owes platform).
   - Frontend: new `pages/admin-pricing-settings.tsx` (route `/admin/pricing-settings`, ADMIN; SUPERUSER auto-allowed via `ProtectedRoute`) with 3 inputs + Guardar; nav entry "Configuración de precios". `pages/subscription.tsx` reads PLAN prices from `useGetPricingSettings`. `pages/wallet.tsx` adds an "Envíos del periodo" card for CLIENTE (totales/solicitados/restantes + BlockOf35 grid) sourced from `useGetMySubscription`.
 
+## Cloud Run Deployment Readiness
+
+The project is prepared for migration to Google Cloud Run as **two services**:
+
+- **`tiempolibre-api`** — `artifacts/api-server/Dockerfile` (multi-stage Node 22 + esbuild bundle, runtime is just `dist/index.mjs`).
+- **`tiempolibre-web`** — `artifacts/delivery-saas/Dockerfile` (multi-stage build → static SPA served by `nginx:alpine`; `nginx.conf.template` does SPA fallback + caches hashed `/assets/`; listens on `$PORT`).
+
+Production-only behavior added:
+
+- `app.set("trust proxy", 1)` and `/healthz` endpoint outside `/api` (Cloud Run probes).
+- `CORS_ORIGIN` env var: comma-separated origin allowlist (defaults to permissive in dev).
+- Auth cookie uses `SameSite=None; Secure` when `NODE_ENV=production` so the cookie survives cross-origin requests between the SPA and the API services.
+- `lib/api-client-react/src/custom-fetch.ts` now defaults `credentials: "include"` so the cookie is sent on every API call (overridable per-request).
+- `artifacts/delivery-saas/src/main.tsx` calls `setBaseUrl(import.meta.env.VITE_API_BASE_URL)` at boot — bake the API URL at build time via `--build-arg VITE_API_BASE_URL=...`.
+- `artifacts/delivery-saas/vite.config.ts` no longer has the broken `rollupOptions.external` block — every dependency is now bundled into the SPA so `vite build` produces a self-contained artifact.
+
+Pipeline & docs:
+
+- `cloudbuild.yaml` — builds both images, pushes to Artifact Registry (`us-central1-docker.pkg.dev/$PROJECT_ID/rapidoo`), deploys both Cloud Run services, mounts `DATABASE_URL` and `SESSION_SECRET` from Secret Manager, sets `CORS_ORIGIN` to the SPA URL.
+- `CLOUD_RUN.md` — step-by-step Spanish deployment guide (Artifact Registry, Cloud SQL, Secret Manager, IAM, custom domains, local docker testing).
+- `.dockerignore` — keeps build context small.
+
+The two-build-pass requirement (first pass with placeholder URLs to learn the Cloud Run hostnames, second pass with real URLs in `_API_URL`/`_WEB_URL` substitutions) is documented in `CLOUD_RUN.md §3`.
+
 ## System Architecture
 
 The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts/api-server` (Express 5 + Drizzle ORM for Postgres) and an `artifacts/delivery-saas` (React + Vite + Tailwind + shadcn UI frontend). Shared libraries (`lib/api-spec`, `lib/api-zod`, `lib/api-client-react`, `lib/db`) ensure consistent API definitions and typed hooks.

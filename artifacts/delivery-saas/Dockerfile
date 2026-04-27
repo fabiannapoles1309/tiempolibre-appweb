@@ -1,41 +1,58 @@
-# ── CUARTO 1: Construir la app ──────────────────────
+# syntax=docker/dockerfile:1.7
 
-# Usa una imagen de Node.js versión 20 (ligera, basada en Alpine Linux)
-FROM node:20-alpine AS builder
+# =============================================================================
+# Builder: install workspace deps and run `vite build` for the SPA.
+# `VITE_API_BASE_URL` is baked into the bundle at build time — pass it via
+#   --build-arg VITE_API_BASE_URL=https://api.example.com
+# =============================================================================
+FROM node:22-alpine AS builder
 
-# Define /app como el directorio de trabajo dentro del contenedor
-WORKDIR /app
+RUN apk add --no-cache libc6-compat \
+ && npm install -g pnpm@10.26.1
 
-# Instala pnpm (el gestor de paquetes que usa tu proyecto)
-RUN npm install -g pnpm
+WORKDIR /workspace
 
-# Copia solo los archivos de dependencias primero
-# (esto permite que Docker guarde caché y no reinstale todo cada vez)
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# 1) Workspace skeleton (every package.json the lockfile references).
+COPY .npmrc package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY tsconfig.base.json tsconfig.json ./
+COPY artifacts/api-server/package.json     ./artifacts/api-server/
+COPY artifacts/delivery-saas/package.json  ./artifacts/delivery-saas/
+COPY artifacts/mockup-sandbox/package.json ./artifacts/mockup-sandbox/
+COPY lib/api-client-react/package.json     ./lib/api-client-react/
+COPY lib/api-spec/package.json             ./lib/api-spec/
+COPY lib/api-zod/package.json              ./lib/api-zod/
+COPY lib/db/package.json                   ./lib/db/
+COPY scripts/package.json                  ./scripts/
 
-# Instala todas las dependencias del proyecto
-RUN pnpm install --frozen-lockfile
+# 2) Install deps for the SPA only.
+RUN pnpm install --frozen-lockfile --filter "@workspace/delivery-saas..."
 
-# Ahora copia el resto del código fuente
-COPY . .
+# 3) Sources needed for the SPA build.
+COPY lib/api-client-react ./lib/api-client-react
+COPY lib/api-zod          ./lib/api-zod
+COPY artifacts/delivery-saas ./artifacts/delivery-saas
 
-# Ejecuta el build: convierte tu React en archivos estáticos en dist/
-RUN pnpm build
+# 4) Bake the API URL into the bundle.
+ARG VITE_API_BASE_URL=""
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
+RUN pnpm --filter @workspace/delivery-saas run build
 
-# ── CUARTO 2: Servir la app ─────────────────────────
+# =============================================================================
+# Runtime: nginx serving the static SPA. Cloud Run injects $PORT.
+# =============================================================================
+FROM nginx:1.27-alpine AS runtime
 
-# Usa nginx ligero para servir los archivos
-FROM nginx:alpine
+# nginx:alpine ships an entrypoint that runs envsubst on every file in
+# /etc/nginx/templates/*.template, so we drop the template here and the
+# container substitutes ${PORT} on startup.
+COPY artifacts/delivery-saas/nginx.conf.template /etc/nginx/templates/default.conf.template
 
-# Copia SOLO la carpeta dist/ del cuarto 1 a nginx
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Static SPA bundle.
+COPY --from=builder /workspace/artifacts/delivery-saas/dist /usr/share/nginx/html
 
-# Abre el puerto 8080 (Cloud Run lo requiere así)
+ENV PORT=8080
 EXPOSE 8080
 
-# Ajusta nginx para escuchar en el puerto 8080 en lugar del 80 por defecto
-RUN sed -i 's/listen       80;/listen       8080;/g' /etc/nginx/conf.d/default.conf
-
-# Arranca nginx cuando el contenedor inicie
-CMD ["nginx", "-g", "daemon off;"]
+# nginx:alpine's default CMD already runs nginx in the foreground after
+# templating, so we don't override it.

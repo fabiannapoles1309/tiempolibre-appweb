@@ -11,12 +11,10 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    rollupOptions: {
-      external: [
-        '@workspace/api-client-react',
-        '@tanstack/react-query',
-        '@tailwindcss/typography'
-      ],
-    },
+    // No `rollupOptions.external` here: every dependency must be bundled
+    // into the SPA, otherwise the browser cannot resolve workspace packages
+    // like `@workspace/api-client-react`. The previous external list broke
+    // production builds (it only "worked" because we never ran `vite build`
+    // on Replit — the workflow uses `vite dev`).
   },
 })

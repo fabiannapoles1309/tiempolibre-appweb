@@ -1,26 +1,145 @@
+# =============================================================================
+# Cloud Build pipeline for Rapidoo (Tiempo Libre).
+#
+# Builds two Docker images and deploys them to two Cloud Run services:
+#   - tiempolibre-api  (Express API, listens on $PORT)
+#   - tiempolibre-web  (React SPA, served by nginx)
+#
+# Required one-time setup (see CLOUD_RUN.md):
+#   - Artifact Registry repo:   gcloud artifacts repositories create rapidoo \
+#                                  --repository-format=docker --location=us-central1
+#   - Secret Manager secrets:   DATABASE_URL, SESSION_SECRET
+#   - Cloud Build SA roles:     run.admin, iam.serviceAccountUser,
+#                               artifactregistry.writer, secretmanager.secretAccessor
+#
+# Trigger this build with:
+#   gcloud builds submit --config cloudbuild.yaml \
+#       --substitutions=_API_URL=https://api.example.com,_WEB_URL=https://app.example.com
+#
+# `_API_URL` is the public URL the SPA will call (must match a Cloud Run URL
+# or a custom domain mapped to tiempolibre-api). It is baked into the SPA
+# bundle, so changing it requires a rebuild of tiempolibre-web.
+# =============================================================================
+
+substitutions:
+  _REGION: "us-central1"
+  _AR_REPO: "rapidoo"
+  _API_SERVICE: "tiempolibre-api"
+  _WEB_SERVICE: "tiempolibre-web"
+  # Public URLs. Override at submit time once you know your Cloud Run hostnames
+  # or after you have mapped a custom domain.
+  _API_URL: "https://tiempolibre-api-PLACEHOLDER.a.run.app"
+  _WEB_URL: "https://tiempolibre-web-PLACEHOLDER.a.run.app"
+  # Cloud SQL instance connection name (PROJECT:REGION:INSTANCE). When set,
+  # the API container gets the Unix-socket /cloudsql/<INSTANCE> mounted and
+  # `DATABASE_URL=postgres://.../?host=/cloudsql/<INSTANCE>` works out of
+  # the box. Defaults below resolve `$PROJECT_ID` at build time so the
+  # pipeline works without any explicit substitution as long as the SA and
+  # Cloud SQL instance use the conventional names from CLOUD_RUN.md.
+  # Override at submit time if you used different names.
+  _CLOUDSQL_INSTANCE: "$PROJECT_ID:us-central1:rapidoo-db"
+  # Runtime service account used by tiempolibre-api. Must have
+  # roles/cloudsql.client and roles/secretmanager.secretAccessor.
+  _RUNTIME_SA: "rapidoo-runtime@$PROJECT_ID.iam.gserviceaccount.com"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: "E2_HIGHCPU_8"
+
 steps:
-# 1. Instalar pnpm globalmente para que Google lo reconozca
-- name: 'node:20'
-  entrypoint: 'npm'
-  args: ['install', '-g', 'pnpm@9']
+  # ---------------------------------------------------------------------------
+  # 1) Build the API image.
+  # ---------------------------------------------------------------------------
+  - id: build-api
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file=artifacts/api-server/Dockerfile
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_API_SERVICE}:$SHORT_SHA
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_API_SERVICE}:latest
+      - .
 
-# 2. Instalar las librerías de tu proyecto Tiempo Libre
-- name: 'node:20'
-  entrypoint: 'pnpm'
-  args: ['install', '--no-frozen-lockfile']
+  # ---------------------------------------------------------------------------
+  # 2) Build the SPA image with the API URL baked in.
+  # ---------------------------------------------------------------------------
+  - id: build-web
+    name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - --file=artifacts/delivery-saas/Dockerfile
+      - --build-arg=VITE_API_BASE_URL=${_API_URL}
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_WEB_SERVICE}:$SHORT_SHA
+      - --tag=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_WEB_SERVICE}:latest
+      - .
 
-# 3. Crear la versión final de la App
-- name: 'node:20'
-  entrypoint: 'pnpm'
-  args: ['run', 'build']
+  # ---------------------------------------------------------------------------
+  # 3) Push both images to Artifact Registry (also done implicitly via `images`
+  #    below, but pushing here avoids deploy-time races).
+  # ---------------------------------------------------------------------------
+  - id: push-api
+    name: gcr.io/cloud-builders/docker
+    args: [push, "--all-tags", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_API_SERVICE}"]
+    waitFor: [build-api]
 
-# 4. Mandar todo a Cloud Run
-- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-  entrypoint: 'gcloud'
-  args:
-    - 'run'
-    - 'deploy'
-    - 'tiempolibre-appweb'
-    - '--source=.'
-    - '--region=us-central1'
-    - '--allow-unauthenticated'
+  - id: push-web
+    name: gcr.io/cloud-builders/docker
+    args: [push, "--all-tags", "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_WEB_SERVICE}"]
+    waitFor: [build-web]
+
+  # ---------------------------------------------------------------------------
+  # 4) Deploy the API to Cloud Run.
+  #    - DATABASE_URL and SESSION_SECRET are mounted from Secret Manager.
+  #    - CORS_ORIGIN restricts which origins may call /api with cookies.
+  # ---------------------------------------------------------------------------
+  - id: deploy-api
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    waitFor: [push-api]
+    args:
+      - run
+      - deploy
+      - ${_API_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_API_SERVICE}:$SHORT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8080
+      - --cpu=1
+      - --memory=512Mi
+      - --min-instances=0
+      - --max-instances=10
+      - --timeout=60s
+      - --service-account=${_RUNTIME_SA}
+      - --add-cloudsql-instances=${_CLOUDSQL_INSTANCE}
+      - --set-env-vars=NODE_ENV=production,LOG_LEVEL=info,CORS_ORIGIN=${_WEB_URL}
+      - --set-secrets=DATABASE_URL=DATABASE_URL:latest,SESSION_SECRET=SESSION_SECRET:latest
+
+  # ---------------------------------------------------------------------------
+  # 5) Deploy the SPA to Cloud Run.
+  # ---------------------------------------------------------------------------
+  - id: deploy-web
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    waitFor: [push-web]
+    args:
+      - run
+      - deploy
+      - ${_WEB_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_WEB_SERVICE}:$SHORT_SHA
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8080
+      - --cpu=1
+      - --memory=256Mi
+      - --min-instances=0
+      - --max-instances=10
+      - --timeout=30s
+
+images:
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_API_SERVICE}:$SHORT_SHA"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_API_SERVICE}:latest"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_WEB_SERVICE}:$SHORT_SHA"
+  - "${_REGION}-docker.pkg.dev/$PROJECT_ID/${_AR_REPO}/${_WEB_SERVICE}:latest"
+
+timeout: 1800s

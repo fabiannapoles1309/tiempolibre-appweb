@@ -1,0 +1,48 @@
+# Keep the Docker build context small AND deterministic.
+# Every path we omit here is recopied via explicit COPY in each Dockerfile.
+
+# VCS / IDE
+.git
+.gitignore
+.idea
+.vscode
+.cursor
+
+# Replit-specific tooling (irrelevant to Cloud Run)
+.replit
+.replitignore
+.local
+.cache
+.config
+.agents
+replit.md
+attached_assets
+
+# Node deps & build outputs (rebuilt in the image)
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+
+# Logs / temporary
+**/*.log
+tmp
+out-tsc
+coverage
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Tests, fixtures, scratch files we don't ship
+test.txt
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Keep workspace skeleton — it's needed for pnpm install.
+!package.json
+!pnpm-lock.yaml
+!pnpm-workspace.yaml
+!.npmrc

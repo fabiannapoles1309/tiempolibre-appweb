@@ -1,24 +1,12 @@
-FROM node:18 AS builder
-
+FROM node:20 AS builder
+RUN npm install -g pnpm@9
 WORKDIR /app
-
-COPY package*.json ./
-RUN npm install
-
 COPY . .
+RUN pnpm install --no-frozen-lockfile
+RUN pnpm run build
 
-RUN npm run build
-
-# Etapa 2: servidor web (ligero)
 FROM nginx:alpine
-
-# Copiar build de Vite
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Cloud Run usa puerto 8080
-EXPOSE 8080
-
-# Configurar nginx para usar puerto 8080
 RUN sed -i 's/80/8080/g' /etc/nginx/conf.d/default.conf
-
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]

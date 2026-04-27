@@ -228,6 +228,9 @@ importers:
       '@tanstack/react-query':
         specifier: ^5.100.5
         version: 5.100.5(react@18.3.1)
+      '@tmcw/togeojson':
+        specifier: ^7.1.2
+        version: 7.1.2
       '@turf/turf':
         specifier: ^7.3.5
         version: 7.3.5

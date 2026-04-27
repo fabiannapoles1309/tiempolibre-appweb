@@ -12,6 +12,6 @@ export default defineConfig({
   },
   build: {
     outDir: "dist",
-    sourcemap: false,
+    sourcemap: false, // Esto apaga los errores de "mapas" que salen en tu imagen
   },
 });

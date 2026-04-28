@@ -8,7 +8,15 @@ import "./index.css";
 // tells the generated API client where to send requests. When unset (e.g.
 // running on Replit where the proxy serves both on the same host) we leave
 // the client using relative URLs.
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+// Accept either a full URL (https://api.example.com) or a bare hostname
+// (api.example.com). Render's `fromService.host` returns just the hostname,
+// so we add `https://` automatically when no scheme is present.
+const rawApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+const apiBaseUrl = rawApiBaseUrl
+  ? /^https?:\/\//i.test(rawApiBaseUrl)
+    ? rawApiBaseUrl
+    : `https://${rawApiBaseUrl}`
+  : undefined;
 if (typeof apiBaseUrl === "string" && apiBaseUrl.trim()) {
   setBaseUrl(apiBaseUrl.trim());
 }

@@ -24,7 +24,12 @@ app.set("trust proxy", 1);
 // avoids a misconfigured production deploy silently accepting requests from
 // any origin while sending credentialed cookies.
 function canonicalOrigin(raw: string): string {
-  const url = new URL(raw); // throws on invalid input
+  // Accept either a full URL (https://app.example.com) or a bare hostname
+  // (app.example.com). Render's `fromService.property: host` returns just the
+  // hostname, and we want render.yaml to wire CORS_ORIGIN automatically
+  // without forcing the operator to remember to prepend "https://".
+  const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+  const url = new URL(withScheme); // throws on invalid input
   if (url.pathname !== "" && url.pathname !== "/") {
     throw new Error(
       `CORS_ORIGIN entry "${raw}" must be a bare origin (no path).`,

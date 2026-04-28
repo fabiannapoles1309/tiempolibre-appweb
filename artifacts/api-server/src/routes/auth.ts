@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db, usersTable, walletsTable } from "@workspace/db";
 import { RegisterBody, LoginBody } from "@workspace/api-zod";
 import {
@@ -22,14 +22,36 @@ const COOKIE_OPTIONS = {
   path: "/",
 };
 
-function publicUser(u: { id: number; email: string; name: string; role: string; createdAt: Date }) {
+function publicUser(u: {
+  id: number;
+  email: string;
+  name: string;
+  role: string;
+  customerCode: string | null;
+  createdAt: Date;
+}) {
   return {
     id: u.id,
     email: u.email,
     name: u.name,
     role: u.role,
+    // Folio público sólo presente para CLIENTE (CLI-NNNNNN). Null para admin/driver.
+    customerCode: u.customerCode ?? null,
     createdAt: u.createdAt.toISOString(),
   };
+}
+
+// Genera el siguiente folio de cliente usando la secuencia dedicada en Postgres.
+// Devuelve un string del tipo "CLI-000042". Atómico: dos requests concurrentes
+// nunca obtienen el mismo número.
+async function nextCustomerCode(): Promise<string> {
+  const result = await db.execute<{ code: string }>(
+    sql`SELECT 'CLI-' || lpad(nextval('customer_code_seq')::text, 6, '0') AS code`,
+  );
+  const row = (result as unknown as { rows?: { code: string }[] }).rows?.[0]
+    ?? (Array.isArray(result) ? (result as any[])[0] : undefined);
+  if (!row?.code) throw new Error("No se pudo generar customer_code");
+  return row.code;
 }
 
 // El alta de usuarios deja de ser pública: solo ADMIN/SUPERUSER puede crear cuentas.
@@ -53,9 +75,17 @@ router.post("/auth/register", requireAuth, requireRole("ADMIN", "SUPERUSER"), as
   }
   const finalRole: Role = requestedRole;
   const passwordHash = await hashPassword(password);
+  // Sólo los CLIENTE reciben folio CLI-NNNNNN. Admin/driver/superuser quedan en null.
+  const customerCode = finalRole === "CLIENTE" ? await nextCustomerCode() : null;
   const [user] = await db
     .insert(usersTable)
-    .values({ email: email.toLowerCase(), name, passwordHash, role: finalRole })
+    .values({
+      email: email.toLowerCase(),
+      name,
+      passwordHash,
+      role: finalRole,
+      customerCode,
+    })
     .returning();
 
   if (!user) {

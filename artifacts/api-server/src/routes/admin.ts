@@ -33,6 +33,8 @@ const RECHARGE_BLOCK = 35;
 
 type ClienteRowShape = {
   id: number;
+  // Folio público del cliente (CLI-NNNNNN). Independiente del id interno.
+  customerCode: string | null;
   name: string;
   email: string;
   businessName: string | null;
@@ -65,6 +67,7 @@ async function buildClienteRow(userId: number): Promise<ClienteRowShape | null> 
   const monthly = sub?.monthlyDeliveries ?? 0;
   return {
     id: user.id,
+    customerCode: user.customerCode ?? null,
     name: user.name,
     email: user.email,
     businessName: customer?.businessName ?? null,
@@ -114,9 +117,23 @@ router.post(
     }
 
     const passwordHash = await hashPassword(password);
+    // Folio público del cliente (CLI-NNNNNN). Sólo se asigna a CLIENTE; otros
+    // roles quedan en null. Atómico (nextval).
+    const customerCode =
+      role === "CLIENTE"
+        ? await (async () => {
+            const r = await db.execute<{ code: string }>(
+              sql`SELECT 'CLI-' || lpad(nextval('customer_code_seq')::text, 6, '0') AS code`,
+            );
+            const row =
+              (r as unknown as { rows?: { code: string }[] }).rows?.[0] ??
+              (Array.isArray(r) ? (r as any[])[0] : undefined);
+            return row?.code ?? null;
+          })()
+        : null;
     const [created] = await db
       .insert(usersTable)
-      .values({ email, name, passwordHash, role })
+      .values({ email, name, passwordHash, role, customerCode })
       .returning();
     if (!created) {
       res.status(500).json({ error: "No se pudo crear el usuario" });
@@ -157,8 +174,17 @@ router.post(
     }
 
     if (role === "DRIVER") {
+      // Folio público del repartidor (REP-NNNNNN), generado atómicamente.
+      const driverCodeRes = await db.execute<{ code: string }>(
+        sql`SELECT 'REP-' || lpad(nextval('driver_code_seq')::text, 6, '0') AS code`,
+      );
+      const driverCodeRow =
+        (driverCodeRes as unknown as { rows?: { code: string }[] }).rows?.[0] ??
+        (Array.isArray(driverCodeRes) ? (driverCodeRes as any[])[0] : undefined);
+      const driverCode = driverCodeRow?.code ?? null;
       await db.insert(driversTable).values({
         userId: created.id,
+        driverCode,
         name,
         phone: phone ?? "",
         vehicle: vehicle ?? "",
@@ -229,6 +255,7 @@ router.get(
       const monthly = s?.monthlyDeliveries ?? 0;
       return {
         id: u.id,
+        customerCode: u.customerCode ?? null,
         name: u.name,
         email: u.email,
         businessName: c?.businessName ?? null,

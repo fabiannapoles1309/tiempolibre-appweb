@@ -339,6 +339,7 @@ export default function Drivers() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Folio</TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Teléfono</TableHead>
                   <TableHead>Vehículo / Placas</TableHead>
@@ -351,6 +352,12 @@ export default function Drivers() {
               <TableBody>
                 {drivers.map((driver) => (
                   <TableRow key={driver.id}>
+                    <TableCell
+                      className="font-mono text-xs"
+                      data-testid={`text-driver-code-${driver.id}`}
+                    >
+                      {driver.driverCode ?? "—"}
+                    </TableCell>
                     <TableCell className="font-medium">{driver.name}</TableCell>
                     <TableCell>{driver.phone}</TableCell>
                     <TableCell>

@@ -68,7 +68,7 @@ export default function FeedbackPage() {
       }
       toast.success(
         data.type === "QUEJA"
-          ? "Tu queja fue enviada. El equipo de Rapidoo la revisará."
+          ? "Tu queja fue enviada. El equipo de TiempoLibre la revisará."
           : "Gracias por tu sugerencia. La revisaremos pronto.",
       );
       form.reset({ type: data.type, subject: "", message: "" });
@@ -87,7 +87,7 @@ export default function FeedbackPage() {
           sugerencias
         </h1>
         <p className="text-muted-foreground mt-1">
-          Cuéntanos cómo mejorar Rapidoo o reporta una experiencia que no fue
+          Cuéntanos cómo mejorar TiempoLibre o reporta una experiencia que no fue
           la esperada. Tu mensaje llega directo a nuestro equipo de soporte por
           correo.
         </p>

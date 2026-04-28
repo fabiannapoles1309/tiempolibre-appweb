@@ -192,6 +192,7 @@ export default function AdminClientesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Folio</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Establecimiento</TableHead>
                   <TableHead>Zona</TableHead>
@@ -204,6 +205,12 @@ export default function AdminClientesPage() {
               <TableBody>
                 {data.map((row) => (
                   <TableRow key={row.id} data-testid={`row-cliente-${row.id}`}>
+                    <TableCell
+                      className="font-mono text-xs"
+                      data-testid={`text-customer-code-${row.id}`}
+                    >
+                      {row.customerCode ?? "—"}
+                    </TableCell>
                     <TableCell>
                       <div className="font-medium">{row.name}</div>
                       <div className="text-xs text-muted-foreground">{row.email}</div>

@@ -391,9 +391,19 @@ router.post(
           return null;
         }
       }
+      // Folio público del pedido: PED-NNNNNN. La secuencia es independiente
+      // del id interno (serial PK) y se incrementa atómicamente.
+      const folioRes = await tx.execute<{ code: string }>(
+        sql`SELECT 'PED-' || lpad(nextval('order_folio_seq')::text, 6, '0') AS code`,
+      );
+      const folioRow =
+        (folioRes as unknown as { rows?: { code: string }[] }).rows?.[0] ??
+        (Array.isArray(folioRes) ? (folioRes as any[])[0] : undefined);
+      const folio = folioRow?.code ?? null;
       const [created] = await tx
         .insert(ordersTable)
         .values({
+          folio,
           customerId: req.user!.sub,
           pickup,
           delivery: parsed.data.delivery,

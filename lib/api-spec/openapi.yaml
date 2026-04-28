@@ -3,7 +3,7 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: Rapidoo - SaaS B2B de Entregas a Domicilio
+  description: TiempoLibre - SaaS B2B de Entregas a Domicilio
 servers:
   - url: /api
     description: Base API path
@@ -1288,6 +1288,9 @@ components:
           type: string
         role:
           $ref: "#/components/schemas/UserRole"
+        customerCode:
+          type: ["string", "null"]
+          description: Folio público del cliente (CLI-NNNNNN). Null para roles distintos a CLIENTE.
         createdAt:
           type: string
       required: [id, email, name, role, createdAt]
@@ -1373,6 +1376,9 @@ components:
       properties:
         id:
           type: integer
+        driverCode:
+          type: ["string", "null"]
+          description: Folio público del repartidor (REP-NNNNNN), independiente del id interno.
         userId:
           type: ["integer", "null"]
         name:
@@ -1668,6 +1674,9 @@ components:
       properties:
         id:
           type: integer
+        folio:
+          type: ["string", "null"]
+          description: Folio público del pedido (PED-NNNNNN), independiente del id interno.
         customerId:
           type: integer
         customerName:
@@ -2088,6 +2097,9 @@ components:
       properties:
         id:
           type: integer
+        customerCode:
+          type: ["string", "null"]
+          description: Folio público del cliente (CLI-NNNNNN). Independiente del id interno.
         name:
           type: string
         email:

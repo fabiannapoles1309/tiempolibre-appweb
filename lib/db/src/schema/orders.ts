@@ -1,5 +1,6 @@
 import {
   pgTable,
+  pgSequence,
   serial,
   varchar,
   integer,
@@ -8,8 +9,15 @@ import {
   timestamp,
 } from "drizzle-orm/pg-core";
 
+// Folio público del pedido (PED-NNNNNN). Es independiente del id interno
+// (serial PK), para que el cliente y el repartidor identifiquen el envío
+// con un número estable y legible.
+export const orderFolioSeq = pgSequence("order_folio_seq", { startWith: 1 });
+
 export const ordersTable = pgTable("orders", {
   id: serial("id").primaryKey(),
+  // Folio visible: PED-000001, PED-000002, ...
+  folio: varchar("folio", { length: 16 }).unique(),
   customerId: integer("customer_id").notNull(),
   pickup: text("pickup").notNull(),
   delivery: text("delivery").notNull(),

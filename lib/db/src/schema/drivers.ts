@@ -1,9 +1,26 @@
-import { pgTable, serial, varchar, boolean, text, timestamp, integer, numeric, date } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  pgSequence,
+  serial,
+  varchar,
+  boolean,
+  text,
+  timestamp,
+  integer,
+  numeric,
+  date,
+} from "drizzle-orm/pg-core";
 import { usersTable } from "./users";
+
+// Folios independientes para repartidores (REP-NNNNNN). Numeración propia,
+// no se mezcla con el folio de clientes ni con la PK interna.
+export const driverCodeSeq = pgSequence("driver_code_seq", { startWith: 1 });
 
 export const driversTable = pgTable("drivers", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => usersTable.id),
+  // Folio público del repartidor: REP-000001, REP-000002, ...
+  driverCode: varchar("driver_code", { length: 16 }).unique(),
   name: varchar("name", { length: 255 }).notNull(),
   phone: varchar("phone", { length: 64 }).notNull(),
   vehicle: varchar("vehicle", { length: 64 }).notNull(),

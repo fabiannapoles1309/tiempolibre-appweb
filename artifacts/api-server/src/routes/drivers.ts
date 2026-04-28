@@ -14,6 +14,8 @@ const router: IRouter = Router();
 function serialize(d: typeof driversTable.$inferSelect) {
   return {
     id: d.id,
+    // Folio público del repartidor (REP-NNNNNN). Estable e independiente del id interno.
+    driverCode: d.driverCode ?? null,
     userId: d.userId,
     name: d.name,
     phone: d.phone,
@@ -27,6 +29,19 @@ function serialize(d: typeof driversTable.$inferSelect) {
     cashPending: Number(d.cashPending),
     createdAt: d.createdAt.toISOString(),
   };
+}
+
+// Genera el siguiente folio de repartidor usando la secuencia dedicada.
+// Devuelve "REP-000042". Atómico frente a creaciones concurrentes.
+async function nextDriverCode(): Promise<string> {
+  const result = await db.execute<{ code: string }>(
+    sql`SELECT 'REP-' || lpad(nextval('driver_code_seq')::text, 6, '0') AS code`,
+  );
+  const row =
+    (result as unknown as { rows?: { code: string }[] }).rows?.[0] ??
+    (Array.isArray(result) ? (result as any[])[0] : undefined);
+  if (!row?.code) throw new Error("No se pudo generar driver_code");
+  return row.code;
 }
 
 // =============== RANKING (declared first so /drivers/:id doesn't shadow) ===============
@@ -129,9 +144,11 @@ router.post(
       res.status(400).json({ error: parsed.error.message });
       return;
     }
+    const driverCode = await nextDriverCode();
     const [driver] = await db
       .insert(driversTable)
       .values({
+        driverCode,
         name: parsed.data.name,
         phone: parsed.data.phone,
         vehicle: parsed.data.vehicle,

@@ -48,7 +48,7 @@ export default function AdminStaffPage() {
           <ShieldCheck className="w-7 h-7 text-[#00B5E2]" /> Personal interno
         </h1>
         <p className="text-muted-foreground mt-1">
-          Administradores y soporte (SUPERUSER) de Rapidoo. Estos correos
+          Administradores y soporte (SUPERUSER) de TiempoLibre. Estos correos
           reciben las notificaciones de solicitudes de paquetes y de quejas /
           sugerencias enviadas por los clientes.
         </p>

@@ -7,6 +7,8 @@ export function serializeOrder(
 ) {
   return {
     id: o.id,
+    // Folio público del pedido (PED-NNNNNN). Independiente del id interno.
+    folio: o.folio ?? null,
     customerId: o.customerId,
     customerName,
     pickup: o.pickup,

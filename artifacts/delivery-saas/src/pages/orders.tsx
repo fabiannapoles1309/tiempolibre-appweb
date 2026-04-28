@@ -97,7 +97,7 @@ export default function OrdersList() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
+                    <TableHead>Folio</TableHead>
                     {isAdmin(user) && <TableHead>Cliente</TableHead>}
                     <TableHead>Ruta</TableHead>
                     <TableHead>Zona</TableHead>
@@ -110,7 +110,12 @@ export default function OrdersList() {
                 <TableBody>
                   {orders.map((order) => (
                     <TableRow key={order.id}>
-                      <TableCell className="font-medium">#{order.id}</TableCell>
+                      <TableCell
+                        className="font-medium font-mono"
+                        data-testid={`text-order-folio-${order.id}`}
+                      >
+                        {order.folio ?? `#${order.id}`}
+                      </TableCell>
                       {isAdmin(user) && <TableCell>{order.customerName}</TableCell>}
                       <TableCell>
                         <div className="flex flex-col text-sm">

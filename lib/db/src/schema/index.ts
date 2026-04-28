@@ -14,3 +14,4 @@ export * from "./recipients";
 export * from "./package-requests";
 export * from "./pricing-settings";
 export * from "./feedback";
+export * from "./notifications";

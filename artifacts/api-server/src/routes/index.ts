@@ -19,6 +19,7 @@ import pricingSettingsRouter from "./pricing-settings";
 import staffUsersRouter from "./staff-users";
 import combinedReportRouter from "./combined-report";
 import feedbackRouter from "./feedback";
+import notificationsRouter from "./notifications";
 
 const router: IRouter = Router();
 
@@ -42,5 +43,6 @@ router.use(pricingSettingsRouter);
 router.use(staffUsersRouter);
 router.use(combinedReportRouter);
 router.use(feedbackRouter);
+router.use(notificationsRouter);
 
 export default router;

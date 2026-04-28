@@ -5,6 +5,7 @@ import { useLogout, UserRole } from "@workspace/api-client-react";
 import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2, ShieldCheck, FileSpreadsheet, MessageSquareWarning, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
+import { NotificationBell } from "@/components/notification-bell";
 
 interface NavItem {
   title: string;
@@ -118,6 +119,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
       <main className="flex-1 flex flex-col overflow-hidden">
+        <header className="flex items-center justify-end gap-2 h-14 px-6 border-b bg-background">
+          <NotificationBell />
+        </header>
         <div className="flex-1 overflow-auto p-6 md:p-8">
           {children}
         </div>

@@ -13,6 +13,11 @@ import { toast } from "sonner";
 import { ArrowLeft, MapPin, Map, Package, Clock, DollarSign, User, Truck, Loader2, Phone } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import {
+  CustomerPickupSettleActions,
+  DriverPickupSettleButton,
+  type PickupSettlementOrder,
+} from "@/components/pickup-settlement";
 
 const statusColors: Record<string, string> = {
   [OrderStatus.PENDIENTE]: "bg-yellow-100 text-yellow-800 border-yellow-200",
@@ -122,7 +127,7 @@ export default function OrderDetail() {
         )}
         
         {user?.role === UserRole.DRIVER && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 items-center justify-end">
              {order.status === OrderStatus.ASIGNADO && (
                <Button
                  size="lg"
@@ -132,6 +137,14 @@ export default function OrderDetail() {
                >
                  <Truck className="w-4 h-4 mr-2" /> Recolección
                </Button>
+             )}
+             {/* Liquidación al recoger: visible mientras el envío está
+                  ASIGNADO o EN_RUTA. Nada que ver con el COD del destinatario. */}
+             {(order.status === OrderStatus.ASIGNADO ||
+               order.status === OrderStatus.EN_RUTA) && (
+               <DriverPickupSettleButton
+                 order={order as unknown as PickupSettlementOrder}
+               />
              )}
              {order.status === OrderStatus.EN_RUTA && (
                <Button
@@ -146,6 +159,16 @@ export default function OrderDetail() {
           </div>
         )}
       </div>
+
+      {/* Bloque del cliente: confirmar / disputar la liquidación al recoger.
+           Aparece tanto en estado pendiente como en estados terminales
+           (confirmada / disputada) para mostrar la trazabilidad. */}
+      {user?.role === UserRole.CLIENTE &&
+        (order as any).pickupSettledAt && (
+          <CustomerPickupSettleActions
+            order={order as unknown as PickupSettlementOrder}
+          />
+        )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">

@@ -136,3 +136,32 @@ The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts
 -   **turf.js:** JavaScript library for geospatial analysis, used for client-side zone validation.
 -   **exceljs:** Library for reading, writing, and manipulating XLSX files for report generation.
 -   **Sendgrid:** Email communication platform for notifications (currently using a fallback logging mechanism).
+
+## In-App Notifications & Pickup Settlement (abr/2026)
+
+- **Tabla `notifications`** (`lib/db/src/schema/notifications.ts`): `user_id`, `type`, `title`, `body`, `link`, `is_read`, `created_at`. Índice `(user_id, is_read, created_at)` para el conteo de no-leídas. **Reemplaza el envío de correo SendGrid** que estaba fallando para alertar a los admins de paquetes extra.
+- **Servicio** `services/inAppNotifications.ts` con `notifyUsers(userIds, payload)` y `notifyByRole(role, payload)`. Best-effort: cualquier error queda en log y nunca rompe la request principal.
+- **Eventos disparados** (todos en backend, no requieren acción del cliente):
+  - `PACKAGE_REQUEST_NEW` → admins, link `/admin/solicitudes-paquetes` (cliente solicitó +35 envíos).
+  - `PACKAGE_REQUEST_APPROVED` / `_REJECTED` → cliente.
+  - `PACKAGE_REQUEST_ASSIGNED` → cliente cuando admin asigna el paquete.
+  - `FEEDBACK_NEW` → admins (queja/sugerencia).
+  - `INCIDENT_NEW` → admins (incidencias de drivers).
+  - `PICKUP_SETTLEMENT_PROPOSED` → cliente cuando driver marca la liquidación.
+  - `PICKUP_SETTLEMENT_CONFIRMED` / `_DISPUTED` → driver y admins.
+- **Rutas in-app** (`/api/me/notifications`):
+  - `GET ?limit=20&onlyUnread=true|false` → `{ unread, items }`.
+  - `PATCH /:id/read` y `POST /read-all`.
+- **Frontend `NotificationBell`** (`components/notification-bell.tsx`): campana con badge rojo de no-leídas en el header (inyectada en `components/layout.tsx`). Polling 30s con React Query, dropdown de últimas 20, click marca como leída + navega al `link`. Botón "Marcar todas".
+- **Liquidación al recoger** — el repartidor marca que el cliente le pagó el costo del envío en efectivo al momento de la recolección, y el cliente confirma o disputa para evitar fraudes:
+  - Columnas en `orders`: `pickup_settled_at`, `pickup_settled_amount`, `pickup_settled_by_driver_id`, `pickup_settlement_confirmed_at`, `pickup_settlement_disputed_at`, `pickup_settlement_dispute_reason`.
+  - `POST /api/orders/:id/pickup-settle` (driver, requiere `amount > 0`, sólo en `ASIGNADO`/`EN_RUTA`, sólo el driver asignado).
+  - `POST /api/orders/:id/pickup-settle/confirm` (cliente dueño del pedido, sólo si hay propuesta vigente y no confirmada/disputada).
+  - `POST /api/orders/:id/pickup-settle/dispute` (cliente, opcional `reason: string` ≤500 chars).
+  - El driver puede reintentar la liquidación con un nuevo monto cuando la anterior fue disputada (limpia las flags de propuesta).
+  - UI: `components/pickup-settlement.tsx` exporta `DriverPickupSettleButton` (modal con monto) y `CustomerPickupSettleActions` con dos variantes: `card` (bloque visible en `/orders/:id`) y `inline` (botones compactos confirmar/disputar en la columna Acciones de `/orders` para clientes).
+  - El serializador (`lib/serializers.ts`) expone los nuevos campos `pickupSettledAt`, `pickupSettledAmount`, `pickupSettledByDriverId`, `pickupSettlementConfirmedAt`, `pickupSettlementDisputedAt`, `pickupSettlementDisputeReason` en todas las respuestas que devuelven un `Order`.
+
+## Bug fixes (abr/2026)
+
+- **Botón "Crear envío"** (`pages/order-new.tsx`): el botón quedaba `disabled` por `zoneError` o `!selectedPoint && !mapUnsupported`, lo que dejaba al usuario sin entender por qué no respondía. Ahora sólo se deshabilita durante `createMutation.isPending`; la validación se hace en `onSubmit` con `toast.error` explícito (zona inválida, sin geocodificación, sin punto en el mapa).

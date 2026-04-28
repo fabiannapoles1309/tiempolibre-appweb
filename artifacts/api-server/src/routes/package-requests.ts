@@ -15,6 +15,7 @@ import {
   notifyAdminsPackageRequest,
   resolveAppUrl,
 } from "../services/notificationService";
+import { notifyByRole, notifyUsers } from "../services/inAppNotifications";
 import { getPricing } from "./pricing-settings";
 
 const router: IRouter = Router();
@@ -113,6 +114,16 @@ router.post(
     } catch (err) {
       console.error("notifyAdminsPackageRequest failed", err);
     }
+
+    // Notificación in-app a admins/superusers — esto sí funciona aunque
+    // no haya proveedor de email configurado, así que es la principal vía
+    // de aviso para que el admin actúe sobre la solicitud.
+    await notifyByRole(["ADMIN", "SUPERUSER"], {
+      type: "PACKAGE_REQUEST_NEW",
+      title: `Nueva solicitud de paquete extra (+35)`,
+      body: `${me.businessName ?? me.userName} solicitó un paquete adicional. Revisa y aprueba o rechaza.`,
+      link: "/admin/solicitudes-paquetes",
+    });
 
     res.status(201).json({
       id: created!.id,
@@ -344,6 +355,14 @@ router.post(
       return;
     }
 
+    // Avisar al cliente que se le asignó un paquete extra.
+    await notifyUsers([userId], {
+      type: "PACKAGE_ASSIGNED_BY_ADMIN",
+      title: "Tu administrador te asignó un paquete extra (+35 envíos)",
+      body: `Se sumaron 35 envíos a tu plan. Cargo de $${result.extraPrice.toFixed(2)} aplicado a tu billetera.`,
+      link: "/wallet",
+    });
+
     res.json({
       ok: true,
       requestId: result.requestId,
@@ -472,6 +491,24 @@ router.post(
       return;
     }
 
+    // Notificar al cliente que su solicitud fue aprobada.
+    try {
+      const [pending] = await db
+        .select({ userId: packageRequestsTable.userId })
+        .from(packageRequestsTable)
+        .where(eq(packageRequestsTable.id, id));
+      if (pending) {
+        await notifyUsers([pending.userId], {
+          type: "PACKAGE_REQUEST_APPROVED",
+          title: "Tu solicitud de paquete extra fue aprobada",
+          body: `Se sumaron 35 envíos a tu plan. Cargo de $${result.extraPrice.toFixed(2)} aplicado a tu billetera.`,
+          link: "/wallet",
+        });
+      }
+    } catch (err) {
+      console.error("notify approve failed", err);
+    }
+
     res.json({ ok: true });
   },
 );
@@ -518,6 +555,27 @@ router.post(
         .json({ error: "La solicitud ya fue procesada anteriormente." });
       return;
     }
+
+    // Notificar al cliente que su solicitud fue rechazada.
+    try {
+      const [pending] = await db
+        .select({ userId: packageRequestsTable.userId })
+        .from(packageRequestsTable)
+        .where(eq(packageRequestsTable.id, id));
+      if (pending) {
+        await notifyUsers([pending.userId], {
+          type: "PACKAGE_REQUEST_REJECTED",
+          title: "Tu solicitud de paquete extra fue rechazada",
+          body: notes
+            ? `Motivo: ${notes}`
+            : "Contacta a tu administrador si necesitas más información.",
+          link: "/wallet",
+        });
+      }
+    } catch (err) {
+      console.error("notify reject failed", err);
+    }
+
     res.json({ ok: true });
   },
 );

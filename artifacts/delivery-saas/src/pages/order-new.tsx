@@ -908,7 +908,7 @@ export default function NewOrder() {
                   <Button
                     type="submit"
                     className="bg-[#00B5E2] hover:bg-[#0096BD]"
-                    disabled={createMutation.isPending || !!zoneError || (!selectedPoint && !mapUnsupported)}
+                    disabled={createMutation.isPending}
                     data-testid="button-submit-order"
                   >
                     {createMutation.isPending && (

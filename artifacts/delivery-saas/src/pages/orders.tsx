@@ -11,7 +11,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Plus, Search, Eye } from "lucide-react";
+import { Plus, Search, Eye, HandCoins } from "lucide-react";
+import {
+  CustomerPickupSettleActions,
+  type PickupSettlementOrder,
+} from "@/components/pickup-settlement";
 
 const statusColors: Record<string, string> = {
   [OrderStatus.PENDIENTE]: "bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400",
@@ -132,11 +136,35 @@ export default function OrdersList() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Link href={`/orders/${order.id}`}>
-                          <Button variant="ghost" size="icon">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                        </Link>
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Cliente con liquidación al recoger pendiente:
+                              botones inline (Confirmar / Disputar) sin abrir
+                              detalle. */}
+                          {user?.role === UserRole.CLIENTE &&
+                            (order as any).pickupSettledAt &&
+                            !(order as any).pickupSettlementConfirmedAt &&
+                            !(order as any).pickupSettlementDisputedAt && (
+                              <>
+                                <span
+                                  className="hidden md:inline-flex items-center gap-1 mr-1 text-[11px] font-medium text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded"
+                                  title={`Liquidación pendiente: $${(order as any).pickupSettledAmount?.toFixed(2) ?? "?"}`}
+                                  data-testid={`badge-settlement-pending-${order.id}`}
+                                >
+                                  <HandCoins className="h-3 w-3" />
+                                  Liquidación
+                                </span>
+                                <CustomerPickupSettleActions
+                                  order={order as unknown as PickupSettlementOrder}
+                                  variant="inline"
+                                />
+                              </>
+                            )}
+                          <Link href={`/orders/${order.id}`}>
+                            <Button variant="ghost" size="icon">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

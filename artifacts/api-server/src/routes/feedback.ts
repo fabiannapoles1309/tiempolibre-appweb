@@ -4,6 +4,7 @@ import { db, feedbackTable, usersTable } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { sendEmail } from "../services/emailService";
 import { resolveAppUrl } from "../services/notificationService";
+import { notifyByRole } from "../services/inAppNotifications";
 
 const router: IRouter = Router();
 
@@ -88,6 +89,15 @@ router.post(
         console.error("[feedback] notify admins failed", err);
       }
     })();
+
+    // Notificación in-app a admins/superusers (no depende de SMTP).
+    const tag = type === "QUEJA" ? "Queja" : "Sugerencia";
+    await notifyByRole(["ADMIN", "SUPERUSER"], {
+      type: "FEEDBACK_NEW",
+      title: `Nueva ${tag.toLowerCase()} de ${user.name}`,
+      body: subject,
+      link: "/admin/feedback",
+    });
 
     res.status(201).json({
       id: row.id,

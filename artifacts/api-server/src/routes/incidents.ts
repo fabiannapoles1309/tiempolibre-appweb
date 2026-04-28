@@ -3,6 +3,7 @@ import { eq, desc } from "drizzle-orm";
 import { db, incidentsTable, driversTable } from "@workspace/db";
 import { CreateIncidentBody, UpdateIncidentBody } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
+import { notifyByRole } from "../services/inAppNotifications";
 
 const router: IRouter = Router();
 
@@ -107,6 +108,16 @@ router.post(
       return;
     }
     const [d] = await db.select().from(driversTable).where(eq(driversTable.id, driverId));
+
+    // Aviso in-app a admins/superusers cuando un repartidor reporta un
+    // incidente, así pueden revisarlo desde /admin/incidents sin esperar email.
+    await notifyByRole(["ADMIN", "SUPERUSER"], {
+      type: "INCIDENT_NEW",
+      title: `Nuevo incidente reportado por ${d?.name ?? "un repartidor"}`,
+      body: `${incident.type}: ${incident.description.slice(0, 140)}`,
+      link: "/admin/incidents",
+    });
+
     res.status(201).json({
       id: incident.id,
       driverId: incident.driverId,

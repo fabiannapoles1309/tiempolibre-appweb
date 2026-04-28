@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, gte, lte, inArray, asc, desc, sql } from "drizzle-orm";
+import { and, eq, gte, lte, inArray, asc, desc, sql, or, isNull, isNotNull } from "drizzle-orm";
 import {
   db,
   ordersTable,
@@ -21,6 +21,7 @@ import {
 import { requireAuth, requireRole } from "../middlewares/auth";
 import { serializeOrder } from "../lib/serializers";
 import { validarZona, validarPunto } from "../lib/mapService";
+import { notifyUsers } from "../services/inAppNotifications";
 
 const router: IRouter = Router();
 
@@ -727,6 +728,319 @@ router.post(
     }
 
     res.json({ assigned, skipped, details });
+  },
+);
+
+/**
+ * Liquidación al recoger: el repartidor marca que el cliente le pagó el
+ * costo del envío en efectivo en el momento de la recolección. Queda
+ * "propuesta" hasta que el cliente la confirme o dispute.
+ *
+ * Reglas:
+ * - Sólo el DRIVER asignado al pedido puede marcarla.
+ * - El pedido debe estar ASIGNADO o EN_RUTA (no se puede liquidar uno
+ *   ya entregado o cancelado).
+ * - Idempotente: si ya está propuesta, devolvemos 409 con el estado
+ *   actual para que el frontend no muestre dos avisos al cliente.
+ * - Genera notificación in-app al cliente dueño del envío.
+ */
+router.post(
+  "/orders/:id/pickup-settle",
+  requireAuth,
+  requireRole("DRIVER"),
+  async (req, res): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const amountRaw = Number(req.body?.amount);
+    if (!Number.isFinite(amountRaw) || amountRaw <= 0) {
+      res.status(400).json({
+        error: "El monto liquidado debe ser un número positivo.",
+      });
+      return;
+    }
+    const amount = Math.round(amountRaw * 100) / 100;
+
+    const [driver] = await db
+      .select()
+      .from(driversTable)
+      .where(eq(driversTable.userId, req.user!.sub));
+    if (!driver) {
+      res.status(403).json({ error: "No autorizado" });
+      return;
+    }
+    const [order] = await db
+      .select()
+      .from(ordersTable)
+      .where(eq(ordersTable.id, id));
+    if (!order) {
+      res.status(404).json({ error: "Pedido no encontrado" });
+      return;
+    }
+    if (order.driverId !== driver.id) {
+      res.status(403).json({ error: "No autorizado" });
+      return;
+    }
+    if (!["ASIGNADO", "EN_RUTA"].includes(order.status)) {
+      res.status(400).json({
+        error:
+          "Sólo se puede liquidar al recoger en pedidos asignados o en ruta.",
+      });
+      return;
+    }
+    // El UPDATE condicional de abajo es la fuente de verdad para idempotencia
+    // (por si dos requests del driver entran en paralelo o el cliente ya
+    // confirmó/disputó entre el SELECT y este UPDATE). El check previo es
+    // sólo para devolver un error claro al usuario en condiciones normales.
+    if (order.pickupSettledAt && !order.pickupSettlementDisputedAt) {
+      res.status(409).json({
+        error: "Este pedido ya tiene una liquidación pendiente o confirmada.",
+      });
+      return;
+    }
+
+    // UPDATE atómico: sólo procede si el pedido sigue siendo del mismo
+    // driver, sigue en estado liquidable, y NO hay propuesta vigente
+    // (`pickup_settled_at IS NULL` o ya disputada). Si dos requests del
+    // mismo driver entran a la vez, sólo una matchea: la otra recibe 409.
+    const [updated] = await db
+      .update(ordersTable)
+      .set({
+        pickupSettledAt: new Date(),
+        pickupSettledAmount: amount.toFixed(2),
+        pickupSettledByDriverId: driver.id,
+        // Si venía de una disputa anterior, limpiamos para que el cliente
+        // pueda volver a confirmar/disputar el nuevo intento.
+        pickupSettlementConfirmedAt: null,
+        pickupSettlementDisputedAt: null,
+        pickupSettlementDisputeReason: null,
+      })
+      .where(
+        and(
+          eq(ordersTable.id, id),
+          eq(ordersTable.driverId, driver.id),
+          inArray(ordersTable.status, ["ASIGNADO", "EN_RUTA"]),
+          // No hay propuesta vigente: o nunca se propuso, o el último intento
+          // fue disputado por el cliente (reintento permitido).
+          or(
+            isNull(ordersTable.pickupSettledAt),
+            isNotNull(ordersTable.pickupSettlementDisputedAt),
+          ),
+        ),
+      )
+      .returning();
+    if (!updated) {
+      res.status(409).json({
+        error:
+          "El pedido cambió de estado mientras procesábamos la liquidación. Recargá la página.",
+      });
+      return;
+    }
+
+    // Notificar al cliente dueño del envío.
+    if (updated && updated.customerId) {
+      await notifyUsers([updated.customerId], {
+        type: "PICKUP_SETTLEMENT_PROPOSED",
+        title: `Liquidación de envío #${updated.id} en recolección`,
+        body: `El repartidor ${driver.name} marcó tu envío como liquidado en efectivo por $${amount.toFixed(2)}. Confirma o disputa desde "Mis envíos".`,
+        link: `/orders/${updated.id}`,
+      });
+    }
+
+    const [serialized] = await expandOrders([updated!]);
+    res.json(serialized);
+  },
+);
+
+/**
+ * Confirmación del cliente: "sí, le pagué al repartidor en la recolección".
+ * Marca pickup_settlement_confirmed_at y avisa al driver.
+ */
+router.post(
+  "/orders/:id/pickup-settle/confirm",
+  requireAuth,
+  requireRole("CLIENTE"),
+  async (req, res): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    // UPDATE condicional atómico: sólo confirma si el pedido sigue
+    // siendo del cliente autenticado, hay propuesta vigente, y NO está ya
+    // confirmada NI disputada. Esto cierra la race entre confirm/dispute
+    // concurrentes — sólo el primer UPDATE matchea.
+    const [updated] = await db
+      .update(ordersTable)
+      .set({
+        pickupSettlementConfirmedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(ordersTable.id, id),
+          eq(ordersTable.customerId, req.user!.sub),
+          isNotNull(ordersTable.pickupSettledAt),
+          isNull(ordersTable.pickupSettlementConfirmedAt),
+          isNull(ordersTable.pickupSettlementDisputedAt),
+        ),
+      )
+      .returning();
+    if (!updated) {
+      // Diferenciamos los motivos para una mejor UX.
+      const [order] = await db
+        .select()
+        .from(ordersTable)
+        .where(eq(ordersTable.id, id));
+      if (!order || order.customerId !== req.user!.sub) {
+        res.status(404).json({ error: "Pedido no encontrado" });
+        return;
+      }
+      if (!order.pickupSettledAt) {
+        res
+          .status(400)
+          .json({ error: "Este pedido no tiene liquidación pendiente." });
+        return;
+      }
+      if (order.pickupSettlementConfirmedAt) {
+        res.status(409).json({ error: "Ya confirmaste esta liquidación." });
+        return;
+      }
+      if (order.pickupSettlementDisputedAt) {
+        res.status(409).json({
+          error:
+            "Ya disputaste esta liquidación. El driver debe registrar una nueva.",
+        });
+        return;
+      }
+      res.status(409).json({ error: "No se pudo confirmar la liquidación." });
+      return;
+    }
+
+    // Avisar al driver que el cliente confirmó.
+    if (updated?.pickupSettledByDriverId) {
+      const [drv] = await db
+        .select()
+        .from(driversTable)
+        .where(eq(driversTable.id, updated.pickupSettledByDriverId));
+      if (drv?.userId) {
+        await notifyUsers([drv.userId], {
+          type: "PICKUP_SETTLEMENT_CONFIRMED",
+          title: `Liquidación confirmada — Pedido #${updated.id}`,
+          body: `El cliente confirmó el pago en efectivo por $${Number(updated.pickupSettledAmount ?? 0).toFixed(2)}.`,
+          link: `/orders/${updated.id}`,
+        });
+      }
+    }
+    const [serialized] = await expandOrders([updated!]);
+    res.json(serialized);
+  },
+);
+
+/**
+ * Disputa del cliente: "no es cierto que pagué" o "el monto está mal".
+ * Marca pickup_settlement_disputed_at + razón opcional, avisa al driver y
+ * a los admins/superusers para auditar.
+ */
+router.post(
+  "/orders/:id/pickup-settle/dispute",
+  requireAuth,
+  requireRole("CLIENTE"),
+  async (req, res): Promise<void> => {
+    const id = Number(req.params.id);
+    if (!Number.isFinite(id)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const reason = (req.body?.reason ?? "").toString().trim().slice(0, 500) || null;
+    // UPDATE condicional atómico: simétrico al confirm. Sólo procede si
+    // hay propuesta vigente, no fue ya confirmada y no fue ya disputada.
+    // Una disputa **nunca** revierte una confirmación previa, ni viceversa
+    // (anti-fraude: el primer veredicto del cliente queda firme).
+    const [updated] = await db
+      .update(ordersTable)
+      .set({
+        pickupSettlementDisputedAt: new Date(),
+        pickupSettlementDisputeReason: reason,
+      })
+      .where(
+        and(
+          eq(ordersTable.id, id),
+          eq(ordersTable.customerId, req.user!.sub),
+          isNotNull(ordersTable.pickupSettledAt),
+          isNull(ordersTable.pickupSettlementConfirmedAt),
+          isNull(ordersTable.pickupSettlementDisputedAt),
+        ),
+      )
+      .returning();
+    if (!updated) {
+      const [order] = await db
+        .select()
+        .from(ordersTable)
+        .where(eq(ordersTable.id, id));
+      if (!order || order.customerId !== req.user!.sub) {
+        res.status(404).json({ error: "Pedido no encontrado" });
+        return;
+      }
+      if (!order.pickupSettledAt) {
+        res
+          .status(400)
+          .json({ error: "Este pedido no tiene liquidación pendiente." });
+        return;
+      }
+      if (order.pickupSettlementConfirmedAt) {
+        res.status(409).json({
+          error: "Ya confirmaste esta liquidación, no se puede disputar.",
+        });
+        return;
+      }
+      if (order.pickupSettlementDisputedAt) {
+        res.status(409).json({ error: "Ya disputaste esta liquidación." });
+        return;
+      }
+      res.status(409).json({ error: "No se pudo registrar la disputa." });
+      return;
+    }
+
+    // Avisar al driver y a los admins/superusers de la disputa para
+    // que puedan revisar/conciliar.
+    const recipients: number[] = [];
+    if (updated?.pickupSettledByDriverId) {
+      const [drv] = await db
+        .select()
+        .from(driversTable)
+        .where(eq(driversTable.id, updated.pickupSettledByDriverId));
+      if (drv?.userId) recipients.push(drv.userId);
+    }
+    if (recipients.length) {
+      await notifyUsers(recipients, {
+        type: "PICKUP_SETTLEMENT_DISPUTED_BY_CUSTOMER",
+        title: `El cliente disputó la liquidación del Pedido #${updated!.id}`,
+        body: reason ?? "Sin motivo indicado.",
+        link: `/orders/${updated!.id}`,
+      });
+    }
+    const adminUsers = await db
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(inArray(usersTable.role, ["ADMIN", "SUPERUSER"]));
+    if (adminUsers.length) {
+      await notifyUsers(
+        adminUsers.map((u) => u.id),
+        {
+          type: "PICKUP_SETTLEMENT_DISPUTED",
+          title: `Disputa de liquidación — Pedido #${updated!.id}`,
+          body: reason
+            ? `El cliente disputa la liquidación. Motivo: ${reason}`
+            : "El cliente disputa la liquidación marcada por el repartidor.",
+          link: `/orders/${updated!.id}`,
+        },
+      );
+    }
+
+    const [serialized] = await expandOrders([updated!]);
+    res.json(serialized);
   },
 );
 

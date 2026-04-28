@@ -14,16 +14,10 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
-// In production we expect the SPA and API to live on different Cloud Run
-// hostnames (or any cross-origin setup). For the auth cookie to be sent on
-// cross-site XHR requests, browsers require BOTH `SameSite=None` and
-// `Secure=true` (Cloud Run is always HTTPS). In development we keep
-// `SameSite=Lax` and `Secure=false` so the cookie works over plain http.
-const isProd = process.env.NODE_ENV === "production";
 const COOKIE_OPTIONS = {
   httpOnly: true,
-  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
-  secure: isProd,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
   maxAge: TOKEN_TTL_SECONDS * 1000,
   path: "/",
 };

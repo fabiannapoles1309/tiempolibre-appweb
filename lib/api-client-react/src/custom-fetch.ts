@@ -360,16 +360,7 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  // Default to `credentials: "include"` so the session cookie is sent on every
-  // request, including cross-origin (web app on one Cloud Run service, API
-  // on another). Same-origin requests are unaffected. Callers can still
-  // override by passing `credentials` explicitly in the options.
-  const response = await fetch(input, {
-    credentials: "include",
-    ...init,
-    method,
-    headers,
-  });
+  const response = await fetch(input, { ...init, method, headers });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);

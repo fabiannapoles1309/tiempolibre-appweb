@@ -56,7 +56,11 @@ export default function MapPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(apiUrl("api/zones/geojson"), { credentials: "include" });
+      const token = localStorage.getItem("tiempolibre_token");
+      const res = await fetch(apiUrl("api/zones/geojson"), {
+        credentials: "include",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body?.error ?? `Error ${res.status}`);

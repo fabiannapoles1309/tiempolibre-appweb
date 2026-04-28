@@ -21,9 +21,8 @@ const ZONE_COLORS = [
 ];
 
 function apiUrl(path: string): string {
-  const base = import.meta.env.BASE_URL ?? "/";
-  const clean = path.startsWith("/") ? path.slice(1) : path;
-  return `${base}${clean}`;
+  const base = import.meta.env.VITE_API_URL ?? "";
+  return `${base}${path}`;
 }
 
 function bboxFromGeoJson(geo: Geo): LngLatBoundsLike | null {

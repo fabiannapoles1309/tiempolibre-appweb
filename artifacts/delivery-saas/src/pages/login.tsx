@@ -37,6 +37,7 @@ export default function Login() {
   const onSubmit = async (data: z.infer<typeof loginSchema>) => {
     try {
       const res = await loginMutation.mutateAsync({ data });
+      if (res.token) localStorage.setItem("tiempolibre_token", res.token);
       setUser(res.user);
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       toast.success("¡Bienvenido a TiempoLibre!");

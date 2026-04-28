@@ -89,35 +89,29 @@ Rapidoo is a production-ready B2B last-mile delivery management platform designe
   - `routes/package-requests.ts` approve transaction also UPSERTS the cliente's wallet row, deducts `extraPackagePrice` via atomic `balance = balance - X` SQL, and inserts a `wallet_tx` PAGO with description `"Cargo por paquete extra de 35 envíos"`. Negative balance is allowed by design (B2B accounts; cliente owes platform).
   - Frontend: new `pages/admin-pricing-settings.tsx` (route `/admin/pricing-settings`, ADMIN; SUPERUSER auto-allowed via `ProtectedRoute`) with 3 inputs + Guardar; nav entry "Configuración de precios". `pages/subscription.tsx` reads PLAN prices from `useGetPricingSettings`. `pages/wallet.tsx` adds an "Envíos del periodo" card for CLIENTE (totales/solicitados/restantes + BlockOf35 grid) sourced from `useGetMySubscription`.
 
-## Render Deployment Readiness
+## Cloud Run Deployment Readiness
 
-The project deploys to [Render](https://render.com) as **three blueprint resources** declared in `render.yaml`:
+The project is prepared for migration to Google Cloud Run as **two services**:
 
-- **`rapidoo-db`** — Managed PostgreSQL 16 instance.
-- **`tiempolibre-api`** — Node Web Service. Build: `pnpm install --frozen-lockfile && pnpm --filter @workspace/api-server run build`. Start: `node --enable-source-maps artifacts/api-server/dist/index.mjs`. Health probe: `/healthz`.
-- **`tiempolibre-web`** — Static Site. Build: `pnpm --filter @workspace/delivery-saas run build`. Publish dir: `artifacts/delivery-saas/dist`. SPA fallback rewrite `/* → /index.html` + immutable cache for `/assets/*`.
+- **`tiempolibre-api`** — `artifacts/api-server/Dockerfile` (multi-stage Node 22 + esbuild bundle, runtime is just `dist/index.mjs`).
+- **`tiempolibre-web`** — `artifacts/delivery-saas/Dockerfile` (multi-stage build → static SPA served by `nginx:alpine`; `nginx.conf.template` does SPA fallback + caches hashed `/assets/`; listens on `$PORT`).
 
-Production hardening (kept from the earlier Cloud Run work, all reusable):
+Production-only behavior added:
 
-- `app.set("trust proxy", 1)` + `/healthz` outside `/api`.
-- `CORS_ORIGIN` allowlist is **fail-closed** in production (server crashes at startup if missing). `canonicalOrigin()` accepts either a full URL or a bare hostname (so Render's `fromService.host` wires automatically with no manual `https://` prefix).
-- `csrfOriginGuard` middleware rejects mutating verbs (`POST`/`PUT`/`PATCH`/`DELETE`) whose `Origin` (or `Referer` fallback) is not in `CORS_ORIGIN` → HTTP 403.
-- Auth cookie uses `SameSite=None; Secure` when `NODE_ENV=production` (cross-origin SPA ↔ API).
-- `lib/api-client-react/src/custom-fetch.ts` defaults `credentials: "include"`.
-- `artifacts/delivery-saas/src/main.tsx` calls `setBaseUrl(VITE_API_BASE_URL)` at boot, also accepting bare hostnames (auto-prepends `https://`).
-- `artifacts/delivery-saas/vite.config.ts` reads `process.env.PORT` and sets `allowedHosts: true` (works in Replit + Render preview environments).
+- `app.set("trust proxy", 1)` and `/healthz` endpoint outside `/api` (Cloud Run probes).
+- `CORS_ORIGIN` env var: comma-separated origin allowlist (defaults to permissive in dev).
+- Auth cookie uses `SameSite=None; Secure` when `NODE_ENV=production` so the cookie survives cross-origin requests between the SPA and the API services.
+- `lib/api-client-react/src/custom-fetch.ts` now defaults `credentials: "include"` so the cookie is sent on every API call (overridable per-request).
+- `artifacts/delivery-saas/src/main.tsx` calls `setBaseUrl(import.meta.env.VITE_API_BASE_URL)` at boot — bake the API URL at build time via `--build-arg VITE_API_BASE_URL=...`.
+- `artifacts/delivery-saas/vite.config.ts` no longer has the broken `rollupOptions.external` block — every dependency is now bundled into the SPA so `vite build` produces a self-contained artifact.
 
-Cross-service wiring (no two-pass deploy needed):
+Pipeline & docs:
 
-- `tiempolibre-api.CORS_ORIGIN` ← `fromService(name=tiempolibre-web, property=host)`.
-- `tiempolibre-web.VITE_API_BASE_URL` ← `fromService(name=tiempolibre-api, property=host)`.
-- `tiempolibre-api.DATABASE_URL` ← `fromDatabase(name=rapidoo-db, property=connectionString)`.
-- `tiempolibre-api.SESSION_SECRET` ← `generateValue: true` (Render mints once).
+- `cloudbuild.yaml` — builds both images, pushes to Artifact Registry (`us-central1-docker.pkg.dev/$PROJECT_ID/rapidoo`), deploys both Cloud Run services, mounts `DATABASE_URL` and `SESSION_SECRET` from Secret Manager, sets `CORS_ORIGIN` to the SPA URL.
+- `CLOUD_RUN.md` — step-by-step Spanish deployment guide (Artifact Registry, Cloud SQL, Secret Manager, IAM, custom domains, local docker testing).
+- `.dockerignore` — keeps build context small.
 
-Docs:
-
-- `RENDER.md` — Spanish step-by-step guide (Blueprint setup, custom domains, smoke test, troubleshooting).
-- `render.yaml` — the Blueprint itself.
+The two-build-pass requirement (first pass with placeholder URLs to learn the Cloud Run hostnames, second pass with real URLs in `_API_URL`/`_WEB_URL` substitutions) is documented in `CLOUD_RUN.md §3`.
 
 ## System Architecture
 

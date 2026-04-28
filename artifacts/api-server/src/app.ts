@@ -9,7 +9,8 @@ import { attachUser } from "./middlewares/auth";
 const app: Express = express();
 const isProduction = process.env.NODE_ENV === "production";
 
-// Cloud Run sits behind Google Front End. Trust the first proxy hop so that
+// In production the API runs behind a managed reverse proxy (Render's
+// load balancer, Cloud Run's GFE, etc.). Trust the first proxy hop so that
 // req.ip / req.protocol / req.secure reflect the original client (required
 // for cookie `secure` flag and for accurate request logging).
 app.set("trust proxy", 1);
@@ -62,8 +63,9 @@ if (isProduction && corsOriginList.length === 0) {
 const corsOrigin: cors.CorsOptions["origin"] =
   corsOriginList.length > 0 ? corsOriginList : true;
 
-// Lightweight liveness/readiness endpoint outside /api so Cloud Run probes
-// (and any uptime check) succeed without touching auth or the DB.
+// Lightweight liveness/readiness endpoint outside /api so the platform's
+// health probe (and any uptime check) succeeds without touching auth or the DB.
+// Render uses this via `healthCheckPath: /healthz` in render.yaml.
 app.get("/healthz", (_req, res) => {
   res.json({ ok: true });
 });
@@ -71,7 +73,8 @@ app.get("/healthz", (_req, res) => {
 // CSRF defense via Origin/Referer enforcement on state-changing requests.
 //
 // Background: with `SameSite=None` (required for cross-site cookies between
-// the SPA and API on different Cloud Run hostnames) the browser will send
+// the SPA and API when they live on different hostnames — e.g. the SPA on
+// app.example.com and the API on api.example.com) the browser will send
 // the auth cookie on cross-origin POSTs initiated by ANY site, which
 // re-opens classic CSRF. We mitigate by requiring that mutating requests
 // carry an Origin (or Referer) header whose origin matches the configured

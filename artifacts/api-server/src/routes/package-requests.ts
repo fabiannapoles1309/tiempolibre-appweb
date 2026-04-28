@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import {
   db,
   packageRequestsTable,
@@ -165,6 +166,10 @@ router.get(
       status && ["PENDIENTE", "APROBADA", "RECHAZADA"].includes(status)
         ? eq(packageRequestsTable.status, status)
         : undefined;
+    // Alias separado para el usuario que procesó la solicitud (admin/superuser).
+    // Necesario porque ya hacemos JOIN con usersTable para los datos del cliente
+    // y Drizzle no permite usar la misma tabla dos veces sin alias.
+    const processedByUsers = alias(usersTable, "processed_by_users");
     const rows = await db
       .select({
         id: packageRequestsTable.id,
@@ -176,12 +181,19 @@ router.get(
         clienteName: usersTable.name,
         clienteEmail: usersTable.email,
         businessName: customersTable.businessName,
+        processedById: packageRequestsTable.processedByUserId,
+        processedByName: processedByUsers.name,
+        processedByEmail: processedByUsers.email,
       })
       .from(packageRequestsTable)
       .innerJoin(usersTable, eq(usersTable.id, packageRequestsTable.userId))
       .innerJoin(
         customersTable,
         eq(customersTable.id, packageRequestsTable.customerId),
+      )
+      .leftJoin(
+        processedByUsers,
+        eq(processedByUsers.id, packageRequestsTable.processedByUserId),
       )
       .where(where as any)
       .orderBy(desc(packageRequestsTable.requestedAt))
@@ -199,8 +211,144 @@ router.get(
           email: r.clienteEmail,
           businessName: r.businessName,
         },
+        processedBy: r.processedById
+          ? {
+              userId: r.processedById,
+              name: r.processedByName,
+              email: r.processedByEmail,
+            }
+          : null,
       })),
     );
+  },
+);
+
+/**
+ * Asignación directa de un paquete extra por parte del admin/superuser
+ * "sin que el cliente lo solicite". Suma +35 envíos a la suscripción
+ * vigente del cliente, le carga el costo del paquete a la billetera
+ * (idéntico al flujo de aprobación) y deja registrado el movimiento
+ * en `package_requests` con status='APROBADA' y `processedByUserId` =
+ * el admin que lo asignó. Esto hace que el reporte de solicitudes
+ * incluya también las asignaciones manuales con autoría visible.
+ */
+router.post(
+  "/admin/clientes/:id/assign-package",
+  requireAuth,
+  requireRole("ADMIN", "SUPERUSER"),
+  async (req, res): Promise<void> => {
+    const userId = Number(req.params.id);
+    if (!Number.isFinite(userId)) {
+      res.status(400).json({ error: "ID inválido" });
+      return;
+    }
+    const notes = (req.body?.notes as string | undefined) ?? null;
+
+    const [target] = await db
+      .select({
+        id: usersTable.id,
+        role: usersTable.role,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.id, userId));
+    if (!target || target.role !== "CLIENTE") {
+      res.status(404).json({ error: "Cliente no encontrado" });
+      return;
+    }
+
+    const [customer] = await db
+      .select({ id: customersTable.id })
+      .from(customersTable)
+      .where(eq(customersTable.userId, userId));
+    if (!customer) {
+      res.status(400).json({
+        error: "El cliente no tiene perfil de cliente configurado",
+      });
+      return;
+    }
+
+    const pricing = await getPricing();
+    const extraPrice = pricing.extraPackagePrice;
+
+    const result = await db.transaction(async (tx) => {
+      const [latest] = await tx
+        .select({ id: subscriptionsTable.id })
+        .from(subscriptionsTable)
+        .where(
+          and(
+            eq(subscriptionsTable.userId, userId),
+            inArray(subscriptionsTable.status, ["ACTIVA", "VENCIDA"]),
+          ),
+        )
+        .orderBy(desc(subscriptionsTable.createdAt))
+        .limit(1);
+      if (!latest) {
+        return { kind: "no_subscription" as const };
+      }
+
+      // Recargar el plan vigente con +35 envíos.
+      await tx
+        .update(subscriptionsTable)
+        .set({
+          monthlyDeliveries: sql`${subscriptionsTable.monthlyDeliveries} + ${RECHARGE_BLOCK}`,
+          status: "ACTIVA",
+        })
+        .where(eq(subscriptionsTable.id, latest.id));
+
+      // Cobrar el costo del paquete a la billetera.
+      await tx
+        .insert(walletsTable)
+        .values({ userId, balance: "0" })
+        .onConflictDoNothing({ target: walletsTable.userId });
+      await tx
+        .update(walletsTable)
+        .set({
+          balance: sql`${walletsTable.balance} - ${extraPrice.toFixed(2)}`,
+        })
+        .where(eq(walletsTable.userId, userId));
+      await tx.insert(walletTxTable).values({
+        userId,
+        amount: extraPrice.toFixed(2),
+        type: "PAGO",
+        description: `Cargo por paquete extra de ${RECHARGE_BLOCK} envíos (asignado por admin)`,
+      });
+
+      // Registrar la asignación manual como solicitud ya APROBADA, con la
+      // autoría del admin que la realizó. Aparece junto a las aprobaciones
+      // ordinarias en el reporte de solicitudes.
+      const [created] = await tx
+        .insert(packageRequestsTable)
+        .values({
+          userId,
+          customerId: customer.id,
+          status: "APROBADA",
+          processedAt: new Date(),
+          processedByUserId: req.user!.sub,
+          processedNotes:
+            notes ?? "Asignación directa por admin (sin solicitud previa).",
+        })
+        .returning();
+
+      return {
+        kind: "ok" as const,
+        extraPrice,
+        requestId: created!.id,
+      };
+    });
+
+    if (result.kind === "no_subscription") {
+      res.status(400).json({
+        error:
+          "El cliente no tiene una suscripción activa o vencida para asignarle un paquete.",
+      });
+      return;
+    }
+
+    res.json({
+      ok: true,
+      requestId: result.requestId,
+      extraPrice: result.extraPrice,
+    });
   },
 );
 

@@ -3,16 +3,17 @@ import { and, desc, eq, inArray } from "drizzle-orm";
 import { db, subscriptionsTable, usersTable, customersTable } from "@workspace/db";
 import { SubscribeBody } from "@workspace/api-zod";
 import { requireAuth, requireRole } from "../middlewares/auth";
-import { getPricing } from "./pricing-settings";
 
 const router: IRouter = Router();
 
-// Cantidad de envíos incluidos por tier. El precio se lee dinámicamente
-// desde `pricing_settings` para que el ADMIN pueda actualizarlo sin
-// redeploy. La cantidad de envíos es estructural y se mantiene fija.
+// Los planes ya NO incluyen envíos por defecto: el cliente compra
+// paquetes extras de 35 envíos cuando los necesita. El tier sólo
+// determina la categoría de servicio (perks). El cargo recurrente
+// del plan se eliminó: monthlyPrice fijo en 0. El único valor
+// monetario vivo es `extraPackagePrice` en `pricing_settings`.
 const TIER_DELIVERIES = {
-  ESTANDAR: 35,
-  OPTIMO: 35,
+  ESTANDAR: 0,
+  OPTIMO: 0,
 } as const;
 
 function serializeSubscription(s: typeof subscriptionsTable.$inferSelect, userName: string) {
@@ -108,9 +109,9 @@ router.post(
       res.status(400).json({ error: "Tier inválido" });
       return;
     }
-    const pricing = await getPricing();
-    const monthlyPrice =
-      tier === "ESTANDAR" ? pricing.estandarPrice : pricing.optimoPrice;
+    // Los planes son tiers gratuitos (sin cargo mensual): la única
+    // facturación viva ocurre al asignar/aprobar paquetes extras.
+    const monthlyPrice = 0;
 
     // Cancelar suscripciones activas previas
     await db

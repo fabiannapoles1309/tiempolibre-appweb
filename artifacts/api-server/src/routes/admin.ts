@@ -24,9 +24,12 @@ import { requireAuth, requireRole } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
+// Los planes ya no incluyen envíos por defecto ni cargo recurrente:
+// el único valor monetario activo es `extraPackagePrice` (paquetes
+// extras de 35 envíos). El tier sólo cumple rol de categoría.
 const TIERS = {
-  ESTANDAR: { monthlyPrice: 15000, monthlyDeliveries: 35 },
-  OPTIMO: { monthlyPrice: 25000, monthlyDeliveries: 70 },
+  ESTANDAR: { monthlyPrice: 0, monthlyDeliveries: 0 },
+  OPTIMO: { monthlyPrice: 0, monthlyDeliveries: 0 },
 } as const;
 
 const RECHARGE_BLOCK = 35;
@@ -314,21 +317,38 @@ router.patch(
     if (data.tier) {
       const cfg = TIERS[data.tier as keyof typeof TIERS];
       if (cfg) {
-        // Cancelar otra ACTIVA y crear la nueva del tier solicitado.
-        await db
-          .update(subscriptionsTable)
-          .set({ status: "CANCELADA" })
+        // Cambio de tier: como los planes ya NO incluyen envíos baseline
+        // (todos los envíos vienen de paquetes extras comprados), preservar
+        // el saldo del cliente al cambiar de plan. Si ya hay una ACTIVA,
+        // sólo actualizamos tier+monthlyPrice y dejamos intactos
+        // monthlyDeliveries / usedDeliveries. Si no hay ACTIVA, se crea
+        // una nueva con cupo en 0 y el cliente compra paquetes después.
+        const [activa] = await db
+          .select({ id: subscriptionsTable.id })
+          .from(subscriptionsTable)
           .where(
             and(eq(subscriptionsTable.userId, id), eq(subscriptionsTable.status, "ACTIVA")),
-          );
-        await db.insert(subscriptionsTable).values({
-          userId: id,
-          tier: data.tier,
-          monthlyPrice: cfg.monthlyPrice.toFixed(2),
-          monthlyDeliveries: cfg.monthlyDeliveries,
-          usedDeliveries: 0,
-          status: "ACTIVA",
-        });
+          )
+          .orderBy(desc(subscriptionsTable.createdAt))
+          .limit(1);
+        if (activa) {
+          await db
+            .update(subscriptionsTable)
+            .set({
+              tier: data.tier,
+              monthlyPrice: cfg.monthlyPrice.toFixed(2),
+            })
+            .where(eq(subscriptionsTable.id, activa.id));
+        } else {
+          await db.insert(subscriptionsTable).values({
+            userId: id,
+            tier: data.tier,
+            monthlyPrice: cfg.monthlyPrice.toFixed(2),
+            monthlyDeliveries: cfg.monthlyDeliveries,
+            usedDeliveries: 0,
+            status: "ACTIVA",
+          });
+        }
       }
     }
     const row = await buildClienteRow(id);

@@ -13,23 +13,27 @@ import { Button } from "@/components/ui/button";
 import { Crown, Check, AlertTriangle, Loader2, Plus, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
-// Los precios y la cantidad de envíos por plan se construyen dinámicamente
-// con `useGetPricingSettings`, para que el ADMIN/SUPERUSER pueda ajustar
-// los precios desde el panel de Configuración de Precios sin redeploy.
+// Los planes ya NO incluyen envíos por defecto: el cliente compra
+// paquetes extras de 35 envíos cuando los necesita. El tier sólo
+// diferencia el nivel de servicio (perks). El cargo recurrente del
+// plan se eliminó: la única tarifa viva es el paquete extra,
+// todavía configurable desde Pricing Settings.
 const PLAN_TEMPLATES = [
   {
     tier: SubscriptionTier.ESTANDAR,
     name: "Estándar",
-    deliveries: 35,
-    perks: ["35 envíos mensuales incluidos", "Soporte por email", "Reportes básicos"],
+    perks: [
+      "Sin envíos incluidos — comprá paquetes extras de 35 envíos",
+      "Soporte por email",
+      "Reportes básicos",
+    ],
     highlight: false,
   },
   {
     tier: SubscriptionTier.OPTIMO,
     name: "Óptimo",
-    deliveries: 35,
     perks: [
-      "35 envíos mensuales incluidos",
+      "Sin envíos incluidos — comprá paquetes extras de 35 envíos",
       "Soporte prioritario",
       "Reportes avanzados",
       "Asignación con prioridad",
@@ -98,13 +102,10 @@ export default function SubscriptionPage() {
   const recharge = useRechargeSubscription();
   const qc = useQueryClient();
   const sub = data?.subscription ?? null;
-  const PLANS = PLAN_TEMPLATES.map((p) => ({
-    ...p,
-    price:
-      p.tier === SubscriptionTier.ESTANDAR
-        ? pricing?.estandarPrice ?? 0
-        : pricing?.optimoPrice ?? 0,
-  }));
+  // Los planes ya no tienen cargo mensual; sólo se factura cada paquete
+  // extra. Mostramos `extraPackagePrice` como referencia para que el
+  // cliente sepa cuánto le costará cada recarga.
+  const extraPackagePrice = pricing?.extraPackagePrice ?? 0;
 
   const handleSubscribe = async (tier: SubscriptionTier) => {
     try {
@@ -199,9 +200,14 @@ export default function SubscriptionPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div className="border rounded-lg p-3">
-                  <div className="text-xs text-muted-foreground">Cuota mensual</div>
+                  <div className="text-xs text-muted-foreground">
+                    Costo paquete extra
+                  </div>
                   <div className="text-xl font-bold">
-                    $ {sub.monthlyPrice.toLocaleString("es-MX")}
+                    $ {extraPackagePrice.toLocaleString("es-MX")}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    por cada +35 envíos
                   </div>
                 </div>
                 <div className="border rounded-lg p-3">
@@ -249,7 +255,7 @@ export default function SubscriptionPage() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
-            {PLANS.map((p) => (
+            {PLAN_TEMPLATES.map((p) => (
               <Card
                 key={p.tier}
                 className={p.highlight ? "border-[#00B5E2] shadow-md" : ""}
@@ -267,14 +273,11 @@ export default function SubscriptionPage() {
                 <CardContent className="space-y-4">
                   <div>
                     <div className="text-3xl font-bold">
-                      $ {p.price.toLocaleString("es-MX")}
-                      <span className="text-sm font-normal text-muted-foreground">
-                        {" "}
-                        /mes
-                      </span>
+                      Sin cargo mensual
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {p.deliveries} envíos incluidos
+                      Pagás sólo por los paquetes extras que uses (
+                      $ {extraPackagePrice.toLocaleString("es-MX")} c/u — 35 envíos).
                     </div>
                   </div>
                   <ul className="space-y-2 text-sm">

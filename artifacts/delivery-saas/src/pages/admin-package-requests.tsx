@@ -29,6 +29,11 @@ type Req = {
     email: string;
     businessName: string | null;
   };
+  processedBy: {
+    userId: number;
+    name: string;
+    email: string;
+  } | null;
 };
 
 function statusBadge(s: Req["status"]) {
@@ -206,13 +211,14 @@ export default function AdminPackageRequestsPage() {
                   <TableHead>Estado</TableHead>
                   <TableHead>Solicitada</TableHead>
                   <TableHead>Procesada</TableHead>
+                  <TableHead>Procesado por</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {lh ? (
                   Array.from({ length: 3 }).map((_, i) => (
                     <TableRow key={i}>
-                      {Array.from({ length: 4 }).map((_, j) => (
+                      {Array.from({ length: 5 }).map((_, j) => (
                         <TableCell key={j}>
                           <Skeleton className="h-4 w-full" />
                         </TableCell>
@@ -221,7 +227,7 @@ export default function AdminPackageRequestsPage() {
                   ))
                 ) : history.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
                       Aún no hay solicitudes registradas.
                     </TableCell>
                   </TableRow>
@@ -246,6 +252,21 @@ export default function AdminPackageRequestsPage() {
                         {r.processedAt
                           ? format(new Date(r.processedAt), "dd MMM yyyy, HH:mm", { locale: es })
                           : "—"}
+                      </TableCell>
+                      <TableCell
+                        className="text-sm"
+                        data-testid={`text-processed-by-${r.id}`}
+                      >
+                        {r.processedBy ? (
+                          <div className="flex flex-col">
+                            <span className="font-medium">{r.processedBy.name}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {r.processedBy.email}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))

@@ -61,9 +61,17 @@ TiempoLibre is a production-ready B2B last-mile delivery management platform des
   - SQL aggregates orders by `date_trunc(period, created_at)` × `customer_id`. Excludes `status='CANCELADO'` from envíos/costo; cash sum only counts `payment='EFECTIVO' AND status='ENTREGADO'` (only delivered cash is "money on hand"). `from`/`to` are validated against `^\d{4}-\d{2}-\d{2}$` and applied as `created_at >= from` / `created_at < to + 1 day`.
   - Frontend page `/admin/reports-combined` exposes a period selector, two date pickers and a "Descargar Excel" button (auth via fetch with credentials).
 - Email service + Sendgrid:
-  - `services/emailService.ts` exports `sendEmail({to, subject, text, html?})`. Calls Sendgrid via the Replit Connectors REST endpoint (`/api/v2/connection?include_secrets=true&connector_names=sendgrid`) to fetch an `api_key`, then sends with `@sendgrid/mail`. If no token / no key / send fails, it logs `[email-fallback] recipients=N subject="…" bodyChars=N` (metadata only, no body to avoid PII leaks) and returns `{sent:false, reason}` — never throws.
+  - `services/emailService.ts` exposes `sendEmail({to, subject, text, html?})`. Calls Sendgrid via the Replit Connectors REST endpoint (`/api/v2/connection?include_secrets=true&connector_names=sendgrid`) to fetch an `api_key`, then sends with `@sendgrid/mail`. If no token / no key / send fails, it logs `[email-fallback] recipients=N subject="…" bodyChars=N` (metadata only, no body to avoid PII leaks) and returns `{sent:false, reason}` — never throws.
   - `notifyAdminsPackageRequest` was refactored to call `sendEmail` instead of `console.log`, so package-request notifications now go to admin emails the moment Sendgrid is connected (until then, the same console fallback works).
   - `TIEMPOLIBRE_EMAIL_FROM` env var overrides the default `no-reply@tiempolibre.app` From address. (`RAPIDOO_EMAIL_FROM` still honored as a fallback for backward compatibility.)
+- **Planes sin envíos baseline (2026-04-28)**: Los planes `ESTANDAR` y `OPTIMO` ya **no incluyen 35 envíos por defecto** ni cargo recurrente. El tier sólo cumple rol de categoría/perks. La única tarifa viva es `extraPackagePrice` (paquetes extras de 35 envíos), todavía configurable en Pricing Settings.
+  - Backend: `TIERS` en `routes/admin.ts` y `TIER_DELIVERIES` en `routes/subscriptions.ts` ahora son `{ monthlyPrice: 0, monthlyDeliveries: 0 }` para ambos tiers. `POST /subscriptions/subscribe` fija `monthlyPrice=0`.
+  - PATCH `/admin/clientes/:id` con `tier`: si el cliente ya tiene una suscripción ACTIVA, sólo se actualiza `tier` y `monthlyPrice` preservando `monthlyDeliveries` y `usedDeliveries` (los envíos vienen de paquetes comprados, no del plan).
+  - Nuevo endpoint `POST /admin/clientes/:id/assign-package`: el admin/superuser asigna un paquete extra **sin solicitud previa del cliente**. Suma +35 envíos al plan vigente, cobra `extraPackagePrice` a la billetera y registra una fila en `package_requests` con `status='APROBADA'` y `processedByUserId=<admin>` (auditable en el reporte).
+  - `GET /admin/package-requests` devuelve ahora `processedBy: { userId, name, email } | null` por solicitud (LEFT JOIN con alias `processed_by_users` de `users`). UI: nueva columna "Procesado por" en `/admin/solicitudes-paquetes` (testid `text-processed-by-{id}`).
+  - UI cliente (`/subscription`): tarjeta "Cuota mensual" → "Costo paquete extra" con `extraPackagePrice` y "por cada +35 envíos". `PLAN_TEMPLATES` quedaron sin "X envíos incluidos" — copy "Sin envíos incluidos — comprá paquetes extras de 35 envíos" + "Sin cargo mensual".
+  - UI admin (`/admin/subscriptions`): tabla con `Select` por fila para cambiar tier (testid `select-tier-{userId}`) + botón "Asignar paquete" (testid `button-assign-package-{userId}`) que abre Dialog de confirmación (testid `button-confirm-assign-package`).
+  - Suscripciones existentes con `monthlyDeliveries>0` quedan intactas; el cambio aplica a planes nuevos y a cambios de tier (preservando lo comprado).
 
 - **Folios públicos independientes (rebrand 2026-04-28)**: PKs `serial id` se conservan; se añadieron tres columnas con secuencias propias para folios visibles e independientes:
   - `users.customer_code` → `CLI-NNNNNN` (sólo CLIENTE), secuencia `customer_code_seq`. Asignado en `POST /auth/register` y `POST /admin/users` cuando `role='CLIENTE'`.
@@ -112,7 +120,7 @@ The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts
 -   **Feedback System:** Implements a complaints and suggestions system for all user roles, with admin review capabilities and email notifications.
 -   **UI/UX:** Light theme with cyan primary color, localized for Spanish (Argentina), with role-based widget visibility. Uses Tailwind CSS and shadcn UI.
 -   **Geospatial Features:** Interactive delivery point selection using client-side MapLibre with `public/zonas.kml` and `turf` for zone validation. Server-side validation handles point-in-polygon checks and geocoding.
--   **Notification System:** `notificationService` for driver welcome messages and admin package request notifications (logging only, with Sendgrid integration planned).
+-   **Notification System:** `notificationService` for driver welcome messages and admin package request notifications.
 -   **Reporting:** Generates combined Excel reports for administrators with detailed financial and delivery metrics.
 
 ## External Dependencies
@@ -127,4 +135,4 @@ The project is a monorepo built with `pnpm workspaces`, comprising an `artifacts
 -   **MapLibre:** Open-source library for interactive maps, used for delivery point selection.
 -   **turf.js:** JavaScript library for geospatial analysis, used for client-side zone validation.
 -   **exceljs:** Library for reading, writing, and manipulating XLSX files for report generation.
--   **Sendgrid:** Email communication platform for notifications (currently using a fallback logging mechanism due to connector status).
+-   **Sendgrid:** Email communication platform for notifications (currently using a fallback logging mechanism).

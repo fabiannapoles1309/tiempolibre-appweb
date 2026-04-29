@@ -56,7 +56,7 @@ export default function Login() {
     <div className="min-h-screen bg-background flex">
       <div className="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:flex-none lg:px-16 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-[420px]">
-          <div className="mb-10">
+          <div className="mb-10 flex justify-center">
             <Logo heightPx={110} />
           </div>
 

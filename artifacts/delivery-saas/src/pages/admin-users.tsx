@@ -357,10 +357,10 @@ export default function AdminUsersPage() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value={SubscriptionTier.ESTANDAR}>
-                                Estándar — 35 envíos / $15,000
+                                Estándar
                               </SelectItem>
                               <SelectItem value={SubscriptionTier.OPTIMO}>
-                                Óptimo — 70 envíos / $25,000
+                                Óptimo
                               </SelectItem>
                             </SelectContent>
                           </Select>

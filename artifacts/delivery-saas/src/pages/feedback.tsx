@@ -83,8 +83,7 @@ export default function FeedbackPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <MessageSquareWarning className="w-7 h-7 text-[#00B5E2]" /> Quejas y
-          sugerencias
+          <MessageSquareWarning className="w-7 h-7 text-[#00B5E2]" /> Quejas y Sugerencias
         </h1>
         <p className="text-muted-foreground mt-1">
           Cuéntanos cómo mejorar TiempoLibre o reporta una experiencia que no fue

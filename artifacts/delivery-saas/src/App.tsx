@@ -1,4 +1,4 @@
-import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
+﻿import { Switch, Route, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -35,6 +35,13 @@ import AdminStaffPage from "@/pages/admin-staff";
 import AdminReportsCombinedPage from "@/pages/admin-reports-combined";
 import AdminFeedbackPage from "@/pages/admin-feedback";
 import FeedbackPage from "@/pages/feedback";
+
+// --- Nuevas Paginas ---
+import AdminRefundsPage from "@/pages/admin/Refunds";
+import AdminMessagingPage from "@/pages/admin/Messaging";
+import DeliveryReportPage from "@/pages/admin/DeliveryReport";
+import ShippingCostsPage from "@/pages/admin/ShippingCosts";
+import DriverStatusToggle from "@/pages/driver/DriverStatusToggle";
 
 const queryClient = new QueryClient();
 
@@ -74,7 +81,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={() => <PublicRoute component={Login} />} />
-      {/* Registro público deshabilitado: las cuentas se crean desde el panel de admin. */}
+      {/* Registro pÃºblico deshabilitado: las cuentas se crean desde el panel de admin. */}
       <Route path="/register" component={() => <Redirect to="/login" />} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/orders" component={() => <ProtectedRoute component={OrdersList} />} />
@@ -86,7 +93,7 @@ function Router() {
       <Route path="/reports" component={() => <ProtectedRoute component={Reports} roles={["ADMIN"]} />} />
       <Route path="/finance" component={() => <ProtectedRoute component={Finance} roles={["ADMIN"]} />} />
       {/* CLIENTE puede ver su saldo de cobranza en efectivo acumulado por las
-          entregas de sus envíos. ADMIN mantiene el acceso para visualización. */}
+          entregas de sus envÃ­os. ADMIN mantiene el acceso para visualizaciÃ³n. */}
       <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["CLIENTE", "ADMIN"]} />} />
       <Route path="/driver/benefits" component={() => <ProtectedRoute component={DriverBenefits} roles={["DRIVER"]} />} />
       <Route path="/driver/ranking" component={() => <ProtectedRoute component={DriverRankingPage} roles={["DRIVER", "ADMIN"]} />} />
@@ -107,6 +114,11 @@ function Router() {
       <Route path="/admin/reports-combined" component={() => <ProtectedRoute component={AdminReportsCombinedPage} roles={["ADMIN"]} />} />
       <Route path="/admin/feedback" component={() => <ProtectedRoute component={AdminFeedbackPage} roles={["ADMIN"]} />} />
       <Route path="/feedback" component={() => <ProtectedRoute component={FeedbackPage} roles={["CLIENTE", "DRIVER", "ADMIN"]} />} />
+            <Route path="/admin/refunds" component={() => <ProtectedRoute component={AdminRefundsPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/messaging" component={() => <ProtectedRoute component={AdminMessagingPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/delivery-report" component={() => <ProtectedRoute component={DeliveryReportPage} roles={["ADMIN"]} />} />
+      <Route path="/admin/shipping-costs" component={() => <ProtectedRoute component={ShippingCostsPage} roles={["ADMIN"]} />} />
+      <Route path="/driver/status" component={() => <ProtectedRoute component={DriverStatusToggle} roles={["DRIVER"]} />} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -128,3 +140,4 @@ function App() {
 }
 
 export default App;
+

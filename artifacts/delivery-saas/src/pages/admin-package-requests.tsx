@@ -17,6 +17,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { toast } from "sonner";
 
+const API = import.meta.env.VITE_API_URL ?? "";
+
 type Req = {
   id: number;
   status: "PENDIENTE" | "APROBADA" | "RECHAZADA";
@@ -49,7 +51,7 @@ export default function AdminPackageRequestsPage() {
   const { data: pending = [], isLoading: lp } = useQuery<Req[]>({
     queryKey: ["admin-package-requests", "PENDIENTE"],
     queryFn: async () => {
-      const r = await fetch(`/api/admin/package-requests?status=PENDIENTE`, {
+      const r = await fetch(`${API}/api/admin/package-requests?status=PENDIENTE`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -60,7 +62,7 @@ export default function AdminPackageRequestsPage() {
   const { data: history = [], isLoading: lh } = useQuery<Req[]>({
     queryKey: ["admin-package-requests", "ALL"],
     queryFn: async () => {
-      const r = await fetch(`/api/admin/package-requests`, { credentials: "include" });
+      const r = await fetch(`${API}/api/admin/package-requests`, { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },
@@ -71,7 +73,7 @@ export default function AdminPackageRequestsPage() {
   const act = async (id: number, action: "approve" | "reject") => {
     setBusyId(id);
     try {
-      const r = await fetch(`/api/admin/package-requests/${id}/${action}`, {
+      const r = await fetch(`${API}/api/admin/package-requests/${id}/${action}`, {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -253,10 +255,7 @@ export default function AdminPackageRequestsPage() {
                           ? format(new Date(r.processedAt), "dd MMM yyyy, HH:mm", { locale: es })
                           : "—"}
                       </TableCell>
-                      <TableCell
-                        className="text-sm"
-                        data-testid={`text-processed-by-${r.id}`}
-                      >
+                      <TableCell className="text-sm" data-testid={`text-processed-by-${r.id}`}>
                         {r.processedBy ? (
                           <div className="flex flex-col">
                             <span className="font-medium">{r.processedBy.name}</span>

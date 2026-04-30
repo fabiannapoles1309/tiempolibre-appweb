@@ -3,7 +3,9 @@ import App from "./App";
 import "./index.css";
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
 
-const apiUrl = import.meta.env.VITE_API_URL;
+// Esta es la dirección de tu servidor en Google Cloud
+const apiUrl = "https://tiempolibre-api-612959916526.us-central1.run.app";
+
 if (apiUrl) {
   setBaseUrl(apiUrl);
 }

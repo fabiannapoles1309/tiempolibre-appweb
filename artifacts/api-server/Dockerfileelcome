@@ -1,0 +1,1 @@
+CMD ["node", "--enable-source-maps", "./dist/index.mjs"]  to the Google Cloud CLI! Run "gcloud -h" to get the list of available commands.

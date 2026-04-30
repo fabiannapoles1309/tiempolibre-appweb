@@ -26,16 +26,8 @@ interface NotificationsResponse {
   items: NotificationItem[];
 }
 
-/**
- * Campana de notificaciones in-app.
- *
- * - Polea `/api/me/notifications` cada 30s para mantener el badge fresco.
- * - Al abrir el panel, muestra las últimas 20 notificaciones (leídas y no
- *   leídas) en orden cronológico inverso.
- * - Click en una notificación: marca como leída y, si tiene `link`,
- *   navega a esa ruta interna.
- * - Botón "Marcar todas como leídas" hace POST /me/notifications/read-all.
- */
+const API = import.meta.env.VITE_API_URL ?? "";
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
@@ -44,13 +36,12 @@ export function NotificationBell() {
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const r = await fetch("/api/me/notifications?limit=20", {
+      const r = await fetch(`${API}/api/me/notifications?limit=20`, {
         credentials: "include",
       });
       if (!r.ok) throw new Error("notifications fetch failed");
       return r.json();
     },
-    // Polling razonable: 30s. La UX no necesita real-time, y reduce carga.
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     refetchIntervalInBackground: false,
@@ -58,7 +49,7 @@ export function NotificationBell() {
 
   const markRead = useMutation({
     mutationFn: async (id: number) => {
-      await fetch(`/api/me/notifications/${id}/read`, {
+      await fetch(`${API}/api/me/notifications/${id}/read`, {
         method: "PATCH",
         credentials: "include",
       });
@@ -68,7 +59,7 @@ export function NotificationBell() {
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      await fetch("/api/me/notifications/read-all", {
+      await fetch(`${API}/api/me/notifications/read-all`, {
         method: "POST",
         credentials: "include",
       });
@@ -79,11 +70,9 @@ export function NotificationBell() {
   const unread = data?.unread ?? 0;
   const items = data?.items ?? [];
 
-  // Cierra el dropdown al cambiar de ruta tras hacer click.
   useEffect(() => {
     if (!open) return;
     return () => setOpen(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleClick = async (n: NotificationItem) => {

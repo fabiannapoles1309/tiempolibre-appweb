@@ -8,6 +8,9 @@ import { attachUser } from "./middlewares/auth";
 
 const app: Express = express();
 
+// 🔥 CRÍTICO PARA CLOUD RUN (permite cookies seguras detrás del proxy)
+app.set("trust proxy", 1);
+
 app.use(
   pinoHttp({
     logger,
@@ -27,15 +30,26 @@ app.use(
     },
   }),
 );
-app.use(cors({ origin: true, credentials: true }));
+
+// 🔥 CORS configurado correctamente para tu frontend
+app.use(
+  cors({
+    origin: "https://tiempolibre-web-612959916526.us-central1.run.app",
+    credentials: true,
+  }),
+);
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 🔥 Lee la cookie y asigna req.user
 app.use(attachUser);
 
+// 🔥 Rutas API
 app.use("/api", router);
 
-// Centralized error handler
+// 🔥 Manejo de errores global
 app.use((err: unknown, req: Request, res: Response, _next: NextFunction): void => {
   req.log?.error({ err }, "Unhandled error");
   if (res.headersSent) return;

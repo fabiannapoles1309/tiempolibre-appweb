@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { Bell, Check, Loader2 } from "lucide-react";
@@ -36,7 +36,7 @@ export function NotificationBell() {
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/me/notifications?limit=20`, {
+      const r = await fetch(`${API}/api/me/notifications?limit=20`, { credentials: "include",
         credentials: "include",
       });
       if (!r.ok) throw new Error("notifications fetch failed");

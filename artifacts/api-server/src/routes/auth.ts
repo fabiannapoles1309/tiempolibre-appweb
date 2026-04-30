@@ -17,7 +17,7 @@ const router: IRouter = Router();
 const COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: "none" as const,
-  secure: process.env.NODE_ENV === "production",
+  secure: true,
   maxAge: TOKEN_TTL_SECONDS * 1000,
   path: "/",
 };

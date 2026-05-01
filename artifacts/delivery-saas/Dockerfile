@@ -1,7 +1,4 @@
-FROM node:22-alpine
-WORKDIR /app
-RUN npm install -g serve
-COPY dist/public/ ./public/
-ENV PORT=8080
+FROM nginx:alpine
+COPY dist/public/ /usr/share/nginx/html/
+RUN echo 'server { listen 8080; location / { root /usr/share/nginx/html; try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf
 EXPOSE 8080
-CMD ["serve", "-s", "public", "-l", "8080"]

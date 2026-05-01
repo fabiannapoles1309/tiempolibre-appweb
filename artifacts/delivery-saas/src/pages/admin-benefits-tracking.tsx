@@ -493,7 +493,7 @@ export default function AdminBenefitsTrackingPage() {
                       <span className="text-sm font-medium truncate">{it.name}</span>
                       {it.description && (
                         <span className="text-xs text-muted-foreground truncate">
-                          — {it.description}
+                          - {it.description}
                         </span>
                       )}
                     </div>

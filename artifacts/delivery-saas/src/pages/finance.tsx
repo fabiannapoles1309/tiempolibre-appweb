@@ -487,7 +487,7 @@ export default function Finance() {
                         {e.subscriptionTier ? (
                           <Badge variant="secondary" className="text-xs">{e.subscriptionTier}</Badge>
                         ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
+                          <span className="text-xs text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">{e.ordersCount}</TableCell>

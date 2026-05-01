@@ -127,7 +127,7 @@ export default function AdminDestinatariosPage() {
                   <TableHead className="text-center">SMS</TableHead>
                   <TableHead className="text-center">Email</TableHead>
                   <TableHead className="text-right">Envíos</TableHead>
-                  <TableHead>Ãƒâ€œÃ…¡ltimo envío</TableHead>
+                  <TableHead>Ãƒâ€œÃ...¡ltimo envío</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -166,7 +166,7 @@ export default function AdminDestinatariosPage() {
                         {r.email ? (
                           <span className="break-all">{r.email}</span>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-center">

@@ -209,15 +209,15 @@ export default function AdminClientesPage() {
                       className="font-mono text-xs"
                       data-testid={`text-customer-code-${row.id}`}
                     >
-                      {row.customerCode ?? "—"}
+                      {row.customerCode ?? "-"}
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{row.name}</div>
                       <div className="text-xs text-muted-foreground">{row.email}</div>
                     </TableCell>
-                    <TableCell>{row.businessName ?? "—"}</TableCell>
+                    <TableCell>{row.businessName ?? "-"}</TableCell>
                     <TableCell>
-                      {row.clienteZone != null ? `Zona ${row.clienteZone}` : "—"}
+                      {row.clienteZone != null ? `Zona ${row.clienteZone}` : "-"}
                     </TableCell>
                     <TableCell>
                       {row.tier ? (
@@ -225,7 +225,7 @@ export default function AdminClientesPage() {
                           {row.tier}
                         </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell>{statusBadge(row.status)}</TableCell>

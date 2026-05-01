@@ -508,7 +508,7 @@ export default function NewOrder() {
         // La autogestión de suscripción fue removida (M1). Las recargas y
         // renovaciones las hace el administrador desde /admin/clientes.
         toast.error(
-          `${error.data.error} — Contacta a tu administrador para recargar tu bloque de envíos.`,
+          `${error.data.error} - Contacta a tu administrador para recargar tu bloque de envíos.`,
         );
         return;
       }
@@ -558,7 +558,7 @@ export default function NewOrder() {
                   ? "Te quedaste sin envíos. Pide una recarga al administrador."
                   : mySub.remainingDeliveries <= 5
                     ? "Tu bloque está por agotarse. Pide una recarga."
-                    : `Plan ${mySub.tier} — ${mySub.usedDeliveries} / ${mySub.monthlyDeliveries} consumidos.`}
+                    : `Plan ${mySub.tier} - ${mySub.usedDeliveries} / ${mySub.monthlyDeliveries} consumidos.`}
               </div>
             </div>
           </div>

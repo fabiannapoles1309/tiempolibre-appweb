@@ -203,7 +203,7 @@ export default function AdminPackageRequestsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Historial</CardTitle>
-          <CardDescription>Ãƒâ€œÃ…¡ltimas 500 solicitudes en cualquier estado.</CardDescription>
+          <CardDescription>Ãƒâ€œÃ...¡ltimas 500 solicitudes en cualquier estado.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="border rounded-md overflow-x-auto">
@@ -254,7 +254,7 @@ export default function AdminPackageRequestsPage() {
                       <TableCell className="text-sm text-muted-foreground">
                         {r.processedAt
                           ? format(new Date(r.processedAt), "dd MMM yyyy, HH:mm", { locale: es })
-                          : "—"}
+                          : "-"}
                       </TableCell>
                       <TableCell className="text-sm" data-testid={`text-processed-by-${r.id}`}>
                         {r.processedBy ? (
@@ -265,7 +265,7 @@ export default function AdminPackageRequestsPage() {
                             </span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                     </TableRow>

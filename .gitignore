@@ -51,3 +51,5 @@ Thumbs.db
 artifacts/api-server/.env
 artifacts/delivery-saas/.env
 *.ps1
+
+gcp-key.json

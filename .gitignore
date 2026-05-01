@@ -53,3 +53,5 @@ artifacts/delivery-saas/.env
 *.ps1
 
 gcp-key.json
+
+!artifacts/api-server/dist/

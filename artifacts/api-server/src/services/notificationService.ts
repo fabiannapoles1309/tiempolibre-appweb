@@ -1,10 +1,10 @@
-/**
+﻿/**
  * Notification service: genera mensajes listos para enviar por SMS / WhatsApp.
  * Mantiene el copy en español rioplatense (voseo) y el branding TiempoLibre.
  *
  * Email delivery is delegated to `emailService.sendEmail`, which talks to
  * Sendgrid when the Replit integration is connected, or falls back to a
- * structured console log otherwise. So this module always succeeds — even if
+ * structured console log otherwise. So this module always succeeds â€” even if
  * no email provider is wired up yet.
  */
 
@@ -64,7 +64,7 @@ export interface PackageRequestNotificationInput {
  * Construye y "envía" la notificación a admins/superusers cuando un cliente
  * solicita un nuevo paquete de entregas. Si no hay un proveedor de email
  * configurado (no hay SMTP/SendGrid integrado), simplemente registramos el
- * mensaje en consola — el aviso queda persistido en la tabla
+ * mensaje en consola â€” el aviso queda persistido en la tabla
  * package_requests, así que el ADMIN siempre puede actuar desde la UI
  * `/admin/solicitudes-paquetes`.
  */
@@ -72,7 +72,7 @@ export async function notifyAdminsPackageRequest(
   input: PackageRequestNotificationInput,
 ): Promise<void> {
   const { admins, cliente, requestId, appUrl } = input;
-  const subject = `Nueva solicitud de paquete (+35 envíos) — ${
+  const subject = `Nueva solicitud de paquete (+35 envíos) â€” ${
     cliente.businessName ?? cliente.name
   }`;
   const cleanUrl = appUrl.replace(/\/+$/, "");
@@ -101,7 +101,7 @@ export async function notifyAdminsPackageRequest(
     text: body,
   });
   console.log(
-    `[notify] package-request#${requestId} → ${recipients.join(",")} sent=${
+    `[notify] package-request#${requestId} â†’ ${recipients.join(",")} sent=${
       result.sent
     }${result.reason ? ` reason=${result.reason}` : ""}`,
   );

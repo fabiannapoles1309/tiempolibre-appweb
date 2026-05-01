@@ -2,9 +2,9 @@ import { pgTable, varchar, numeric, timestamp } from "drizzle-orm/pg-core";
 
 // Configuración de precios editable por ADMIN/SUPERUSER. Es una tabla
 // key-value con claves bien conocidas:
-//   ESTANDAR_PRICE       — precio mensual del plan Estándar (MXN).
-//   OPTIMO_PRICE         — precio mensual del plan Óptimo (MXN).
-//   EXTRA_PACKAGE_PRICE  — costo del paquete extra de 35 envíos (MXN).
+//   ESTANDAR_PRICE       â€” precio mensual del plan Estándar (MXN).
+//   OPTIMO_PRICE         â€” precio mensual del plan Óptimo (MXN).
+//   EXTRA_PACKAGE_PRICE  â€” costo del paquete extra de 35 envíos (MXN).
 // El monto se guarda en `value` como numeric con 2 decimales para mantener
 // consistencia con el resto del schema financiero.
 export const pricingSettingsTable = pgTable("pricing_settings", {

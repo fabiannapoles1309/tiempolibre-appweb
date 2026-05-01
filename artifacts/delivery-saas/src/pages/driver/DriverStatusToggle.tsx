@@ -1,4 +1,5 @@
-﻿import { useState } from "react";
+﻿import { apiFetch } from "@/lib/api";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
@@ -14,7 +15,7 @@ export default function DriverStatusToggle() {
   const { data, isLoading } = useQuery({
     queryKey: ["driver-status"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/driver/status`, {
+      const r = await apiFetch(`${API}/api/driver/status`, {
         credentials: "include",
       });
       if (!r.ok) throw new Error("Error al obtener estado");
@@ -24,7 +25,7 @@ export default function DriverStatusToggle() {
 
   const mutation = useMutation({
     mutationFn: async (active: boolean) => {
-      const r = await fetch(`${API}/api/driver/status`, {
+      const r = await apiFetch(`${API}/api/driver/status`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -90,3 +91,4 @@ export default function DriverStatusToggle() {
     </Card>
   );
 }
+

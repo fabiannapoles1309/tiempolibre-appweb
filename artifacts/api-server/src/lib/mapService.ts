@@ -7,8 +7,6 @@ import type { Feature, FeatureCollection, Polygon, MultiPolygon, Point } from "g
 import { logger } from "./logger";
 
 type ZonePolygonFeature = Feature<Polygon | MultiPolygon, { name: string; [k: string]: unknown }>;
-
-// Minimal structural type so we don't need lib.dom in tsconfig.
 type DomDocLike = Parameters<typeof kmlToGeoJson>[0];
 
 interface MapServiceState {
@@ -24,6 +22,7 @@ let lastError: string | null = null;
 function findKmlPath(): string | null {
   const candidates = [
     resolve(process.cwd(), "zonas.kml"),
+    resolve(process.cwd(), "dist/zonas.kml"),
     resolve(process.cwd(), "../../zonas.kml"),
     resolve(process.cwd(), "../zonas.kml"),
     resolve(process.cwd(), "attached_assets/zonas.kml"),
@@ -34,10 +33,6 @@ function findKmlPath(): string | null {
   return null;
 }
 
-// Canonicalizamos el nombre de la zona a su número (ej: "ZONA 1" -> "1",
-// "Zona 12" -> "12"). Esto debe coincidir con `customers.zone` (entero
-// almacenado como string) usado en el chequeo server-side de CLIENTE.
-// Si no podemos extraer un dígito caemos al índice 1-based.
 function normalizeName(raw: unknown, idx: number): string {
   if (typeof raw === "string" && raw.trim().length > 0) {
     const m = raw.match(/\d+/);
@@ -51,13 +46,12 @@ export function loadZones(force = false): MapServiceState | null {
   if (state && !force) return state;
   const path = findKmlPath();
   if (!path) {
-    lastError = "zonas.kml no encontrado en la raíz del proyecto";
+    lastError = "zonas.kml no encontrado";
     logger.warn({ msg: lastError });
     return null;
   }
   try {
     const xml = readFileSync(path, "utf8");
-    // @xmldom/xmldom DOMParser is a structural superset of the lib.dom DOMParser used by @tmcw/togeojson
     const doc = new DOMParser().parseFromString(xml, "text/xml") as unknown as DomDocLike;
     const fc = kmlToGeoJson(doc) as FeatureCollection;
     const polys: ZonePolygonFeature[] = [];
@@ -73,7 +67,7 @@ export function loadZones(force = false): MapServiceState | null {
       });
     });
     if (polys.length === 0) {
-      lastError = "No se encontraron polígonos en zonas.kml";
+      lastError = "No se encontraron poligonos en zonas.kml";
       logger.warn({ msg: lastError, path });
       return null;
     }
@@ -120,19 +114,17 @@ export async function geocodeNominatim(direccion: string): Promise<GeocodeResult
   url.searchParams.set("q", q);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "1");
-  // Cobertura actual del KML: zona metropolitana de Guadalajara, México.
   url.searchParams.set("countrycodes", "mx");
   url.searchParams.set("addressdetails", "0");
   try {
     const res = await fetch(url, {
       headers: {
-        // Nominatim usage policy requires a descriptive User-Agent
         "User-Agent": "TiempoLibre/1.0 (logistica@tiempolibre.com.ar)",
         "Accept-Language": "es",
       },
     });
     if (!res.ok) {
-      logger.warn({ status: res.status }, "Nominatim respondió con error");
+      logger.warn({ status: res.status }, "Nominatim respondio con error");
       return null;
     }
     const data = (await res.json()) as Array<{ lat: string; lon: string; display_name: string }>;
@@ -157,10 +149,6 @@ export interface ValidationResult {
   displayName?: string;
 }
 
-/**
- * Validar un punto explícito (lat/lng) contra los polígonos KML.
- * Devuelve la zona que contiene el punto o null si está fuera de cobertura.
- */
 export function validarPunto(lat: number, lng: number): { zone: string | null } {
   const s = loadZones();
   if (!s) return { zone: null };

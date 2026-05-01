@@ -1,4 +1,4 @@
-import type { Order } from "@workspace/db";
+﻿import type { Order } from "@workspace/db";
 
 export function serializeOrder(
   o: Order,
@@ -25,7 +25,7 @@ export function serializeOrder(
     cashChange: o.cashChange != null ? Number(o.cashChange) : null,
     deliveryLat: o.deliveryLat != null ? Number(o.deliveryLat) : null,
     deliveryLng: o.deliveryLng != null ? Number(o.deliveryLng) : null,
-    // Liquidación al recoger (driver→cliente). Undefined si no aplica.
+    // Liquidación al recoger (driverâ†’cliente). Undefined si no aplica.
     pickupSettledAt: o.pickupSettledAt ? o.pickupSettledAt.toISOString() : null,
     pickupSettledAmount:
       o.pickupSettledAmount != null ? Number(o.pickupSettledAmount) : null,

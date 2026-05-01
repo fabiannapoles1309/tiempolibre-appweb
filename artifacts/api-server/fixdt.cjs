@@ -1,0 +1,1 @@
+﻿const fs=require("fs");let c=fs.readFileSync("src/routes/deliveryTimer.ts","utf8");c=c.replace("export default router;","export const deliveryTimerRouter = router;");fs.writeFileSync("src/routes/deliveryTimer.ts",c,"utf8");console.log("OK");

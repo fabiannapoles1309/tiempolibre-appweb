@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useGetDeliveriesReport, useGetDriversReport, GetDeliveriesReportRange, ZoneName } from "@workspace/api-client-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -53,9 +53,9 @@ export default function Reports() {
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">Últimas 24 horas</SelectItem>
-                <SelectItem value="week">Última semana</SelectItem>
-                <SelectItem value="month">Último mes</SelectItem>
+                <SelectItem value="day">ÃƒÅ¡ltimas 24 horas</SelectItem>
+                <SelectItem value="week">ÃƒÅ¡ltima semana</SelectItem>
+                <SelectItem value="month">ÃƒÅ¡ltimo mes</SelectItem>
               </SelectContent>
             </Select>
             
@@ -130,9 +130,9 @@ export default function Reports() {
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">Últimas 24 horas</SelectItem>
-                <SelectItem value="week">Última semana</SelectItem>
-                <SelectItem value="month">Último mes</SelectItem>
+                <SelectItem value="day">ÃƒÅ¡ltimas 24 horas</SelectItem>
+                <SelectItem value="week">ÃƒÅ¡ltima semana</SelectItem>
+                <SelectItem value="month">ÃƒÅ¡ltimo mes</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -1,4 +1,5 @@
-﻿import { Router, type IRouter } from "express";
+﻿import marketingRouter from './marketing';
+import { Router, type IRouter } from "express";
 import healthRouter from "./health";
 import authRouter from "./auth";
 import zonesRouter from "./zones";
@@ -25,7 +26,7 @@ import { driverStatusRouter } from "./driverStatus";
 import { deliveryTimerRouter } from "./deliveryTimer";
 import { refundsRouter } from "./refunds";
 import { messagingRouter } from "./messaging";
-import { reportsRouter } from "./reports";
+import reportsRouter from "./reports";
 import { shippingCostsRouter } from "./shippingCosts";
 
 const router: IRouter = Router();
@@ -57,7 +58,13 @@ router.use("/driver", driverStatusRouter);
 router.use("/orders", deliveryTimerRouter);
 router.use("/admin/refunds", refundsRouter);
 router.use("/admin/messaging", messagingRouter);
-router.use("/admin/reports", reportsRouter);
+router.use("/admin/reports", reportsRouter);router.use("/reports", reportsRouter);
 router.use("/admin/shipping-costs", shippingCostsRouter);
 
+router.use('/marketing', marketingRouter);
 export default router;
+
+
+
+
+

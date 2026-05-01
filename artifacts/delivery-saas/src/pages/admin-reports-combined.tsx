@@ -1,3 +1,4 @@
+import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import {
   Card,
@@ -50,7 +51,7 @@ export default function AdminReportsCombinedPage() {
       params.set("period", period);
       if (from) params.set("from", from);
       if (to) params.set("to", to);
-      const r = await fetch(
+      const r = await apiFetch(
         `/api/admin/reports/combined?${params.toString()}`,
         { credentials: "include" },
       );
@@ -177,3 +178,5 @@ export default function AdminReportsCombinedPage() {
     </div>
   );
 }
+
+

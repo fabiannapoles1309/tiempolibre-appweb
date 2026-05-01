@@ -36,7 +36,7 @@ export const ordersTable = pgTable("orders", {
   cashAmount: numeric("cash_amount", { precision: 12, scale: 2 }),
   cashChange: numeric("cash_change", { precision: 12, scale: 2 }),
   notes: text("notes"),
-  // ───── Liquidación en recolección (pago directo cliente↔repartidor) ─────
+  // â”€â”€â”€â”€â”€ Liquidación en recolección (pago directo clienteâ†”repartidor) â”€â”€â”€â”€â”€
   // Cuando el repartidor llega a la recolección y el CLIENTE le paga el
   // costo del envío en efectivo en ese momento, el repartidor marca el
   // pedido como "liquidado al recoger". Queda PENDIENTE de aceptación por

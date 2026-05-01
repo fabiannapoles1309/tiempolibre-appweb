@@ -1,0 +1,1 @@
+﻿const fs=require("fs");const p="src/routes/reports.ts";let c=fs.readFileSync(p,"utf8");c=c.replace("import { Router } from \"express\";","import { Router } from \"express\";\nimport { desc, eq, sql } from \"drizzle-orm\";\nimport { ordersTable } from \"@workspace/db\";");fs.writeFileSync(p,c,"utf8");console.log("imports OK");

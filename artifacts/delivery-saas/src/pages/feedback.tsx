@@ -1,3 +1,4 @@
+﻿import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -56,7 +57,7 @@ export default function FeedbackPage() {
   const onSubmit = async (data: FormValues) => {
     setSubmitting(true);
     try {
-      const r = await fetch("/api/me/feedback", {
+      const r = await apiFetch("/api/me/feedback", {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -188,3 +189,5 @@ export default function FeedbackPage() {
     </div>
   );
 }
+
+

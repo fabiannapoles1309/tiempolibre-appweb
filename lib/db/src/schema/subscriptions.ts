@@ -2,8 +2,8 @@ import { pgTable, serial, varchar, integer, timestamp, numeric } from "drizzle-o
 
 // Suscripciones B2B del cliente (paquetes mensuales de envíos).
 // Tiers:
-//   ESTANDAR — MXN 15,000/mes, 35 envíos incluidos.
-//   OPTIMO   — MXN 25,000/mes, 70 envíos incluidos.
+//   ESTANDAR â€” MXN 15,000/mes, 35 envíos incluidos.
+//   OPTIMO   â€” MXN 25,000/mes, 70 envíos incluidos.
 export const subscriptionsTable = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),

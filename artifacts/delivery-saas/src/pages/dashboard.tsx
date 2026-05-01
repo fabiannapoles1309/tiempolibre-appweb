@@ -1,4 +1,4 @@
-import { useGetDashboard, useGetMySubscription, getGetMySubscriptionQueryKey, OrderStatus, UserRole } from "@workspace/api-client-react";
+﻿import { useGetDashboard, useGetMySubscription, getGetMySubscriptionQueryKey, OrderStatus, UserRole } from "@workspace/api-client-react";
 import { useAuth, isAdmin } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -285,10 +285,10 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className="space-y-1">
                       <div className="font-medium">
-                        Envío #{order.id} • <span className="text-muted-foreground">{order.customerName}</span>
+                        Envío #{order.id} ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢ <span className="text-muted-foreground">{order.customerName}</span>
                       </div>
                       <div className="text-sm text-muted-foreground line-clamp-1">
-                        De: {order.pickup} → Para: {order.delivery}
+                        De: {order.pickup} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ Para: {order.delivery}
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-sm">

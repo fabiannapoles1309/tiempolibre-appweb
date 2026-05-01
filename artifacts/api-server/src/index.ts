@@ -1,3 +1,4 @@
+﻿import { reportsRouter } from "./routes/reports";
 import app from "./app";
 import { logger } from "./lib/logger";
 

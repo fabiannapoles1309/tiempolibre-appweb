@@ -29,21 +29,19 @@ function publicUser(u: {
   role: string;
   customerCode: string | null;
   createdAt: Date;
+  mustChangePassword?: boolean;
 }) {
   return {
     id: u.id,
     email: u.email,
     name: u.name,
     role: u.role,
-    // Folio público sólo presente para CLIENTE (CLI-NNNNNN). Null para admin/driver.
     customerCode: u.customerCode ?? null,
     createdAt: u.createdAt.toISOString(),
+    mustChangePassword: u.mustChangePassword ?? false,
   };
 }
 
-// Genera el siguiente folio de cliente usando la secuencia dedicada en Postgres.
-// Devuelve un string del tipo "CLI-000042". Atómico: dos requests concurrentes
-// nunca obtienen el mismo número.
 async function nextCustomerCode(): Promise<string> {
   const result = await db.execute<{ code: string }>(
     sql`SELECT 'CLI-' || lpad(nextval('customer_code_seq')::text, 6, '0') AS code`,
@@ -54,7 +52,6 @@ async function nextCustomerCode(): Promise<string> {
   return row.code;
 }
 
-// El alta de usuarios deja de ser pública: solo ADMIN/SUPERUSER puede crear cuentas.
 router.post("/auth/register", requireAuth, requireRole("ADMIN", "SUPERUSER"), async (req, res): Promise<void> => {
   const parsed = RegisterBody.safeParse(req.body);
   if (!parsed.success) {
@@ -68,14 +65,12 @@ router.post("/auth/register", requireAuth, requireRole("ADMIN", "SUPERUSER"), as
     return;
   }
   const requestedRole = (role as Role | undefined) ?? "CLIENTE";
-  // Solo un SUPERUSER puede crear otro SUPERUSER; un ADMIN no puede escalar privilegios.
   if (requestedRole === "SUPERUSER" && req.user?.role !== "SUPERUSER") {
     res.status(403).json({ error: "Solo un SUPERUSER puede crear otro SUPERUSER" });
     return;
   }
   const finalRole: Role = requestedRole;
   const passwordHash = await hashPassword(password);
-  // Sólo los CLIENTE reciben folio CLI-NNNNNN. Admin/driver/superuser quedan en null.
   const customerCode = finalRole === "CLIENTE" ? await nextCustomerCode() : null;
   const [user] = await db
     .insert(usersTable)
@@ -85,6 +80,7 @@ router.post("/auth/register", requireAuth, requireRole("ADMIN", "SUPERUSER"), as
       passwordHash,
       role: finalRole,
       customerCode,
+      mustChangePassword: true,
     })
     .returning();
 
@@ -94,13 +90,9 @@ router.post("/auth/register", requireAuth, requireRole("ADMIN", "SUPERUSER"), as
   }
 
   if (finalRole === "CLIENTE") {
-    await db
-      .insert(walletsTable)
-      .values({ userId: user.id, balance: "0" })
-      .onConflictDoNothing();
+    await db.insert(walletsTable).values({ userId: user.id, balance: "0" }).onConflictDoNothing();
   }
 
-  // No iniciamos sesión como el usuario recién creado: el admin sigue siendo el actor.
   res.status(201).json({ user: publicUser(user) });
 });
 
@@ -124,7 +116,73 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   const role = user.role as Role;
   const token = signToken({ sub: user.id, email: user.email, role });
   res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
-  res.status(200).json({ user: publicUser(user), token });
+  res.status(200).json({
+    user: publicUser(user),
+    token,
+    mustChangePassword: user.mustChangePassword ?? false,
+  });
+});
+
+router.post("/auth/change-password", requireAuth, async (req, res): Promise<void> => {
+  const { currentPassword, newPassword } = req.body;
+  if (!currentPassword || !newPassword) {
+    res.status(400).json({ error: "Se requieren currentPassword y newPassword" });
+    return;
+  }
+  if (newPassword.length < 6) {
+    res.status(400).json({ error: "La nueva contraseña debe tener al menos 6 caracteres" });
+    return;
+  }
+  const [user] = await db.select().from(usersTable).where(eq(usersTable.id, req.user!.sub));
+  if (!user) {
+    res.status(404).json({ error: "Usuario no encontrado" });
+    return;
+  }
+  const ok = await verifyPassword(currentPassword, user.passwordHash);
+  if (!ok) {
+    res.status(401).json({ error: "Contraseña actual incorrecta" });
+    return;
+  }
+  const passwordHash = await hashPassword(newPassword);
+  await db.update(usersTable).set({
+    passwordHash,
+    mustChangePassword: false,
+    passwordChangeEnabled: false,
+  }).where(eq(usersTable.id, req.user!.sub));
+  res.json({ ok: true });
+});
+
+router.post("/admin/users/:id/reset-password", requireAuth, requireRole("ADMIN", "SUPERUSER"), async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+  const { newPassword } = req.body;
+  if (!newPassword || newPassword.length < 6) {
+    res.status(400).json({ error: "La contraseña debe tener al menos 6 caracteres" });
+    return;
+  }
+  const passwordHash = await hashPassword(newPassword);
+  await db.update(usersTable).set({
+    passwordHash,
+    mustChangePassword: true,
+    passwordChangeEnabled: true,
+  }).where(eq(usersTable.id, id));
+  res.json({ ok: true });
+});
+
+router.post("/admin/users/:id/enable-password-change", requireAuth, requireRole("ADMIN", "SUPERUSER"), async (req, res): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) {
+    res.status(400).json({ error: "ID inválido" });
+    return;
+  }
+  await db.update(usersTable).set({
+    passwordChangeEnabled: true,
+    mustChangePassword: true,
+  }).where(eq(usersTable.id, id));
+  res.json({ ok: true });
 });
 
 router.post("/auth/logout", async (_req, res): Promise<void> => {

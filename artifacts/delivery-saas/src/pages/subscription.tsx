@@ -1,4 +1,4 @@
-import {
+﻿import {
   useGetMySubscription,
   useSubscribe,
   useRechargeSubscription,
@@ -31,7 +31,7 @@ const PLAN_TEMPLATES = [
   },
   {
     tier: SubscriptionTier.OPTIMO,
-    name: "Óptimo",
+    name: "Ãƒâ€œptimo",
     perks: [
       "Sin envíos incluidos — comprá paquetes extras de 35 envíos",
       "Soporte prioritario",
@@ -180,7 +180,7 @@ export default function SubscriptionPage() {
               data-testid="alert-low-remaining"
             >
               <AlertTriangle className="w-5 h-5" />
-              ¡Atención! Te quedan{" "}
+              Ãƒâ€šÃ‚¡Atención! Te quedan{" "}
               <span className="font-bold">{sub.remainingDeliveries}</span> envíos. Solicita un
               paquete extra para no quedarte sin servicio.
             </div>

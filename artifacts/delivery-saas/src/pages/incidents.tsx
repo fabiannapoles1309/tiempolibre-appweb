@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   useListIncidents,
   useCreateIncident,
@@ -131,7 +131,7 @@ export default function IncidentsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">
-                    N° de envío (opcional)
+                    NÃƒâ€šÃ‚Â° de envío (opcional)
                   </label>
                   <Input
                     type="number"
@@ -204,7 +204,7 @@ export default function IncidentsPage() {
                     </div>
                     <p className="text-sm">{inc.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {admin ? `${inc.driverName} · ` : ""}
+                      {admin ? `${inc.driverName} Ãƒâ€šÃ‚Â· ` : ""}
                       {new Date(inc.createdAt).toLocaleString("es-MX")}
                     </p>
                   </div>

@@ -1,5 +1,5 @@
 ﻿import { Router } from "express";
-import { db } from "../db";
+import { db } from "@workspace/db";
 
 export const shippingCostsRouter = Router();
 

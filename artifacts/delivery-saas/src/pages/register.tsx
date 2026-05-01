@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,7 +43,7 @@ export default function Register() {
       const res = await registerMutation.mutateAsync({ data });
       setUser(res.user);
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-      toast.success("¡Cuenta creada exitosamente!");
+      toast.success("Ãƒâ€šÃ‚¡Cuenta creada exitosamente!");
       setLocation("/");
     } catch (error: any) {
       toast.error(error.data?.error || "Error al crear cuenta");

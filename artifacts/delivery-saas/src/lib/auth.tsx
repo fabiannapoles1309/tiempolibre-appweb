@@ -1,11 +1,8 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+﻿import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, UserRole, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 
-/**
- * Devuelve true si el usuario tiene capacidades de administrador.
- * SUPERUSER hereda todos los permisos de ADMIN.
- */
 export function isAdmin(user: { role: string } | null | undefined): boolean {
   if (!user) return false;
   return user.role === UserRole.ADMIN || user.role === UserRole.SUPERUSER;
@@ -24,16 +21,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(() => {
     const saved = localStorage.getItem("tiempolibre_user");
     if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        return null;
-      }
+      try { return JSON.parse(saved); } catch { return null; }
     }
     return null;
   });
-
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   const { data: meData, isLoading } = useGetMe({
     query: {
@@ -46,6 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (meData?.user) {
       setUserState(meData.user);
       localStorage.setItem("tiempolibre_user", JSON.stringify(meData.user));
+      if ((meData.user as any).mustChangePassword) {
+        navigate("/change-password");
+      }
     } else if (meData && !meData.user) {
       setUserState(null);
       localStorage.removeItem("tiempolibre_user");
@@ -56,6 +52,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUserState(newUser);
     if (newUser) {
       localStorage.setItem("tiempolibre_user", JSON.stringify(newUser));
+      if ((newUser as any).mustChangePassword) {
+        navigate("/change-password");
+      }
     } else {
       localStorage.removeItem("tiempolibre_user");
     }

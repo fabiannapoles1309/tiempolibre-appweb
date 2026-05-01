@@ -1,17 +1,17 @@
-import { db, usersTable, zonesTable, driversTable, ordersTable, walletsTable, transactionsTable, pricingSettingsTable, PRICING_KEYS, PRICING_DEFAULTS } from "@workspace/db";
+﻿import { db, usersTable, zonesTable, driversTable, ordersTable, walletsTable, transactionsTable, pricingSettingsTable, PRICING_KEYS, PRICING_DEFAULTS } from "@workspace/db";
 import { hashPassword } from "./lib/auth";
 import { eq } from "drizzle-orm";
 
 async function main() {
   console.log("Seeding base data...");
 
-  // Zones — numeric 1-8
+  // Zones â€” numeric 1-8
   const zoneNames = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
   for (const name of zoneNames) {
     await db.insert(zonesTable).values({ name }).onConflictDoNothing();
   }
 
-  // Pricing settings — defaults editables desde /admin/pricing-settings
+  // Pricing settings â€” defaults editables desde /admin/pricing-settings
   const pricingSeeds: Array<[string, number]> = [
     [PRICING_KEYS.ESTANDAR_PRICE, PRICING_DEFAULTS.ESTANDAR_PRICE],
     [PRICING_KEYS.OPTIMO_PRICE, PRICING_DEFAULTS.OPTIMO_PRICE],
@@ -52,7 +52,7 @@ async function main() {
   const [cliente] = await db.select().from(usersTable).where(eq(usersTable.email, "cliente@tiempolibre.com"));
   const [driverUser] = await db.select().from(usersTable).where(eq(usersTable.email, "driver@tiempolibre.com"));
 
-  // Drivers — Carlos linked to driver user; zones use numeric strings
+  // Drivers â€” Carlos linked to driver user; zones use numeric strings
   const driverSeeds: Array<{ name: string; phone: string; vehicle: string; zones: string[]; userId: number | null }> = [
     { name: "Carlos Gómez", phone: "+54 11 5555-1010", vehicle: "Moto Honda 150", zones: ["1", "3"], userId: driverUser?.id ?? null },
     { name: "Lucía Fernández", phone: "+54 11 5555-2020", vehicle: "Moto Yamaha", zones: ["2", "4"], userId: null },
@@ -89,7 +89,7 @@ async function main() {
         { pickup: "Av. Reforma 100, CDMX", delivery: "Polanco 50, CDMX", zone: "1", payment: "TARJETA", amount: "4500", status: "ENTREGADO", driverId: drivers[0]?.id ?? null, daysAgo: 1 },
         { pickup: "Av. Insurgentes 800, CDMX", delivery: "Roma Norte 300, CDMX", zone: "2", payment: "TARJETA", amount: "3700", status: "ENTREGADO", driverId: drivers[1]?.id ?? null, daysAgo: 2 },
         { pickup: "Centro 100, CDMX", delivery: "Condesa 200, CDMX", zone: "3", payment: "CORTESIA", amount: "0", status: "ENTREGADO", driverId: drivers[2]?.id ?? null, daysAgo: 1 },
-        { pickup: "Coyoacán 50, CDMX", delivery: "San Ángel 150, CDMX", zone: "4", payment: "CORTESIA", amount: "0", status: "ENTREGADO", driverId: drivers[0]?.id ?? null, daysAgo: 3 },
+        { pickup: "Coyoacán 50, CDMX", delivery: "San Ãngel 150, CDMX", zone: "4", payment: "CORTESIA", amount: "0", status: "ENTREGADO", driverId: drivers[0]?.id ?? null, daysAgo: 3 },
       ];
       for (const s of samples) {
         const created = new Date();

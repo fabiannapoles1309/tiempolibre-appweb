@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useListOrders, useListDrivers, useAssignOrdersAuto, useAssignOrderManual, getListOrdersQueryKey, OrderStatus, ZoneName, type Order, type Driver } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,7 +65,7 @@ function PendingOrderRow({ order, zoneDrivers, onAssign }: PendingOrderRowProps)
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             {order.amount.toFixed(2)}
           </span>
-          <span className="text-muted-foreground">•</span>
+          <span className="text-muted-foreground">ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢</span>
           <span className="text-muted-foreground">Pago: {order.payment}</span>
         </div>
       </div>

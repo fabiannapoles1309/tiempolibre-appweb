@@ -1,3 +1,4 @@
+﻿import { apiFetch } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl, { type Map as MapLibreMap, type LngLatBoundsLike } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -20,10 +21,6 @@ const ZONE_COLORS = [
   "#0F9D58", "#01579B", "#795548", "#FF7043", "#5E35B1",
 ];
 
-function apiUrl(path: string): string {
-  const base = import.meta.env.VITE_API_URL ?? "";
-  return `${base}/${path}`;
-}
 
 function bboxFromGeoJson(geo: Geo): LngLatBoundsLike | null {
   let minLng = Infinity, minLat = Infinity, maxLng = -Infinity, maxLat = -Infinity;
@@ -57,7 +54,7 @@ export default function MapPage() {
     setError(null);
     try {
       const token = localStorage.getItem("tiempolibre_token");
-      const res = await fetch(apiUrl("api/zones/geojson"), {
+      const res = await apiFetch("/api/zones/geojson", {
         credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -160,12 +157,10 @@ export default function MapPage() {
             osm: {
               type: "raster",
               tiles: [
-                "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png","https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png","https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
               ],
               tileSize: 256,
-              attribution: "© OpenStreetMap contributors",
+              attribution: "© CartoDB © OpenStreetMap contributors",
               maxzoom: 19,
             },
           },
@@ -305,3 +300,8 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
+
+

@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { and, eq, gte, lte, inArray, asc, desc, sql, or, isNull, isNotNull } from "drizzle-orm";
 import {
   db,
@@ -295,7 +295,7 @@ router.post(
       }
 
       // Si el cliente tiene varias suscripciones ACTIVA (p.ej. una recarga que
-      // generó un nuevo periodo), tomamos la más reciente — el mismo criterio
+      // generó un nuevo periodo), tomamos la más reciente â€” el mismo criterio
       // que usa GET /me/subscription para mostrarle el contador en pantalla.
       const [candidateSub] = await db
         .select()
@@ -548,7 +548,7 @@ router.patch(
     if (parsed.data.status != null) {
       updates.status = parsed.data.status;
       if (parsed.data.status === "ASIGNADO" && parsed.data.driverId == null) {
-        // status alone — keep driver as is
+        // status alone â€” keep driver as is
       }
     }
     if (parsed.data.driverId !== undefined) {
@@ -871,7 +871,7 @@ router.post(
     // UPDATE condicional atómico: sólo confirma si el pedido sigue
     // siendo del cliente autenticado, hay propuesta vigente, y NO está ya
     // confirmada NI disputada. Esto cierra la race entre confirm/dispute
-    // concurrentes — sólo el primer UPDATE matchea.
+    // concurrentes â€” sólo el primer UPDATE matchea.
     const [updated] = await db
       .update(ordersTable)
       .set({
@@ -927,7 +927,7 @@ router.post(
       if (drv?.userId) {
         await notifyUsers([drv.userId], {
           type: "PICKUP_SETTLEMENT_CONFIRMED",
-          title: `Liquidación confirmada — Pedido #${updated.id}`,
+          title: `Liquidación confirmada â€” Pedido #${updated.id}`,
           body: `El cliente confirmó el pago en efectivo por $${Number(updated.pickupSettledAmount ?? 0).toFixed(2)}.`,
           link: `/orders/${updated.id}`,
         });
@@ -1030,7 +1030,7 @@ router.post(
         adminUsers.map((u) => u.id),
         {
           type: "PICKUP_SETTLEMENT_DISPUTED",
-          title: `Disputa de liquidación — Pedido #${updated!.id}`,
+          title: `Disputa de liquidación â€” Pedido #${updated!.id}`,
           body: reason
             ? `El cliente disputa la liquidación. Motivo: ${reason}`
             : "El cliente disputa la liquidación marcada por el repartidor.",

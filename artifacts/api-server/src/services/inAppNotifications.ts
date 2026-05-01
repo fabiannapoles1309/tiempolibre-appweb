@@ -1,11 +1,11 @@
-/**
+﻿/**
  * In-app notifications: persistencia simple en `notifications` para que la
  * campana del layout muestre el badge sin depender de SendGrid/SMTP.
  *
  * Diseño:
  * - `notifyUsers` recibe lista de `userId`s e inserta una fila por cada uno.
  * - Es siempre best-effort: si la inserción falla, lo logueamos y seguimos
- *   (no rompemos el flujo principal — p.ej. crear una solicitud de paquete
+ *   (no rompemos el flujo principal â€” p.ej. crear una solicitud de paquete
  *   no debe abortarse porque la notificación falle).
  * - `notifyByRole` resuelve por rol (ADMIN/SUPERUSER) y delega.
  */

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -380,7 +380,7 @@ export default function AdminClientesPage() {
                             Estándar (35)
                           </SelectItem>
                           <SelectItem value={SubscriptionTier.OPTIMO}>
-                            Óptimo (70)
+                            Ãƒâ€œptimo (70)
                           </SelectItem>
                         </SelectContent>
                       </Select>

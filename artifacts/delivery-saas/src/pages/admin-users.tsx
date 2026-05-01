@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -360,7 +360,7 @@ export default function AdminUsersPage() {
                                 Estándar
                               </SelectItem>
                               <SelectItem value={SubscriptionTier.OPTIMO}>
-                                Óptimo
+                                Ãƒâ€œptimo
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -437,7 +437,7 @@ export default function AdminUsersPage() {
                         <FormItem>
                           <FormLabel>Tarjeta de Circulación</FormLabel>
                           <FormControl>
-                            <Input placeholder="N°" {...field} />
+                            <Input placeholder="NÃƒâ€šÃ‚Â°" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>

@@ -1,3 +1,4 @@
+﻿import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -51,7 +52,7 @@ export default function AdminPackageRequestsPage() {
   const { data: pending = [], isLoading: lp } = useQuery<Req[]>({
     queryKey: ["admin-package-requests", "PENDIENTE"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/package-requests?status=PENDIENTE`, {
+      const r = await apiFetch(`${API}/api/admin/package-requests?status=PENDIENTE`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -62,7 +63,7 @@ export default function AdminPackageRequestsPage() {
   const { data: history = [], isLoading: lh } = useQuery<Req[]>({
     queryKey: ["admin-package-requests", "ALL"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/package-requests`, { credentials: "include" });
+      const r = await apiFetch(`${API}/api/admin/package-requests`, { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },
@@ -73,7 +74,7 @@ export default function AdminPackageRequestsPage() {
   const act = async (id: number, action: "approve" | "reject") => {
     setBusyId(id);
     try {
-      const r = await fetch(`${API}/api/admin/package-requests/${id}/${action}`, {
+      const r = await apiFetch(`${API}/api/admin/package-requests/${id}/${action}`, {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -115,7 +116,7 @@ export default function AdminPackageRequestsPage() {
             <Clock className="w-5 h-5 text-amber-500" /> Pendientes
           </CardTitle>
           <CardDescription>
-            Aprobar recarga +35 envíos al último plan ACTIVA/VENCIDA del
+            Aprobar recarga +35 envíos al óltimo plan ACTIVA/VENCIDA del
             cliente. Rechazar simplemente cierra la solicitud sin recargar.
           </CardDescription>
         </CardHeader>
@@ -202,7 +203,7 @@ export default function AdminPackageRequestsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Historial</CardTitle>
-          <CardDescription>Últimas 500 solicitudes en cualquier estado.</CardDescription>
+          <CardDescription>Ãƒâ€œÃ…¡ltimas 500 solicitudes en cualquier estado.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="border rounded-md overflow-x-auto">
@@ -230,7 +231,7 @@ export default function AdminPackageRequestsPage() {
                 ) : history.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                      Aún no hay solicitudes registradas.
+                      Aón no hay solicitudes registradas.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -278,3 +279,4 @@ export default function AdminPackageRequestsPage() {
     </div>
   );
 }
+

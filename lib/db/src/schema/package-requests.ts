@@ -16,7 +16,7 @@ import { customersTable } from "./customers";
  * "Mi billetera". Quedan en estado PENDIENTE hasta que un ADMIN o SUPERUSER
  * las aprueba (lo que dispara la recarga real) o las rechaza.
  *
- * Sólo puede haber una solicitud en estado PENDIENTE por cliente a la vez —
+ * Sólo puede haber una solicitud en estado PENDIENTE por cliente a la vez â€”
  * lo enforzamos con un índice único parcial para que el chequeo sea atómico
  * incluso bajo concurrencia.
  */

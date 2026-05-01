@@ -18,11 +18,11 @@ import { usersTable } from "./users";
  * layout muestra el badge con el conteo de no leídas.
  *
  * - `type`: identifica el evento (PACKAGE_REQUEST_NEW, FEEDBACK_NEW,
- *   PICKUP_SETTLEMENT_PROPOSED, PICKUP_SETTLEMENT_CONFIRMED, etc.) — la UI
+ *   PICKUP_SETTLEMENT_PROPOSED, PICKUP_SETTLEMENT_CONFIRMED, etc.) â€” la UI
  *   lo usa para elegir el ícono.
  * - `link`: ruta interna a la que navegamos al hacer clic (p.ej.
  *   `/admin/solicitudes-paquetes` o `/orders/123`).
- * - `is_read`: una vez leída, la fila queda en historial — no se borra.
+ * - `is_read`: una vez leída, la fila queda en historial â€” no se borra.
  */
 export const notificationsTable = pgTable(
   "notifications",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useListDrivers, useCreateDriver, useUpdateDriver, useDeleteDriver, useSettleDriverCash, getListDriversQueryKey, ZoneName } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -270,7 +270,7 @@ export default function Drivers() {
                       <FormItem>
                         <FormLabel>Tarjeta de Circulación</FormLabel>
                         <FormControl>
-                          <Input placeholder="N° de tarjeta" {...field} />
+                          <Input placeholder="NÃƒâ€šÃ‚Â° de tarjeta" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetBenefitsTracking,
@@ -298,7 +298,7 @@ export default function AdminBenefitsTrackingPage() {
                         {row.currentLevel > 0 ? (
                           <Badge className="bg-[#00B5E2]/15 text-[#0096BD] border-0">
                             Nivel {row.currentLevel}
-                            {row.currentLevelName ? ` · ${row.currentLevelName}` : ""}
+                            {row.currentLevelName ? ` Ãƒâ€šÃ‚Â· ${row.currentLevelName}` : ""}
                           </Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">
@@ -316,7 +316,7 @@ export default function AdminBenefitsTrackingPage() {
                                 {" "}
                                 <strong>
                                   Nivel {row.nextLevel}
-                                  {row.nextLevelName ? ` · ${row.nextLevelName}` : ""}
+                                  {row.nextLevelName ? ` Ãƒâ€šÃ‚Â· ${row.nextLevelName}` : ""}
                                 </strong>
                               </>
                             ) : (

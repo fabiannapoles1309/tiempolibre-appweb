@@ -1,3 +1,4 @@
+﻿import { apiFetch } from "@/lib/api";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -41,7 +42,7 @@ export default function AdminFeedbackPage() {
   const { data = [], isLoading } = useQuery<AdminFeedbackRow[]>({
     queryKey: ["admin-feedback"],
     queryFn: async () => {
-      const r = await fetch("/api/admin/feedback", { credentials: "include" });
+      const r = await apiFetch("/api/admin/feedback", { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },
@@ -191,7 +192,7 @@ export default function AdminFeedbackPage() {
                       <TableCell>
                         <div className="font-medium">{f.userName}</div>
                         <div className="text-xs text-muted-foreground">
-                          {f.userEmail} · {f.userRole}
+                          {f.userEmail} Â· {f.userRole}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -221,3 +222,5 @@ export default function AdminFeedbackPage() {
     </div>
   );
 }
+
+

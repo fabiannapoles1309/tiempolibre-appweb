@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import {
   useGetPricingSettings,
   useUpdatePricingSettings,
@@ -16,9 +16,9 @@ import { Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
-  estandarPrice: z.coerce.number().min(0, "Debe ser ≥ 0"),
-  optimoPrice: z.coerce.number().min(0, "Debe ser ≥ 0"),
-  extraPackagePrice: z.coerce.number().min(0, "Debe ser ≥ 0"),
+  estandarPrice: z.coerce.number().min(0, "Debe ser ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¥ 0"),
+  optimoPrice: z.coerce.number().min(0, "Debe ser ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¥ 0"),
+  extraPackagePrice: z.coerce.number().min(0, "Debe ser ÃƒÂ¢Ã¢â‚¬Â°Ã‚Â¥ 0"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -77,7 +77,7 @@ export default function AdminPricingSettingsPage() {
         <CardContent>
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Cargando precios actuales…
+              <Loader2 className="w-4 h-4 animate-spin" /> Cargando precios actualesÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦
             </div>
           ) : (
             <Form {...form}>
@@ -112,7 +112,7 @@ export default function AdminPricingSettingsPage() {
                   name="optimoPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan Óptimo — precio mensual (MXN)</FormLabel>
+                      <FormLabel>Plan Ãƒâ€œptimo — precio mensual (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>

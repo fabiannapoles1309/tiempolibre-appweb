@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { and, eq, gte, lte, desc } from "drizzle-orm";
 import ExcelJS from "exceljs";
 import {
@@ -106,8 +106,8 @@ router.get(
         ws.addRow({
           fecha: r.createdAt.toISOString().slice(0, 19).replace("T", " "),
           id: r.id,
-          cliente: r.customerName ?? "—",
-          zona: r.zone ?? "—",
+          cliente: r.customerName ?? "â€”",
+          zona: r.zone ?? "â€”",
           payment: r.payment,
           amount: Number(r.amount),
           delivery: r.delivery,
@@ -158,7 +158,7 @@ router.get(
         ws.addRow({
           fecha: r.createdAt.toISOString().slice(0, 19).replace("T", " "),
           id: r.id,
-          cliente: r.userName ?? "—",
+          cliente: r.userName ?? "â€”",
           tier: r.tier,
           monthly: r.monthlyDeliveries,
           price: Number(r.monthlyPrice),
@@ -200,7 +200,7 @@ router.get(
       let income = 0;
       let expense = 0;
 
-      // Desglose por método (hoja 2) — incluye los 5 métodos vigentes
+      // Desglose por método (hoja 2) â€” incluye los 5 métodos vigentes
       // (EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA, CORTESIA) aunque no
       // tengan transacciones, para que el contador siempre vea las columnas.
       const ALL_METHODS = [
@@ -250,7 +250,7 @@ router.get(
       front.addRow({});
       front.addRow({ concept: "Generado", amount: new Date().toISOString() });
 
-      // Hoja 2: Desglose por método de pago — pedido explícito por contabilidad
+      // Hoja 2: Desglose por método de pago â€” pedido explícito por contabilidad
       const breakdown = wb.addWorksheet("Por método de pago");
       breakdown.columns = [
         { header: "Método", key: "method", width: 18 },

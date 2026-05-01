@@ -1,4 +1,4 @@
-import { Router, type IRouter } from "express";
+﻿import { Router, type IRouter } from "express";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import {
@@ -23,7 +23,7 @@ const RECHARGE_BLOCK = 35;
 
 /**
  * Solicita un nuevo paquete de entregas (+35). Genera una solicitud
- * PENDIENTE y notifica a ADMIN/SUPERUSER por correo (best-effort —
+ * PENDIENTE y notifica a ADMIN/SUPERUSER por correo (best-effort â€”
  * registrado en log si no hay servicio SMTP configurado).
  */
 router.post(
@@ -115,7 +115,7 @@ router.post(
       console.error("notifyAdminsPackageRequest failed", err);
     }
 
-    // Notificación in-app a admins/superusers — esto sí funciona aunque
+    // Notificación in-app a admins/superusers â€” esto sí funciona aunque
     // no haya proveedor de email configurado, así que es la principal vía
     // de aviso para que el admin actúe sobre la solicitud.
     await notifyByRole(["ADMIN", "SUPERUSER"], {
@@ -525,7 +525,7 @@ router.post(
     }
     const notes = (req.body?.notes as string | undefined) ?? null;
     // Transición condicional: sólo se rechaza si la solicitud todavía está
-    // PENDIENTE — evita pisar una APROBADA concurrente.
+    // PENDIENTE â€” evita pisar una APROBADA concurrente.
     const claimed = await db
       .update(packageRequestsTable)
       .set({

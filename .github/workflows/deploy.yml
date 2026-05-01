@@ -1,4 +1,4 @@
-﻿name: Deploy a Google Cloud Run
+name: Deploy a Google Cloud Run
 
 on:
   push:
@@ -8,19 +8,25 @@ on:
 env:
   PROJECT_ID: tiempo-libre-app-494607
   REGION: us-central1
-  FRONTEND_SERVICE: tiempolibre-frontend
+  FRONTEND_SERVICE: tiempolibre-web
   API_SERVICE: tiempolibre-api
+  WORKLOAD_IDENTITY_PROVIDER: projects/612959916526/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  SERVICE_ACCOUNT: github-deploy@tiempo-libre-app-494607.iam.gserviceaccount.com
 
 jobs:
   deploy-frontend:
     name: Deploy Frontend
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@v2
 
@@ -48,12 +54,16 @@ jobs:
   deploy-api:
     name: Deploy API
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: google-github-actions/auth@v2
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ env.SERVICE_ACCOUNT }}
 
       - uses: google-github-actions/setup-gcloud@v2
 
@@ -76,4 +86,4 @@ jobs:
             --platform managed \
             --allow-unauthenticated \
             --port 8080 \
-            --set-env-vars="NODE_ENV=production,ADMIN_EMAIL=admin@tiempolibre.com,SUPERADMIN_EMAIL=fabian.napoles1309@gmail.com,SMTP_USER=${{ secrets.SMTP_USER }},SMTP_PASS=${{ secrets.SMTP_PASS }}"
+            --set-env-vars="NODE_ENV=production,ADMIN_EMAIL=admin@tiempolibre.com,SUPERADMIN_EMAIL=fabian.napoles1309@gmail.com"

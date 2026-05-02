@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import { useLocation } from "wouter";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -42,7 +42,7 @@ export function NotificationBell() {
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const r = await apiFetch(`${API}/api/me/notifications?limit=20`, {
+      const r = await apiFetch("/api/me/notifications?limit=20", {
         credentials: "include",
         headers: authHeaders(),
       });
@@ -56,7 +56,7 @@ export function NotificationBell() {
 
   const markRead = useMutation({
     mutationFn: async (id: number) => {
-      await apiFetch(`${API}/api/me/notifications/${id}/read`, {
+      await apiFetch(`/api/me/notifications/${id}/read`, {
         method: "PATCH",
         credentials: "include",
         headers: authHeaders(),
@@ -67,7 +67,7 @@ export function NotificationBell() {
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      await apiFetch(`${API}/api/me/notifications/read-all`, {
+      await apiFetch("/api/me/notifications/read-all", {
         method: "POST",
         credentials: "include",
         headers: authHeaders(),

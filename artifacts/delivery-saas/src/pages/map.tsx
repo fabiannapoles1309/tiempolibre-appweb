@@ -1,4 +1,4 @@
-ï»¿import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import maplibregl, { type Map as MapLibreMap, type LngLatBoundsLike } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -58,7 +58,7 @@ export default function MapPage() {
     setError(null);
     try {
       const token = localStorage.getItem("tiempolibre_token");
-      const res = await apiFetch(apiUrl("api/zones/geojson"), {
+      const res = await apiFetch("/api/zones/geojson", {
         credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
@@ -166,7 +166,7 @@ export default function MapPage() {
                 "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
               ],
               tileSize: 256,
-              attribution: "Â© OpenStreetMap contributors",
+              attribution: "© OpenStreetMap contributors",
               maxzoom: 19,
             },
           },
@@ -234,8 +234,8 @@ export default function MapPage() {
             Mapa de zonas
           </h1>
           <p className="text-muted-foreground mt-1">
-            PolÃ­gonos de cobertura cargados desde <code>zonas.kml</code>. Cada nuevo envÃ­o valida automÃ¡ticamente que la
-            direcciÃ³n de entrega caiga dentro de una de estas zonas.
+            Polígonos de cobertura cargados desde <code>zonas.kml</code>. Cada nuevo envío valida automáticamente que la
+            dirección de entrega caiga dentro de una de estas zonas.
           </p>
         </div>
         <Button variant="outline" onClick={fetchZones} disabled={loading}>
@@ -269,7 +269,7 @@ export default function MapPage() {
                       <p className="font-medium">Mapa no disponible</p>
                       <p className="text-sm text-muted-foreground mt-2">{mapError}</p>
                       <p className="text-xs text-muted-foreground mt-3">
-                        Las zonas siguen funcionando para validar envÃ­os. Listado completo a la derecha.
+                        Las zonas siguen funcionando para validar envíos. Listado completo a la derecha.
                       </p>
                     </div>
                   </div>
@@ -285,7 +285,7 @@ export default function MapPage() {
           </CardHeader>
           <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
             {zones.length === 0 && !loading && (
-              <p className="text-sm text-muted-foreground">Sin polÃ­gonos. Sube <code>zonas.kml</code> a la raÃ­z.</p>
+              <p className="text-sm text-muted-foreground">Sin polígonos. Sube <code>zonas.kml</code> a la raíz.</p>
             )}
             {zones.map((z) => (
               <div key={z.name} className="flex items-start gap-3 p-2 rounded-md hover:bg-muted/50">

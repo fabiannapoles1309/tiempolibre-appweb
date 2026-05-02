@@ -1,15 +1,20 @@
 ﻿FROM node:22-alpine AS builder
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
+WORKDIR /workspace
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json tsconfig.json ./
+COPY lib/ ./lib/
+COPY artifacts/delivery-saas/ ./artifacts/delivery-saas/
+RUN pnpm install --frozen-lockfile=false
+RUN pnpm --filter "@workspace/api-zod" build || true
+RUN pnpm --filter "@workspace/api-client-react" build || true
+WORKDIR /workspace/artifacts/delivery-saas
+ENV VITE_API_URL=https://tiempolibre-api-612959916526.us-central1.run.app
+ENV NODE_ENV=production
+RUN npx vite build --config vite.config.ts
+FROM node:22-alpine
+RUN npm install -g serve
 WORKDIR /app
-COPY . .
-RUN pnpm install
-RUN pnpm add -w @rollup/rollup-linux-x64-musl lightningcss-linux-x64-musl @tailwindcss/oxide-linux-x64-musl 2>/dev/null || true
-ENV PORT=8080
-ENV BASE_PATH=/
-RUN pnpm --filter @workspace/delivery-saas build
-
-FROM nginx:alpine
-COPY --from=builder /app/artifacts/delivery-saas/dist/public /usr/share/nginx/html
-RUN echo 'server { listen 8080; location / { root /usr/share/nginx/html; try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf
+COPY --from=builder /workspace/artifacts/delivery-saas/dist/public ./public
+COPY --from=builder /workspace/artifacts/delivery-saas/serve.json ./serve.json
 EXPOSE 8080
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["serve", "public", "-l", "8080", "--single"]

@@ -1,6 +1,6 @@
 ﻿import { useState } from "react";
 import { useGetWallet, useListWalletTransactions, useTopUpWallet, useGetMySubscription, getGetMySubscriptionQueryKey, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
-import { useAuth } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -60,7 +60,7 @@ function BlockOf35({ remaining, monthly }: { remaining: number; monthly: number 
 
 const topUpSchema = z.object({
   amount: z.coerce.number().min(100, "El monto minimo es de $100"),
-  method: z.nativeEnum(PaymentMethod).refine(m => m !== 'BILLETERA', "Metodo invÃ¡lido para recarga"),
+  method: z.nativeEnum(PaymentMethod).refine(m => m !== 'BILLETERA', "Metodo invalido para recarga"),
 });
 
 const formatMoney = (val: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
@@ -82,7 +82,7 @@ export default function WalletPage() {
   // Usamos la queryKey canonica (la que genera orval) para que cuando el
   // cliente crea un envio en /orders/new y se invalida ese key, esta tarjeta
   // ("Envios del periodo") refresque los contadores Solicitados/Restantes
-  // automÃ¡ticamente sin necesidad de recargar la pagina.
+  // automaticamente sin necesidad de recargar la pagina.
   const { data: subData, isLoading: loadingSub } = useGetMySubscription({
     query: {
       enabled: isCliente,
@@ -106,7 +106,7 @@ export default function WalletPage() {
     enabled: isCliente,
     queryKey: ["my-package-request-active"],
     queryFn: async () => {
-      const r = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/me/package-requests/active`, { credentials: "include" });
+      const r = await apiFetch(`${import.meta.env.VITE_API_URL ?? ""}/api/me/package-requests/active`, { credentials: "include" });
       if (!r.ok) return { pending: null };
       return r.json();
     },
@@ -117,7 +117,7 @@ export default function WalletPage() {
   const handleRequestPackage = async () => {
     setRequesting(true);
     try {
-      const r = await fetch(`${import.meta.env.VITE_API_URL ?? ""}/api/me/package-requests`, {
+      const r = await apiFetch(`${import.meta.env.VITE_API_URL ?? ""}/api/me/package-requests`, {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -260,7 +260,7 @@ export default function WalletPage() {
                 Solicitar nuevo paquete de entregas
               </CardTitle>
               <CardDescription>
-                ``Te quedaste sin Envios disponibles? EnvÃ­a una solicitud y tu
+                Te quedaste sin Envios disponibles? Envia una solicitud y tu
                 administrador la revisara para recargar tu paquete mensual.
               </CardDescription>
             </CardHeader>
@@ -283,7 +283,7 @@ export default function WalletPage() {
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  Al enviar la solicitud, notificaremos automÃ¡ticamente al
+                  Al enviar la solicitud, notificaremos automaticamente al
                   administrador y al equipo de soporte.
                 </p>
               )}

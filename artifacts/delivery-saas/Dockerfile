@@ -4,4 +4,4 @@ WORKDIR /app
 COPY dist/public/ ./public/
 COPY serve.json ./serve.json
 EXPOSE 8080
-CMD ["serve", "public", "-l", "8080", "--config", "serve.json"]
+CMD ["sh", "-c", "serve public --listen tcp://0.0.0.0:${PORT:-8080} --config serve.json"]

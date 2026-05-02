@@ -28,6 +28,14 @@ interface NotificationsResponse {
 
 const API = import.meta.env.VITE_API_URL ?? "";
 
+function authHeaders(): HeadersInit {
+  const token = document.cookie
+    .split("; ")
+    .find((r) => r.startsWith("rapidoo_session="))
+    ?.split("=")[1];
+  return token ? { Authorization: "Bearer " + token } : {};
+}
+
 export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
@@ -36,7 +44,7 @@ export function NotificationBell() {
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/me/notifications?limit=20`, { credentials: "include" });
+      const r = await fetch(`${API}/api/me/notifications?limit=20`, { credentials: "include", headers: authHeaders() });
       if (!r.ok) throw new Error("notifications fetch failed");
       return r.json();
     },

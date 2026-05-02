@@ -1,4 +1,4 @@
-﻿import {
+import {
   useGetMyDriver,
   useGetMyDriverBenefits,
 } from "@workspace/api-client-react";
@@ -96,7 +96,7 @@ export default function DriverBenefits() {
                     <p className="text-lg font-semibold flex items-center gap-2">
                       <Trophy className="w-5 h-5 text-[#00B5E2]" />
                       Nivel {data.currentLevel}
-                      {data.currentLevelName ? ` Ãƒâ€šÃ‚Â· ${data.currentLevelName}` : ""}
+                      {data.currentLevelName ? ` · ${data.currentLevelName}` : ""}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -111,7 +111,7 @@ export default function DriverBenefits() {
                   {data.nextLevel != null ? (
                     <p className="text-lg font-semibold">
                       Nivel {data.nextLevel}
-                      {data.nextLevelName ? ` Ãƒâ€šÃ‚Â· ${data.nextLevelName}` : ""}
+                      {data.nextLevelName ? ` · ${data.nextLevelName}` : ""}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -137,16 +137,16 @@ export default function DriverBenefits() {
                       para desbloquear{" "}
                       <strong>
                         Nivel {data.nextLevel}
-                        {data.nextLevelName ? ` Ãƒâ€šÃ‚Â· ${data.nextLevelName}` : ""}
+                        {data.nextLevelName ? ` · ${data.nextLevelName}` : ""}
                       </strong>
                     </>
                   ) : data.nextLevel == null ? (
                     <span className="text-[#00B5E2]">
-                      Ãƒâ€šÃ‚¡Felicidades! Has desbloqueado todos los niveles del mes.
+                      ¡Felicidades! Has desbloqueado todos los niveles del mes.
                     </span>
                   ) : (
                     <span className="text-[#00B5E2]">
-                      Ãƒâ€šÃ‚¡Listo! Acabas de alcanzar este nivel.
+                      ¡Listo! Acabas de alcanzar este nivel.
                     </span>
                   )}
                 </p>
@@ -166,7 +166,7 @@ export default function DriverBenefits() {
         <CardContent>
           {!data || data.benefits.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Aún no tienes beneficios desbloqueados este mes. Ãƒâ€šÃ‚¡Sigue entregando!
+              Aún no tienes beneficios desbloqueados este mes. ¡Sigue entregando!
             </p>
           ) : (
             <div className="grid md:grid-cols-2 gap-3">

@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -233,7 +233,7 @@ export function CustomerPickupSettleActions({
         method: "POST",
       }),
     onSuccess: () => {
-      toast.success("Confirmaste la liquidación. Ãƒâ€šÃ‚¡Gracias!");
+      toast.success("Confirmaste la liquidación. ¡Gracias!");
       qc.invalidateQueries();
       onChanged?.();
     },

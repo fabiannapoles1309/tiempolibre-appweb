@@ -1,4 +1,3 @@
-﻿import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -42,13 +41,13 @@ export default function AdminSubscriptionsPage() {
   const extraPackagePrice = pricing?.extraPackagePrice ?? 0;
 
   // Cambio de tier: PATCH /admin/clientes/:id { tier }. El servidor preserva
-  // los envíos comprados â€” sólo cambia tier y monthlyPrice de la suscripción
+  // los envíos comprados — sólo cambia tier y monthlyPrice de la suscripción
   // ACTIVA del cliente.
   const [busyTierId, setBusyTierId] = useState<number | null>(null);
   const handleTierChange = async (userId: number, tier: TierValue) => {
     setBusyTierId(userId);
     try {
-      const r = await apiFetch(`/api/admin/clientes/${userId}`, {
+      const r = await fetch(`/api/admin/clientes/${userId}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -78,7 +77,7 @@ export default function AdminSubscriptionsPage() {
     if (!assignTarget) return;
     setAssigning(true);
     try {
-      const r = await apiFetch(
+      const r = await fetch(
         `/api/admin/clientes/${assignTarget.userId}/assign-package`,
         {
           method: "POST",
@@ -170,7 +169,7 @@ export default function AdminSubscriptionsPage() {
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="ESTANDAR">Estándar</SelectItem>
-                                <SelectItem value="OPTIMO">Ó“ptimo</SelectItem>
+                                <SelectItem value="OPTIMO">Óptimo</SelectItem>
                               </SelectContent>
                             </Select>
                           ) : (
@@ -262,5 +261,3 @@ export default function AdminSubscriptionsPage() {
     </div>
   );
 }
-
-

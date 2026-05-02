@@ -1,8 +1,8 @@
-﻿import React from "react";
-import { Link, useLocation, useRouter } from "wouter";
+import React from "react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2, ShieldCheck, FileSpreadsheet, MessageSquareWarning, Inbox, KeyRound, Megaphone, MessageCircle, QrCode, LineChart, Globe } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2, ShieldCheck, FileSpreadsheet, MessageSquareWarning, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
@@ -29,8 +29,7 @@ const navItems: NavItem[] = [
   { title: "Incidentes", href: "/driver/incidents", icon: AlertTriangle, roles: [UserRole.DRIVER] },
   { title: "Reportes", href: "/reports", icon: FileText, roles: [UserRole.ADMIN] },
   { title: "Finanzas", href: "/finance", icon: DollarSign, roles: [UserRole.ADMIN] },
-  { title: "Clientes", href: "/marketing/clientes", icon: Users, roles: ["MARKETING" as UserRole] },
-  { title: "Metricas", href: "/marketing/metrics", icon: LineChart, roles: ["MARKETING" as UserRole] },
+  { title: "Clientes", href: "/admin/clientes", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Destinatarios", href: "/admin/destinatarios", icon: BookUser, roles: [UserRole.ADMIN] },
   { title: "Solicitudes de paquete", href: "/admin/solicitudes-paquetes", icon: PackagePlus, roles: [UserRole.ADMIN] },
   { title: "Configuración de precios", href: "/admin/pricing-settings", icon: Settings2, roles: [UserRole.ADMIN] },
@@ -44,19 +43,16 @@ const navItems: NavItem[] = [
   { title: "Reporte combinado", href: "/admin/reports-combined", icon: FileSpreadsheet, roles: [UserRole.ADMIN] },
   { title: "Buzón de quejas", href: "/admin/feedback", icon: Inbox, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
+  // Quejas y sugerencias accesible a cualquier usuario logueado (cliente / driver / admin).
   { title: "Quejas y sugerencias", href: "/feedback", icon: MessageSquareWarning, roles: [UserRole.CLIENTE, UserRole.DRIVER] },
-  // MARKETING
-  { title: "Comunidad", href: "/marketing/community", icon: Globe, roles: ["MARKETING" as UserRole] },
-  { title: "Campañas", href: "/marketing/campaigns", icon: Megaphone, roles: ["MARKETING" as UserRole] },
-  { title: "Mensajería", href: "/marketing/messaging", icon: MessageCircle, roles: ["MARKETING" as UserRole] },
-  { title: "Cupones QR", href: "/marketing/coupons", icon: QrCode, roles: ["MARKETING" as UserRole] },
-  { title: "Clientes", href: "/marketing/clientes", icon: Users, roles: ["MARKETING" as UserRole] },
-  { title: "Metricas", href: "/marketing/metrics", icon: LineChart, roles: ["MARKETING" as UserRole] },
+  // El CLIENTE accede a "Mi billetera" para ver el saldo acumulado por
+  // cobros en efectivo que los repartidores hacen al entregar sus envíos.
+  // No puede recargar ni gastar saldo: es sólo visualización de cobranza.
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, logout: clearAuth } = useAuth();
-  const [location, navigate] = useLocation();
+  const [location] = useLocation();
   const logoutMutation = useLogout();
 
   if (!user) {
@@ -71,10 +67,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // SUPERUSER (Soporte): perfil de gestión, no operativo. Sólo ve lo que
+  // ve un ADMIN. Excluye ítems personales (Mi suscripción, Mis pedidos,
+  // Mis beneficios, Billetera) y específicos de DRIVER/CLIENTE.
   const filteredNav =
     user.role === "SUPERUSER"
       ? navItems.filter((item) => item.roles.includes(UserRole.ADMIN))
-      : navItems.filter((item) => item.roles.includes(user.role as UserRole));
+      : navItems.filter((item) => item.roles.includes(user.role));
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -101,22 +100,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
           })}
         </div>
         <div className="p-4 border-t border-white/20">
-          <div className="mb-3">
+          <div className="mb-4">
             <p className="text-sm font-medium text-white truncate">{user.name}</p>
             <p className="text-xs text-white/80 truncate">{user.email}</p>
             <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-white text-[#0096BD]">
               {user.role}
             </span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full justify-start mb-2 bg-transparent border-white/40 text-white hover:bg-white hover:text-[#0096BD] hover:border-white"
-            onClick={() => navigate("/change-password")}
-          >
-            <KeyRound className="w-4 h-4 mr-2" />
-            Cambiar contraseña
-          </Button>
           <Button
             variant="outline"
             className="w-full justify-start bg-transparent border-white/40 text-white hover:bg-white hover:text-destructive hover:border-white"
@@ -139,5 +129,3 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
-
-

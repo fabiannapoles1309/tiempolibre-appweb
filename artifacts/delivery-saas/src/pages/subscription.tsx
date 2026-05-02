@@ -1,4 +1,4 @@
-﻿import {
+import {
   useGetMySubscription,
   useSubscribe,
   useRechargeSubscription,
@@ -23,7 +23,7 @@ const PLAN_TEMPLATES = [
     tier: SubscriptionTier.ESTANDAR,
     name: "Estándar",
     perks: [
-      "Sin envíos incluidos - comprá paquetes extras de 35 envíos",
+      "Sin envíos incluidos — comprá paquetes extras de 35 envíos",
       "Soporte por email",
       "Reportes básicos",
     ],
@@ -31,9 +31,9 @@ const PLAN_TEMPLATES = [
   },
   {
     tier: SubscriptionTier.OPTIMO,
-    name: "Ãƒâ€œptimo",
+    name: "Óptimo",
     perks: [
-      "Sin envíos incluidos - comprá paquetes extras de 35 envíos",
+      "Sin envíos incluidos — comprá paquetes extras de 35 envíos",
       "Soporte prioritario",
       "Reportes avanzados",
       "Asignación con prioridad",
@@ -145,7 +145,7 @@ export default function SubscriptionPage() {
           <CardContent className="pt-6 grid sm:grid-cols-2 gap-4 text-sm">
             <div>
               <div className="text-xs text-muted-foreground">Establecimiento</div>
-              <div className="font-medium">{profile.businessName ?? "-"}</div>
+              <div className="font-medium">{profile.businessName ?? "—"}</div>
             </div>
             <div>
               <div className="text-xs text-muted-foreground flex items-center gap-1">
@@ -180,7 +180,7 @@ export default function SubscriptionPage() {
               data-testid="alert-low-remaining"
             >
               <AlertTriangle className="w-5 h-5" />
-              Ãƒâ€šÃ‚¡Atención! Te quedan{" "}
+              ¡Atención! Te quedan{" "}
               <span className="font-bold">{sub.remainingDeliveries}</span> envíos. Solicita un
               paquete extra para no quedarte sin servicio.
             </div>
@@ -277,7 +277,7 @@ export default function SubscriptionPage() {
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Pagás sólo por los paquetes extras que uses (
-                      $ {extraPackagePrice.toLocaleString("es-MX")} c/u - 35 envíos).
+                      $ {extraPackagePrice.toLocaleString("es-MX")} c/u — 35 envíos).
                     </div>
                   </div>
                   <ul className="space-y-2 text-sm">

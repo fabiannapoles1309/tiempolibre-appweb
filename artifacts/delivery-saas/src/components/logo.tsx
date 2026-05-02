@@ -1,4 +1,4 @@
-﻿interface LogoProps {
+interface LogoProps {
   /** `full` includes TL mark + wordmark + slogan; `wordmark` is wordmark + slogan only (horizontal) */
   variant?: "full" | "wordmark";
   /** Height in px */
@@ -17,7 +17,7 @@ export function Logo({ variant = "full", heightPx, className }: LogoProps) {
   return (
     <img
       src={src}
-      alt="TiempoLibre - Somos tu sistema de reparto"
+      alt="TiempoLibre — Somos tu sistema de reparto"
       style={{ height: h, width: "auto" }}
       className={className}
       draggable={false}

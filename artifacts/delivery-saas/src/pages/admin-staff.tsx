@@ -1,4 +1,3 @@
-﻿import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -33,7 +32,7 @@ export default function AdminStaffPage() {
   const { data = [], isLoading } = useQuery<StaffUser[]>({
     queryKey: ["admin-staff-users"],
     queryFn: async () => {
-      const r = await apiFetch("/api/admin/staff-users", {
+      const r = await fetch("/api/admin/staff-users", {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -130,5 +129,3 @@ export default function AdminStaffPage() {
     </div>
   );
 }
-
-

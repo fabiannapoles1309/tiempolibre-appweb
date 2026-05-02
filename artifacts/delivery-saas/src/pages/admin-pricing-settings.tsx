@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import {
   useGetPricingSettings,
   useUpdatePricingSettings,
@@ -16,9 +16,9 @@ import { Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
-  estandarPrice: z.coerce.number().min(0, "Debe ser mayor o igual a 0"),
-  optimoPrice: z.coerce.number().min(0, "Debe ser mayor o igual a 0"),
-  extraPackagePrice: z.coerce.number().min(0, "Debe ser mayor o igual a 0"),
+  estandarPrice: z.coerce.number().min(0, "Debe ser ≥ 0"),
+  optimoPrice: z.coerce.number().min(0, "Debe ser ≥ 0"),
+  extraPackagePrice: z.coerce.number().min(0, "Debe ser ≥ 0"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -33,6 +33,7 @@ export default function AdminPricingSettingsPage() {
     defaultValues: { estandarPrice: 0, optimoPrice: 0, extraPackagePrice: 0 },
   });
 
+  // Cuando llega la respuesta del backend, hidratamos el formulario.
   useEffect(() => {
     if (pricing) {
       form.reset({
@@ -57,10 +58,10 @@ export default function AdminPricingSettingsPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings2 className="w-7 h-7 text-[#00B5E2]" /> Configuracion de Precios
+          <Settings2 className="w-7 h-7 text-[#00B5E2]" /> Configuración de Precios
         </h1>
         <p className="text-muted-foreground mt-1">
-          Estos precios se aplican al contratar una suscripcion y al aprobar
+          Estos precios se aplican al contratar una suscripción y al aprobar
           solicitudes de paquete extra. Los cambios entran en efecto al instante.
         </p>
       </div>
@@ -69,14 +70,14 @@ export default function AdminPricingSettingsPage() {
         <CardHeader>
           <CardTitle>Planes y paquete extra</CardTitle>
           <CardDescription>
-            El costo del paquete extra se descuenta automaticamente del saldo
+            El costo del paquete extra se descuenta automáticamente del saldo
             de billetera del cliente al momento de aprobar su solicitud.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Cargando precios actuales...
+              <Loader2 className="w-4 h-4 animate-spin" /> Cargando precios actuales…
             </div>
           ) : (
             <Form {...form}>
@@ -86,7 +87,7 @@ export default function AdminPricingSettingsPage() {
                   name="estandarPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan Estandar - precio mensual (MXN)</FormLabel>
+                      <FormLabel>Plan Estándar — precio mensual (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -100,7 +101,7 @@ export default function AdminPricingSettingsPage() {
                           />
                         </div>
                       </FormControl>
-                      <FormDescription>Incluye 35 envios mensuales.</FormDescription>
+                      <FormDescription>Incluye 35 envíos mensuales.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -111,7 +112,7 @@ export default function AdminPricingSettingsPage() {
                   name="optimoPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan Optimo - precio mensual (MXN)</FormLabel>
+                      <FormLabel>Plan Óptimo — precio mensual (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -125,7 +126,7 @@ export default function AdminPricingSettingsPage() {
                           />
                         </div>
                       </FormControl>
-                      <FormDescription>Incluye 35 envios mensuales.</FormDescription>
+                      <FormDescription>Incluye 35 envíos mensuales.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -136,7 +137,7 @@ export default function AdminPricingSettingsPage() {
                   name="extraPackagePrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Paquete extra - costo por bloque de 35 envios (MXN)</FormLabel>
+                      <FormLabel>Paquete extra — costo por bloque de 35 envíos (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>

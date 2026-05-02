@@ -1,5 +1,4 @@
-﻿import { apiFetch } from "@/lib/api";
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +28,7 @@ export default function ShippingCostsPage() {
   const { data: costs = [], isLoading } = useQuery<ShippingCost[]>({
     queryKey: ["shipping-costs"],
     queryFn:  async () => {
-      const r = await apiFetch(`${API}/api/admin/shipping-costs`, {
+      const r = await fetch(`${API}/api/admin/shipping-costs`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -40,7 +39,7 @@ export default function ShippingCostsPage() {
   // Editar costo existente
   const editMutation = useMutation({
     mutationFn: async (id: number) => {
-      const r = await apiFetch(`${API}/api/admin/shipping-costs/${id}`, {
+      const r = await fetch(`${API}/api/admin/shipping-costs/${id}`, {
         method:      "PATCH",
         credentials: "include",
         headers:     { "Content-Type": "application/json" },
@@ -63,7 +62,7 @@ export default function ShippingCostsPage() {
   // Crear nuevo costo
   const createMutation = useMutation({
     mutationFn: async () => {
-      const r = await apiFetch(`${API}/api/admin/shipping-costs`, {
+      const r = await fetch(`${API}/api/admin/shipping-costs`, {
         method:      "POST",
         credentials: "include",
         headers:     { "Content-Type": "application/json" },
@@ -88,7 +87,7 @@ export default function ShippingCostsPage() {
   // Eliminar costo
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const r = await apiFetch(`${API}/api/admin/shipping-costs/${id}`, {
+      const r = await fetch(`${API}/api/admin/shipping-costs/${id}`, {
         method:      "DELETE",
         credentials: "include",
       });
@@ -317,4 +316,3 @@ export default function ShippingCostsPage() {
     </div>
   );
 }
-

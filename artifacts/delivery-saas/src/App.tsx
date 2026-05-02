@@ -42,13 +42,6 @@ import AdminMessagingPage from "@/pages/admin/Messaging";
 import DeliveryReportPage from "@/pages/admin/DeliveryReport";
 import ShippingCostsPage from "@/pages/admin/ShippingCosts";
 import DriverStatusToggle from "@/pages/driver/DriverStatusToggle";
-import ChangePassword from "@/pages/change-password";
-import MarketingCommunity from "@/pages/marketing/community";
-import MarketingCampaigns from "@/pages/marketing/campaigns";
-import MarketingMessaging from "@/pages/marketing/messaging";
-import MarketingCoupons from "@/pages/marketing/coupons";
-import MarketingMetrics from "@/pages/marketing/metrics";
-import MarketingClientes from "@/pages/marketing/clientes";
 
 const queryClient = new QueryClient();
 
@@ -88,7 +81,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={() => <PublicRoute component={Login} />} />
-      {/* Registro público deshabilitado: las cuentas se crean desde el panel de admin. */}
+      {/* Registro pÃºblico deshabilitado: las cuentas se crean desde el panel de admin. */}
       <Route path="/register" component={() => <Redirect to="/login" />} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/orders" component={() => <ProtectedRoute component={OrdersList} />} />
@@ -100,7 +93,7 @@ function Router() {
       <Route path="/reports" component={() => <ProtectedRoute component={Reports} roles={["ADMIN"]} />} />
       <Route path="/finance" component={() => <ProtectedRoute component={Finance} roles={["ADMIN"]} />} />
       {/* CLIENTE puede ver su saldo de cobranza en efectivo acumulado por las
-          entregas de sus envíos. ADMIN mantiene el acceso para visualización. */}
+          entregas de sus envÃ­os. ADMIN mantiene el acceso para visualizaciÃ³n. */}
       <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["CLIENTE", "ADMIN"]} />} />
       <Route path="/driver/benefits" component={() => <ProtectedRoute component={DriverBenefits} roles={["DRIVER"]} />} />
       <Route path="/driver/ranking" component={() => <ProtectedRoute component={DriverRankingPage} roles={["DRIVER", "ADMIN"]} />} />
@@ -121,21 +114,11 @@ function Router() {
       <Route path="/admin/reports-combined" component={() => <ProtectedRoute component={AdminReportsCombinedPage} roles={["ADMIN"]} />} />
       <Route path="/admin/feedback" component={() => <ProtectedRoute component={AdminFeedbackPage} roles={["ADMIN"]} />} />
       <Route path="/feedback" component={() => <ProtectedRoute component={FeedbackPage} roles={["CLIENTE", "DRIVER", "ADMIN"]} />} />
-      <Route path="/admin/refunds" component={() => <ProtectedRoute component={AdminRefundsPage} roles={["ADMIN"]} />} />
+            <Route path="/admin/refunds" component={() => <ProtectedRoute component={AdminRefundsPage} roles={["ADMIN"]} />} />
       <Route path="/admin/messaging" component={() => <ProtectedRoute component={AdminMessagingPage} roles={["ADMIN"]} />} />
       <Route path="/admin/delivery-report" component={() => <ProtectedRoute component={DeliveryReportPage} roles={["ADMIN"]} />} />
       <Route path="/admin/shipping-costs" component={() => <ProtectedRoute component={ShippingCostsPage} roles={["ADMIN"]} />} />
       <Route path="/driver/status" component={() => <ProtectedRoute component={DriverStatusToggle} roles={["DRIVER"]} />} />
-      
-      {/* RUTAS NUEVAS */}
-      <Route path="/marketing/community" component={() => <ProtectedRoute component={MarketingCommunity} roles={["MARKETING"]} />} />
-      <Route path="/marketing/campaigns" component={() => <ProtectedRoute component={MarketingCampaigns} roles={["MARKETING"]} />} />
-      <Route path="/marketing/messaging" component={() => <ProtectedRoute component={MarketingMessaging} roles={["MARKETING"]} />} />
-      <Route path="/marketing/coupons" component={() => <ProtectedRoute component={MarketingCoupons} roles={["MARKETING"]} />} />
-      <Route path="/marketing/clientes" component={() => <ProtectedRoute component={MarketingClientes} roles={["MARKETING"]} />} />
-      <Route path="/marketing/metrics" component={() => <ProtectedRoute component={MarketingMetrics} roles={["MARKETING"]} />} />
-      <Route path="/change-password" component={() => <ProtectedRoute component={ChangePassword} />} />
-      
       <Route component={NotFound} />
     </Switch>
   );

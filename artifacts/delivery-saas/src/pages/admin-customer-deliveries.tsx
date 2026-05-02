@@ -1,4 +1,4 @@
-﻿import { useAdminCustomerDeliveries } from "@workspace/api-client-react";
+import { useAdminCustomerDeliveries } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
@@ -90,7 +90,7 @@ export default function AdminCustomerDeliveriesPage() {
                         ) : r.status ? (
                           <Badge variant="outline">{r.status}</Badge>
                         ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
+                          <span className="text-xs text-muted-foreground">—</span>
                         )}
                         {low && (
                           <span className="ml-2 inline-flex items-center text-xs text-red-600">

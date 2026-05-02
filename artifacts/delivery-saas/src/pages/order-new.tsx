@@ -1,4 +1,3 @@
-﻿import { apiFetch } from "@/lib/api";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
@@ -8,6 +7,8 @@ import * as z from "zod";
 import maplibregl, { type Map as MapLibreMap, type Marker } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import * as turf from "@turf/turf";
+import { kml as kmlToGeoJson } from "@tmcw/togeojson";
+import { DOMParser as XmlDomParser } from "@xmldom/xmldom";
 import {
   useCreateOrder,
   useGetMyCustomerProfile,
@@ -35,7 +36,7 @@ import {
 import { toast } from "sonner";
 import { Loader2, ArrowLeft, AlertTriangle, MapPin, Check } from "lucide-react";
 
-// Métodos de pago disponibles segón el rol.
+// Métodos de pago disponibles según el rol.
 // Para CLIENTE eliminamos BILLETERA porque la auto-recarga de saldo
 // fue retirada del flujo del cliente (ahora sólo solicita un paquete extra).
 const PAYMENTS_BY_ROLE: Record<string, readonly PaymentMethod[]> = {
@@ -155,7 +156,7 @@ function bboxFromGeo(geo: Geo): [[number, number], [number, number]] | null {
   ];
 }
 
-// Canonicaliza el nombre de zona del KML a sólo el nómero (ej: "ZONA 1" -> "1").
+// Canonicaliza el nombre de zona del KML a sólo el número (ej: "ZONA 1" -> "1").
 // Debe coincidir con el `customers.zone` (entero) que devuelve /me/customer
 // y con la normalización del backend en mapService.ts.
 function canonicalZoneName(raw: unknown): string {
@@ -204,7 +205,7 @@ export default function NewOrder() {
   // "Cargando zonas..." indefinidamente.
   const noAssignedZone = isCliente && profileFetched && !clienteZone;
 
-  // Lista de métodos de pago visibles segón rol (CLIENTE no ve BILLETERA).
+  // Lista de métodos de pago visibles según rol (CLIENTE no ve BILLETERA).
   const allowedPayments = PAYMENTS_BY_ROLE[role] ?? PAYMENTS_BY_ROLE.CLIENTE;
 
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -253,7 +254,7 @@ export default function NewOrder() {
     enabled: isCliente,
     queryKey: ["my-recipients"],
     queryFn: async () => {
-      const r = await apiFetch("/api/me/recipients", { credentials: "include" });
+      const r = await fetch("/api/me/recipients", { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },
@@ -303,12 +304,15 @@ export default function NewOrder() {
   // `clienteZone` esté disponible antes de inicializar el mapa.
   useEffect(() => {
     let cancelled = false;
-    if (isCliente && clienteZone === null) return; // aón cargando perfil
+    if (isCliente && clienteZone === null) return; // aún cargando perfil
     (async () => {
       try {
-                const res = await apiFetch("/api/zones/geojson");
+        const base = import.meta.env.BASE_URL ?? "/";
+        const res = await fetch(`${base}zonas.kml`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const fc = await res.json() as Geo;
+        const text = await res.text();
+        const doc = new XmlDomParser().parseFromString(text, "text/xml") as unknown as Document;
+        const fc = kmlToGeoJson(doc) as unknown as Geo;
         let features = fc.features.filter(
           (f) =>
             f.geometry &&
@@ -360,7 +364,7 @@ export default function NewOrder() {
               "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
             ],
             tileSize: 256,
-            attribution: "Ã‚© OpenStreetMap contributors",
+            attribution: "© OpenStreetMap contributors",
             maxzoom: 19,
           },
         },
@@ -450,7 +454,7 @@ export default function NewOrder() {
     }
     try {
       await createMutation.mutateAsync({
-        // Los campos `recipientName` + `allowMarketing*` aón no están en el
+        // Los campos `recipientName` + `allowMarketing*` aún no están en el
         // OpenAPI generado; el backend los acepta como opcionales. Casteamos
         // a `any` para sortear el chequeo estricto sin regenerar el cliente.
         data: {
@@ -508,7 +512,7 @@ export default function NewOrder() {
         // La autogestión de suscripción fue removida (M1). Las recargas y
         // renovaciones las hace el administrador desde /admin/clientes.
         toast.error(
-          `${error.data.error} - Contacta a tu administrador para recargar tu bloque de envíos.`,
+          `${error.data.error} — Contacta a tu administrador para recargar tu bloque de envíos.`,
         );
         return;
       }
@@ -558,7 +562,7 @@ export default function NewOrder() {
                   ? "Te quedaste sin envíos. Pide una recarga al administrador."
                   : mySub.remainingDeliveries <= 5
                     ? "Tu bloque está por agotarse. Pide una recarga."
-                    : `Plan ${mySub.tier} - ${mySub.usedDeliveries} / ${mySub.monthlyDeliveries} consumidos.`}
+                    : `Plan ${mySub.tier} — ${mySub.usedDeliveries} / ${mySub.monthlyDeliveries} consumidos.`}
               </div>
             </div>
           </div>
@@ -624,7 +628,7 @@ export default function NewOrder() {
               >
                 <AlertTriangle className="w-4 h-4 mt-0.5" />
                 <span>
-                  Tu cuenta aón no tiene una zona asignada. Contacta a tu
+                  Tu cuenta aún no tiene una zona asignada. Contacta a tu
                   administrador para activarla.
                 </span>
               </div>
@@ -758,7 +762,7 @@ export default function NewOrder() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Marca sólo si el destinatario aceptó recibir comunicaciones
-                      promocionales en este nómero o correo. Se guarda en tu
+                      promocionales en este número o correo. Se guarda en tu
                       directorio para próximos envíos.
                     </p>
                     <FormField
@@ -921,7 +925,3 @@ export default function NewOrder() {
     </div>
   );
 }
-
-
-
-

@@ -10,7 +10,6 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/lib/auth";
 
 interface NotificationItem {
   id: number;
@@ -33,20 +32,16 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
-  const { user } = useAuth();
 
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const token = localStorage.getItem("tiempolibre_token");
-      const r = await fetch(`${API}/api/me/notifications?limit=20`, {
+      const r = await fetch(`${API}/api/me/notifications?limit=20`, { credentials: "include",
         credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!r.ok) throw new Error("notifications fetch failed");
       return r.json();
     },
-    enabled: !!user,
     refetchInterval: 30000,
     refetchOnWindowFocus: true,
     refetchIntervalInBackground: false,
@@ -91,8 +86,6 @@ export function NotificationBell() {
     setOpen(false);
     if (n.link) navigate(n.link);
   };
-
-  if (!user) return null;
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>

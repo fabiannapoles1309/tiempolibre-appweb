@@ -1,4 +1,4 @@
-﻿import { useLocation } from "wouter";
+import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -40,7 +40,7 @@ export default function Login() {
       if (res.token) localStorage.setItem("tiempolibre_token", res.token);
       setUser(res.user);
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-      toast.success("Ãƒâ€šÃ‚¡Bienvenido a TiempoLibre!");
+      toast.success("¡Bienvenido a TiempoLibre!");
       setLocation("/");
     } catch (error: any) {
       toast.error(error.data?.error || "Error al iniciar sesión");

@@ -1,4 +1,3 @@
-﻿import { apiFetch } from "@/lib/api";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -45,7 +44,7 @@ export default function AdminDestinatariosPage() {
       const url = q.trim()
         ? `/api/admin/recipients?q=${encodeURIComponent(q.trim())}`
         : `/api/admin/recipients`;
-      const r = await apiFetch(url, { credentials: "include" });
+      const r = await fetch(url, { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },
@@ -56,7 +55,7 @@ export default function AdminDestinatariosPage() {
   const handleExport = async () => {
     setDownloading(true);
     try {
-      const r = await apiFetch("/api/admin/recipients/export", { credentials: "include" });
+      const r = await fetch("/api/admin/recipients/export", { credentials: "include" });
       if (!r.ok) throw new Error("export-failed");
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);
@@ -127,7 +126,7 @@ export default function AdminDestinatariosPage() {
                   <TableHead className="text-center">SMS</TableHead>
                   <TableHead className="text-center">Email</TableHead>
                   <TableHead className="text-right">Envíos</TableHead>
-                  <TableHead>Ãƒâ€œÃ...¡ltimo envío</TableHead>
+                  <TableHead>Último envío</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -144,7 +143,7 @@ export default function AdminDestinatariosPage() {
                 ) : data.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
-                      Aón no hay destinatarios registrados.
+                      Aún no hay destinatarios registrados.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -166,7 +165,7 @@ export default function AdminDestinatariosPage() {
                         {r.email ? (
                           <span className="break-all">{r.email}</span>
                         ) : (
-                          <span className="text-muted-foreground">-</span>
+                          <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell className="text-center">
@@ -200,5 +199,3 @@ export default function AdminDestinatariosPage() {
     </div>
   );
 }
-
-

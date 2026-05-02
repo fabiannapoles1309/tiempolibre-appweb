@@ -1,4 +1,4 @@
-﻿import { useParams } from "wouter";
+import { useParams } from "wouter";
 import { useGetOrder, getGetOrderQueryKey, useUpdateOrder, useAssignOrderManual, useListDrivers, getListDriversQueryKey, OrderStatus, UserRole, getListOrdersQueryKey, getGetDashboardQueryKey } from "@workspace/api-client-react";
 import { useAuth, isAdmin } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -263,7 +263,7 @@ export default function OrderDetail() {
               <div className="flex items-center gap-3">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">ÃƒÅ¡ltima actualización</p>
+                  <p className="text-sm font-medium">Última actualización</p>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(order.updatedAt), "dd/MM/yyyy HH:mm")}
                   </p>

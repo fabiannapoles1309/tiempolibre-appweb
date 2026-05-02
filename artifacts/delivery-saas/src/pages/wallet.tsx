@@ -106,7 +106,7 @@ export default function WalletPage() {
     enabled: isCliente,
     queryKey: ["my-package-request-active"],
     queryFn: async () => {
-      const r = await apiFetch(`${import.meta.env.VITE_API_URL ?? ""}/api/me/package-requests/active`, { credentials: "include" });
+      const r = await apiFetch(`${import.meta.env.VITE_API_URL ?? ""}/api/me/package-requests/active`);
       if (!r.ok) return { pending: null };
       return r.json();
     },
@@ -119,7 +119,6 @@ export default function WalletPage() {
     try {
       const r = await apiFetch(`${import.meta.env.VITE_API_URL ?? ""}/api/me/package-requests`, {
         method: "POST",
-        credentials: "include",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({}),
       });

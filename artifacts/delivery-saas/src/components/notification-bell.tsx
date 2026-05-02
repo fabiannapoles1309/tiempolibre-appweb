@@ -29,10 +29,7 @@ interface NotificationsResponse {
 const API = import.meta.env.VITE_API_URL ?? "";
 
 function authHeaders(): HeadersInit {
-  const token = document.cookie
-    .split("; ")
-    .find((r) => r.startsWith("rapidoo_session="))
-    ?.split("=")[1];
+  const token = localStorage.getItem("tiempolibre_token");
   return token ? { Authorization: "Bearer " + token } : {};
 }
 
@@ -44,7 +41,10 @@ export function NotificationBell() {
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/me/notifications?limit=20`, { credentials: "include", headers: authHeaders() });
+      const r = await fetch(`${API}/api/me/notifications?limit=20`, {
+        credentials: "include",
+        headers: authHeaders(),
+      });
       if (!r.ok) throw new Error("notifications fetch failed");
       return r.json();
     },
@@ -58,6 +58,7 @@ export function NotificationBell() {
       await fetch(`${API}/api/me/notifications/${id}/read`, {
         method: "PATCH",
         credentials: "include",
+        headers: authHeaders(),
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),
@@ -68,6 +69,7 @@ export function NotificationBell() {
       await fetch(`${API}/api/me/notifications/read-all`, {
         method: "POST",
         credentials: "include",
+        headers: authHeaders(),
       });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["notifications"] }),

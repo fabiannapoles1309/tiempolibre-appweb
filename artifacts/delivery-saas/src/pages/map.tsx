@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+Ôªøimport { useEffect, useMemo, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api";
 import maplibregl, { type Map as MapLibreMap, type LngLatBoundsLike } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -166,7 +166,7 @@ export default function MapPage() {
                 "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
               ],
               tileSize: 256,
-              attribution: "© OpenStreetMap contributors",
+              attribution: "√≠ OpenStreetMap contributors",
               maxzoom: 19,
             },
           },
@@ -234,8 +234,8 @@ export default function MapPage() {
             Mapa de zonas
           </h1>
           <p className="text-muted-foreground mt-1">
-            PolÌgonos de cobertura cargados desde <code>zonas.kml</code>. Cada nuevo envÌo valida autom·ticamente que la
-            direcciÛn de entrega caiga dentro de una de estas zonas.
+            Pol√≠gonos de cobertura cargados desde <code>zonas.kml</code>. Cada nuevo env√≠o valida autom√≠ticamente que la
+            direcci√≠n de entrega caiga dentro de una de estas zonas.
           </p>
         </div>
         <Button variant="outline" onClick={fetchZones} disabled={loading}>
@@ -269,7 +269,7 @@ export default function MapPage() {
                       <p className="font-medium">Mapa no disponible</p>
                       <p className="text-sm text-muted-foreground mt-2">{mapError}</p>
                       <p className="text-xs text-muted-foreground mt-3">
-                        Las zonas siguen funcionando para validar envÌos. Listado completo a la derecha.
+                        Las zonas siguen funcionando para validar env√≠os. Listado completo a la derecha.
                       </p>
                     </div>
                   </div>
@@ -285,7 +285,7 @@ export default function MapPage() {
           </CardHeader>
           <CardContent className="space-y-2 max-h-[600px] overflow-y-auto">
             {zones.length === 0 && !loading && (
-              <p className="text-sm text-muted-foreground">Sin polÌgonos. Sube <code>zonas.kml</code> a la raÌz.</p>
+              <p className="text-sm text-muted-foreground">Sin pol√≠gonos. Sube <code>zonas.kml</code> a la ra√≠z.</p>
             )}
             {zones.map((z) => (
               <div key={z.name} className="flex items-start gap-3 p-2 rounded-md hover:bg-muted/50">

@@ -51,7 +51,7 @@ function BlockOf35({ remaining, monthly }: { remaining: number; monthly: number 
       </div>
       {blockUsed > 0 && (
         <div className="text-xs text-muted-foreground">
-          {blockUsed} {blockUsed === 1 ? "envÃ­o usado" : "envÃ­os usados"} de este bloque.
+          {blockUsed} {blockUsed === 1 ? "envio usado" : "Envios usados"} de este bloque.
         </div>
       )}
     </div>
@@ -59,8 +59,8 @@ function BlockOf35({ remaining, monthly }: { remaining: number; monthly: number 
 }
 
 const topUpSchema = z.object({
-  amount: z.coerce.number().min(100, "El monto mÃ­nimo es de $100"),
-  method: z.nativeEnum(PaymentMethod).refine(m => m !== 'BILLETERA', "MÃ©todo invÃ¡lido para recarga"),
+  amount: z.coerce.number().min(100, "El monto minimo es de $100"),
+  method: z.nativeEnum(PaymentMethod).refine(m => m !== 'BILLETERA', "Metodo invÃ¡lido para recarga"),
 });
 
 const formatMoney = (val: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(val);
@@ -68,21 +68,21 @@ const formatMoney = (val: number) => new Intl.NumberFormat('es-MX', { style: 'cu
 export default function WalletPage() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-  // El CLIENTE sÃ³lo visualiza su saldo: representa la cobranza acumulada
-  // de los envÃ­os pagados en EFECTIVO al momento de la entrega. No puede
+  // El CLIENTE solo visualiza su saldo: representa la cobranza acumulada
+  // de los Envios pagados en EFECTIVO al momento de la entrega. No puede
   // recargar saldo ni gastarlo (no se usa como medio de pago).
   const isCliente = user?.role === "CLIENTE";
 
   const { data: wallet, isLoading: loadingWallet } = useGetWallet();
   const { data: transactions, isLoading: loadingTx } = useListWalletTransactions();
   const topUpMutation = useTopUpWallet();
-  // EnvÃ­os del periodo: visible sÃ³lo para CLIENTE. Replicamos los counters
+  // Envios del periodo: visible solo para CLIENTE. Replicamos los counters
   // que ya existen en /subscription para que el cliente pueda consultarlos
   // junto con su saldo cobrado sin cambiar de pantalla.
-  // Usamos la queryKey canÃ³nica (la que genera orval) para que cuando el
-  // cliente crea un envÃ­o en /orders/new y se invalida ese key, esta tarjeta
-  // ("EnvÃ­os del periodo") refresque los contadores Solicitados/Restantes
-  // automÃ¡ticamente sin necesidad de recargar la pÃ¡gina.
+  // Usamos la queryKey canonica (la que genera orval) para que cuando el
+  // cliente crea un envio en /orders/new y se invalida ese key, esta tarjeta
+  // ("Envios del periodo") refresque los contadores Solicitados/Restantes
+  // automÃ¡ticamente sin necesidad de recargar la pagina.
   const { data: subData, isLoading: loadingSub } = useGetMySubscription({
     query: {
       enabled: isCliente,
@@ -99,8 +99,8 @@ export default function WalletPage() {
     },
   });
 
-  // Solicitudes de paquete: el cliente sÃ³lo puede tener UNA pendiente a la vez.
-  // El admin la aprueba (recarga +35 envÃ­os) o la rechaza desde su panel.
+  // Solicitudes de paquete: el cliente solo puede tener UNA pendiente a la vez.
+  // El admin la aprueba (recarga +35 Envios) o la rechaza desde su panel.
   type PendingReq = { id: number; status: string; requestedAt: string } | null;
   const { data: activeReqData, refetch: refetchActiveReq } = useQuery<{ pending: PendingReq }>({
     enabled: isCliente,
@@ -129,7 +129,7 @@ export default function WalletPage() {
         const err = await r.json().catch(() => ({}));
         toast.error(err?.error || "No se pudo enviar la solicitud");
       } else {
-        toast.success("Solicitud enviada. Tu administrador la revisarÃ¡ en breve.");
+        toast.success("Solicitud enviada. Tu administrador la revisara en breve.");
       }
       await refetchActiveReq();
     } catch {
@@ -157,8 +157,8 @@ export default function WalletPage() {
         <h1 className="text-3xl font-bold tracking-tight">Mi Billetera</h1>
         <p className="text-muted-foreground mt-1">
           {isCliente
-            ? "Saldo acumulado por las cobranzas en efectivo que tus repartidores realizan al entregar tus envÃ­os."
-            : "Gestiona el saldo prepago para agilizar tus envÃ­os."}
+            ? "Saldo acumulado por las cobranzas en efectivo que tus repartidores realizan al entregar tus Envios."
+            : "Gestiona el saldo prepago para agilizar tus Envios."}
         </p>
       </div>
 
@@ -195,20 +195,20 @@ export default function WalletPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Truck className="w-5 h-5 text-[#00B5E2]" />
-                EnvÃ­os del periodo
+                Envios del periodo
               </CardTitle>
               <CardDescription>
-                Resumen de tu paquete de envÃ­os contratado.
+                Resumen de tu paquete de Envios contratado.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
               {loadingSub ? (
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Cargandoâ€¦
+                  <Loader2 className="w-4 h-4 animate-spin" /> Cargando...
                 </div>
               ) : !sub ? (
                 <div className="text-sm text-muted-foreground">
-                  AÃºn no tienes un plan activo. Visita "Mi suscripciÃ³n" para
+                  Aun no tienes un plan activo. Visita "Mi suscripcion" para
                   contratar uno.
                 </div>
               ) : (
@@ -260,8 +260,8 @@ export default function WalletPage() {
                 Solicitar nuevo paquete de entregas
               </CardTitle>
               <CardDescription>
-                Â¿Te quedaste sin envÃ­os disponibles? EnvÃ­a una solicitud y tu
-                administrador la revisarÃ¡ para recargar tu paquete mensual.
+                ``Te quedaste sin Envios disponibles? EnvÃ­a una solicitud y tu
+                administrador la revisara para recargar tu paquete mensual.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -272,11 +272,11 @@ export default function WalletPage() {
                 >
                   <Clock className="w-4 h-4" />
                   <div>
-                    <p className="font-medium">Solicitud en revisiÃ³n</p>
+                    <p className="font-medium">Solicitud en revision</p>
                     <p className="text-xs text-amber-800">
                       Enviada el{" "}
                       {format(new Date(activeReq.requestedAt), "dd MMM yyyy, HH:mm", { locale: es })}
-                      . RecibirÃ¡s una confirmaciÃ³n cuando tu administrador la
+                      . Recibiras una confirmacion cuando tu administrador la
                       apruebe.
                     </p>
                   </div>
@@ -316,7 +316,7 @@ export default function WalletPage() {
             <CardTitle className="flex items-center gap-2">
               <PlusCircle className="h-5 w-5 text-primary" /> Recargar Saldo
             </CardTitle>
-            <CardDescription>AÃ±adÃ­ fondos mediante transferencia o efectivo en sucursal.</CardDescription>
+            <CardDescription>Agrega fondos mediante transferencia o efectivo en sucursal.</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -343,11 +343,11 @@ export default function WalletPage() {
                   name="method"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>MÃ©todo de pago</FormLabel>
+                      <FormLabel>Metodo de pago</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="SeleccionÃ¡ un mÃ©todo" />
+                            <SelectValue placeholder="Selecciona un Metodo" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -373,7 +373,7 @@ export default function WalletPage() {
       <Card>
         <CardHeader>
           <CardTitle>Movimientos de Billetera</CardTitle>
-          <CardDescription>Historial de recargas y pagos de envÃ­os</CardDescription>
+          <CardDescription>Historial de recargas y pagos de Envios</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {loadingTx ? (
@@ -383,7 +383,7 @@ export default function WalletPage() {
           ) : !transactions || transactions.length === 0 ? (
             <div className="p-12 text-center text-muted-foreground">
               <Wallet className="mx-auto h-12 w-12 opacity-20 mb-4" />
-              AÃºn no tienes movimientos en tu billetera.
+              Aun no tienes movimientos en tu billetera.
             </div>
           ) : (
             <Table>

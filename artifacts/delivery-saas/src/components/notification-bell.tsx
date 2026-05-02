@@ -36,9 +36,7 @@ export function NotificationBell() {
   const { data, isLoading } = useQuery<NotificationsResponse>({
     queryKey: ["notifications"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/me/notifications?limit=20`, { credentials: "include",
-        credentials: "include",
-      });
+      const r = await fetch(`${API}/api/me/notifications?limit=20`, { credentials: "include" });
       if (!r.ok) throw new Error("notifications fetch failed");
       return r.json();
     },

@@ -1,16 +1,11 @@
-name: Deploy a Google Cloud Run
-
+﻿name: Deploy a Google Cloud Run
 on:
   push:
     branches:
       - main
-
 env:
   PROJECT_ID: tiempo-libre-app-494607
   REGION: us-central1
-  FRONTEND_SERVICE: tiempolibre-frontend
-  API_SERVICE: tiempolibre-api
-
 jobs:
   deploy-frontend:
     name: Deploy Frontend
@@ -20,35 +15,19 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/612959916526/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: github-deploy@tiempo-libre-app-494607.iam.gserviceaccount.com
-
       - uses: google-github-actions/setup-gcloud@v2
-
-      - run: gcloud auth configure-docker
-
-      - name: Build imagen
+      - name: Deploy Frontend a Cloud Run
         run: |
-          docker build \
-            --build-arg VITE_API_URL=https://tiempolibre-api-612959916526.us-central1.run.app \
-            -t gcr.io/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }} \
-            -f artifacts/delivery-saas/Dockerfile .
-
-      - name: Push imagen
-        run: docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }}
-
-      - name: Deploy a Cloud Run
-        run: |
-          gcloud run deploy ${{ env.FRONTEND_SERVICE }} \
-            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.FRONTEND_SERVICE }}:${{ github.sha }} \
-            --region ${{ env.REGION }} \
-            --platform managed \
+          gcloud run deploy tiempolibre-web \
+            --source . \
+            --region us-central1 \
             --allow-unauthenticated \
-            --port 8080
-
+            --port 8080 \
+            --project tiempo-libre-app-494607
   deploy-api:
     name: Deploy API
     runs-on: ubuntu-latest
@@ -57,31 +36,17 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-
       - uses: google-github-actions/auth@v2
         with:
           workload_identity_provider: projects/612959916526/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: github-deploy@tiempo-libre-app-494607.iam.gserviceaccount.com
-
       - uses: google-github-actions/setup-gcloud@v2
-
-      - run: gcloud auth configure-docker
-
-      - name: Build imagen
+      - name: Deploy API a Cloud Run
         run: |
-          docker build \
-            -t gcr.io/${{ env.PROJECT_ID }}/${{ env.API_SERVICE }}:${{ github.sha }} \
-            -f artifacts/api-server/Dockerfile .
-
-      - name: Push imagen
-        run: docker push gcr.io/${{ env.PROJECT_ID }}/${{ env.API_SERVICE }}:${{ github.sha }}
-
-      - name: Deploy a Cloud Run
-        run: |
-          gcloud run deploy ${{ env.API_SERVICE }} \
-            --image gcr.io/${{ env.PROJECT_ID }}/${{ env.API_SERVICE }}:${{ github.sha }} \
-            --region ${{ env.REGION }} \
-            --platform managed \
+          gcloud run deploy tiempolibre-api \
+            --source artifacts/api-server \
+            --region us-central1 \
             --allow-unauthenticated \
             --port 8080 \
-            --set-env-vars="NODE_ENV=production,ADMIN_EMAIL=admin@tiempolibre.com,SUPERADMIN_EMAIL=fabian.napoles1309@gmail.com,SMTP_USER=${{ secrets.SMTP_USER }},SMTP_PASS=${{ secrets.SMTP_PASS }}"
+            --project tiempo-libre-app-494607 \
+            --set-env-vars="NODE_ENV=production,DATABASE_URL=${{ secrets.DATABASE_URL }},SESSION_SECRET=${{ secrets.SESSION_SECRET }}"

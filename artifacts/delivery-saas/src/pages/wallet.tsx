@@ -1,6 +1,7 @@
 ﻿import { useState } from "react";
 import { useGetWallet, useListWalletTransactions, useTopUpWallet, useGetMySubscription, getGetMySubscriptionQueryKey, getGetWalletQueryKey, getListWalletTransactionsQueryKey, PaymentMethod } from "@workspace/api-client-react";
 import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

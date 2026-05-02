@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { apiFetch } from "@/lib/api";
 import maplibregl, { type Map as MapLibreMap, type LngLatBoundsLike } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +58,7 @@ export default function MapPage() {
     setError(null);
     try {
       const token = localStorage.getItem("tiempolibre_token");
-      const res = await fetch(apiUrl("api/zones/geojson"), {
+      const res = await apiFetch(apiUrl("api/zones/geojson"), {
         credentials: "include",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });

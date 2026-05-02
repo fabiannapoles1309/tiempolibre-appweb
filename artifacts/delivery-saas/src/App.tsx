@@ -81,7 +81,7 @@ function Router() {
   return (
     <Switch>
       <Route path="/login" component={() => <PublicRoute component={Login} />} />
-      {/* Registro pÃºblico deshabilitado: las cuentas se crean desde el panel de admin. */}
+      {/* Registro publico deshabilitado: las cuentas se crean desde el panel de admin. */}
       <Route path="/register" component={() => <Redirect to="/login" />} />
       <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/orders" component={() => <ProtectedRoute component={OrdersList} />} />

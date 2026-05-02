@@ -1,4 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -44,7 +45,7 @@ export default function AdminDestinatariosPage() {
       const url = q.trim()
         ? `/api/admin/recipients?q=${encodeURIComponent(q.trim())}`
         : `/api/admin/recipients`;
-      const r = await fetch(url, { credentials: "include" });
+      const r = await apiFetch(url, { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },
@@ -55,7 +56,7 @@ export default function AdminDestinatariosPage() {
   const handleExport = async () => {
     setDownloading(true);
     try {
-      const r = await fetch("/api/admin/recipients/export", { credentials: "include" });
+      const r = await apiFetch("/api/admin/recipients/export", { credentials: "include" });
       if (!r.ok) throw new Error("export-failed");
       const blob = await r.blob();
       const url = URL.createObjectURL(blob);

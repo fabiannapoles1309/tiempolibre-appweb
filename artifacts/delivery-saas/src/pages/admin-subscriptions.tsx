@@ -1,4 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useListSubscriptions,
@@ -47,7 +48,7 @@ export default function AdminSubscriptionsPage() {
   const handleTierChange = async (userId: number, tier: TierValue) => {
     setBusyTierId(userId);
     try {
-      const r = await fetch(`/api/admin/clientes/${userId}`, {
+      const r = await apiFetch(`/api/admin/clientes/${userId}`, {
         method: "PATCH",
         credentials: "include",
         headers: { "content-type": "application/json" },
@@ -77,7 +78,7 @@ export default function AdminSubscriptionsPage() {
     if (!assignTarget) return;
     setAssigning(true);
     try {
-      const r = await fetch(
+      const r = await apiFetch(
         `/api/admin/clientes/${assignTarget.userId}/assign-package`,
         {
           method: "POST",

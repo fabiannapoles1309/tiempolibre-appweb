@@ -1,4 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -44,7 +45,7 @@ export interface PickupSettlementOrder {
 }
 
 async function jsonFetch(url: string, init?: RequestInit) {
-  const r = await fetch(url, {
+  const r = await apiFetch(url, {
     credentials: "include",
     headers: { "Content-Type": "application/json" },
     ...init,

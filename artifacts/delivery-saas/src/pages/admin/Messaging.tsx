@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ export default function AdminMessagingPage() {
   const { data: drivers = [], isLoading: ld } = useQuery<Person[]>({
     queryKey: ["messaging-drivers"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/messaging/drivers`, {
+      const r = await apiFetch(`${API}/api/admin/messaging/drivers`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -33,7 +34,7 @@ export default function AdminMessagingPage() {
   const { data: clientes = [], isLoading: lc } = useQuery<Person[]>({
     queryKey: ["messaging-clientes"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/messaging/clientes`, {
+      const r = await apiFetch(`${API}/api/admin/messaging/clientes`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -43,7 +44,7 @@ export default function AdminMessagingPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const r = await fetch(`${API}/api/admin/messaging/send`, {
+      const r = await apiFetch(`${API}/api/admin/messaging/send`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

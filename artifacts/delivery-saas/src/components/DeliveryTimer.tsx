@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ export default function DeliveryTimer({ orderId, onDelivered }: DeliveryTimerPro
   // Iniciar contador cuando el driver sale a ruta
   const startRoute = async () => {
     try {
-      await fetch(`${API}/api/orders/${orderId}/start-route`, {
+      await apiFetch(`${API}/api/orders/${orderId}/start-route`, {
         method: "POST",
         credentials: "include",
       });
@@ -39,7 +40,7 @@ export default function DeliveryTimer({ orderId, onDelivered }: DeliveryTimerPro
   // Marcar como entregado
   const markDelivered = async () => {
     try {
-      await fetch(`${API}/api/orders/${orderId}/deliver`, {
+      await apiFetch(`${API}/api/orders/${orderId}/deliver`, {
         method: "POST",
         credentials: "include",
       });

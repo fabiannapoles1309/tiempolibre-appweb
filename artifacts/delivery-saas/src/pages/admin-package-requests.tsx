@@ -1,4 +1,5 @@
-import { useState } from "react";
+﻿import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
@@ -51,7 +52,7 @@ export default function AdminPackageRequestsPage() {
   const { data: pending = [], isLoading: lp } = useQuery<Req[]>({
     queryKey: ["admin-package-requests", "PENDIENTE"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/package-requests?status=PENDIENTE`, {
+      const r = await apiFetch(`${API}/api/admin/package-requests?status=PENDIENTE`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -62,7 +63,7 @@ export default function AdminPackageRequestsPage() {
   const { data: history = [], isLoading: lh } = useQuery<Req[]>({
     queryKey: ["admin-package-requests", "ALL"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/package-requests`, { credentials: "include" });
+      const r = await apiFetch(`${API}/api/admin/package-requests`, { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },
@@ -73,7 +74,7 @@ export default function AdminPackageRequestsPage() {
   const act = async (id: number, action: "approve" | "reject") => {
     setBusyId(id);
     try {
-      const r = await fetch(`${API}/api/admin/package-requests/${id}/${action}`, {
+      const r = await apiFetch(`${API}/api/admin/package-requests/${id}/${action}`, {
         method: "POST",
         credentials: "include",
         headers: { "content-type": "application/json" },

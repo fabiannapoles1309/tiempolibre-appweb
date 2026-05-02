@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import {
   Card,
@@ -41,7 +42,7 @@ export default function AdminFeedbackPage() {
   const { data = [], isLoading } = useQuery<AdminFeedbackRow[]>({
     queryKey: ["admin-feedback"],
     queryFn: async () => {
-      const r = await fetch("/api/admin/feedback", { credentials: "include" });
+      const r = await apiFetch("/api/admin/feedback", { credentials: "include" });
       if (!r.ok) return [];
       return r.json();
     },

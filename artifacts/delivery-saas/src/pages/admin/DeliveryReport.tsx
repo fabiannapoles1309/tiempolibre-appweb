@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ export default function DeliveryReportPage({ userRole }: { userRole?: string }) 
     queryKey: ["report-clientes"],
     enabled:  isAdmin,
     queryFn:  async () => {
-      const r = await fetch(`${API}/api/admin/refunds/clientes`, {
+      const r = await apiFetch(`${API}/api/admin/refunds/clientes`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -90,7 +91,7 @@ export default function DeliveryReportPage({ userRole }: { userRole?: string }) 
   const { data: orders = [], isLoading, refetch } = useQuery<OrderReport[]>({
     queryKey: ["delivery-report", clienteId, from, to],
     queryFn:  async () => {
-      const r = await fetch(`${API}/api/admin/reports/deliveries?${params}`, {
+      const r = await apiFetch(`${API}/api/admin/reports/deliveries?${params}`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -102,7 +103,7 @@ export default function DeliveryReportPage({ userRole }: { userRole?: string }) 
   // Descargar Excel
   const downloadExcel = async () => {
     try {
-      const r = await fetch(`${API}/api/admin/reports/excel?${params}`, {
+      const r = await apiFetch(`${API}/api/admin/reports/excel?${params}`, {
         credentials: "include",
       });
       if (!r.ok) throw new Error("Error al generar Excel");

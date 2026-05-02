@@ -1,4 +1,5 @@
 ﻿import { useState } from "react";
+import { apiFetch } from "@/lib/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ export default function AdminRefundsPage() {
   const { data: clientes = [], isLoading: lc } = useQuery<Cliente[]>({
     queryKey: ["refund-clientes"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/refunds/clientes`, {
+      const r = await apiFetch(`${API}/api/admin/refunds/clientes`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -55,7 +56,7 @@ export default function AdminRefundsPage() {
   const { data: history = [], isLoading: lh } = useQuery<Refund[]>({
     queryKey: ["refunds-history"],
     queryFn: async () => {
-      const r = await fetch(`${API}/api/admin/refunds`, {
+      const r = await apiFetch(`${API}/api/admin/refunds`, {
         credentials: "include",
       });
       if (!r.ok) return [];
@@ -65,7 +66,7 @@ export default function AdminRefundsPage() {
 
   const mutation = useMutation({
     mutationFn: async () => {
-      const r = await fetch(`${API}/api/admin/refunds`, {
+      const r = await apiFetch(`${API}/api/admin/refunds`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

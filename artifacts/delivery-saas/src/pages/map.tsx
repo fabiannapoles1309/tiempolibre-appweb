@@ -235,7 +235,7 @@ export default function MapPage() {
           </h1>
           <p className="text-muted-foreground mt-1">
             Polígonos de cobertura cargados desde <code>zonas.kml</code>. Cada nuevo envío valida automíticamente que la
-            direcciín de entrega caiga dentro de una de estas zonas.
+            dirección de entrega caiga dentro de una de estas zonas.
           </p>
         </div>
         <Button variant="outline" onClick={fetchZones} disabled={loading}>
@@ -306,6 +306,7 @@ export default function MapPage() {
     </div>
   );
 }
+
 
 
 

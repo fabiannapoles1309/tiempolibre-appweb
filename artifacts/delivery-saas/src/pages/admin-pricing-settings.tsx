@@ -16,9 +16,9 @@ import { Loader2, Settings2 } from "lucide-react";
 import { toast } from "sonner";
 
 const schema = z.object({
-  estandarPrice: z.coerce.number().min(0, "Debe ser â‰¥ 0"),
-  optimoPrice: z.coerce.number().min(0, "Debe ser â‰¥ 0"),
-  extraPackagePrice: z.coerce.number().min(0, "Debe ser â‰¥ 0"),
+  estandarPrice: z.coerce.number().min(0, "Debe ser >= 0"),
+  optimoPrice: z.coerce.number().min(0, "Debe ser >= 0"),
+  extraPackagePrice: z.coerce.number().min(0, "Debe ser >= 0"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -87,7 +87,7 @@ export default function AdminPricingSettingsPage() {
                   name="estandarPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan Estándar â€” precio mensual (MXN)</FormLabel>
+                      <FormLabel>Plan Estándar - precio mensual (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -112,7 +112,7 @@ export default function AdminPricingSettingsPage() {
                   name="optimoPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan Á“ptimo â€” precio mensual (MXN)</FormLabel>
+                      <FormLabel>Plan Óptimo - precio mensual (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -137,7 +137,7 @@ export default function AdminPricingSettingsPage() {
                   name="extraPackagePrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Paquete extra â€” costo por bloque de 35 envíos (MXN)</FormLabel>
+                      <FormLabel>Paquete extra -” costo por bloque de 35 envíos (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>

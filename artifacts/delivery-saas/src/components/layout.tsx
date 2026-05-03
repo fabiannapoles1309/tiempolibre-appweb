@@ -1,4 +1,4 @@
-﻿﻿import React, { useState } from "react";
+﻿﻿import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
@@ -51,10 +51,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const logoutMutation = useLogout();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  if (!user) {
-    return <>{children}</>;
-  }
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  if (!user) return <>{children}</>;
 
   const handleLogout = async () => {
     try {
@@ -119,25 +125,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
 
-      {/* Sidebar desktop */}
-      <aside className="w-64 flex-shrink-0 flex-col bg-[#00B5E2] text-white" style={{ display: typeof window !== 'undefined' && window.innerWidth < 768 ? 'none' : 'flex' }}>
-        <SidebarContent />
-      </aside>
+      {/* Sidebar — solo visible en PC */}
+      {!isMobile && (
+        <aside className="w-64 flex-shrink-0 flex flex-col bg-[#00B5E2] text-white">
+          <SidebarContent />
+        </aside>
+      )}
 
       {/* Sidebar móvil - overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 flex md:hidden">
-          {/* Fondo oscuro */}
-          <div
-            className="fixed inset-0 bg-black/50"
-            onClick={() => setSidebarOpen(false)}
-          />
-          {/* Panel lateral */}
+      {isMobile && sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
           <aside className="relative z-50 w-64 flex flex-col bg-[#00B5E2] text-white h-full">
-            <button
-              className="absolute top-3 right-3 text-white"
-              onClick={() => setSidebarOpen(false)}
-            >
+            <button className="absolute top-3 right-3 text-white" onClick={() => setSidebarOpen(false)}>
               <X className="w-5 h-5" />
             </button>
             <SidebarContent />
@@ -148,13 +148,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       {/* Contenido principal */}
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="flex items-center justify-between gap-2 h-14 px-4 border-b bg-background">
-          {/* Botón hamburguesa solo en móvil */}
-          <button
-            className="md:hidden p-1 rounded-md text-muted-foreground hover:text-foreground"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          {isMobile && (
+            <button className="p-1 rounded-md text-muted-foreground hover:text-foreground" onClick={() => setSidebarOpen(true)}>
+              <Menu className="w-6 h-6" />
+            </button>
+          )}
           <div className="flex items-center gap-2 ml-auto">
             <NotificationBell />
           </div>

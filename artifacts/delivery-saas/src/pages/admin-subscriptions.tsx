@@ -106,7 +106,7 @@ export default function AdminSubscriptionsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Crown className="w-7 h-7 text-[#00B5E2]" /> Suscripciones B2B
+          <Crown className="w-7 h-7 text-[#00B5E2]" /> Suscripciones
         </h1>
         <p className="text-muted-foreground mt-1">
           Cambiá el plan de cada cliente y asignale paquetes extras de 35
@@ -262,6 +262,7 @@ export default function AdminSubscriptionsPage() {
     </div>
   );
 }
+
 
 
 

@@ -456,7 +456,7 @@ export default function Finance() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Recaudación B2B (suscripciones)</CardTitle>
+            <CardTitle>Recaudación por suscripciones</CardTitle>
             <CardDescription>
               MRR activo:{" "}
               <span className="font-bold text-foreground">{formatMoney(b2b?.totalMrr ?? 0)}</span>{" "}
@@ -559,6 +559,7 @@ export default function Finance() {
     </div>
   );
 }
+
 
 
 

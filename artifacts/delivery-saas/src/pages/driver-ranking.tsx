@@ -1,4 +1,4 @@
-import { useGetDriverRanking, useGetMyDriver } from "@workspace/api-client-react";
+﻿import { useGetDriverRanking, useGetMyDriver } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Loader2 } from "lucide-react";
 
@@ -13,7 +13,7 @@ export default function DriverRankingPage() {
           <Trophy className="w-7 h-7 text-[#00B5E2]" /> Ranking de repartidores
         </h1>
         <p className="text-muted-foreground mt-1">
-          Top performers según entregas confirmadas.
+          Top performers segÃºn entregas confirmadas.
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function DriverRankingPage() {
               <Loader2 className="w-4 h-4 animate-spin" /> Cargando ranking...
             </div>
           ) : ranking.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Todavía no hay datos suficientes.</p>
+            <p className="text-sm text-muted-foreground">TodavÃ­a no hay datos suficientes.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -36,7 +36,7 @@ export default function DriverRankingPage() {
                     <th className="py-2 pr-4 w-16">#</th>
                     <th className="py-2 pr-4">Repartidor</th>
                     <th className="py-2 pr-4 text-right">Entregas</th>
-                    <th className="py-2 text-right">Recaudación</th>
+                    <th className="py-2 text-right">RecaudaciÃ³n</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -82,3 +82,5 @@ export default function DriverRankingPage() {
     </div>
   );
 }
+
+

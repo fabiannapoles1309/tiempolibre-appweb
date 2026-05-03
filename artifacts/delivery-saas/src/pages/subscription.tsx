@@ -1,4 +1,4 @@
-import {
+﻿import {
   useGetMySubscription,
   useSubscribe,
   useRechargeSubscription,
@@ -13,30 +13,30 @@ import { Button } from "@/components/ui/button";
 import { Crown, Check, AlertTriangle, Loader2, Plus, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
-// Los planes ya NO incluyen envíos por defecto: el cliente compra
-// paquetes extras de 35 envíos cuando los necesita. El tier sólo
+// Los planes ya NO incluyen envÃ­os por defecto: el cliente compra
+// paquetes extras de 35 envÃ­os cuando los necesita. El tier sÃ³lo
 // diferencia el nivel de servicio (perks). El cargo recurrente del
-// plan se eliminó: la única tarifa viva es el paquete extra,
-// todavía configurable desde Pricing Settings.
+// plan se eliminÃ³: la Ãºnica tarifa viva es el paquete extra,
+// todavÃ­a configurable desde Pricing Settings.
 const PLAN_TEMPLATES = [
   {
     tier: SubscriptionTier.ESTANDAR,
-    name: "Estándar",
+    name: "EstÃ¡ndar",
     perks: [
-      "Sin envíos incluidos — comprá paquetes extras de 35 envíos",
+      "Sin envÃ­os incluidos â€” comprÃ¡ paquetes extras de 35 envÃ­os",
       "Soporte por email",
-      "Reportes básicos",
+      "Reportes bÃ¡sicos",
     ],
     highlight: false,
   },
   {
     tier: SubscriptionTier.OPTIMO,
-    name: "Óptimo",
+    name: "Ã“ptimo",
     perks: [
-      "Sin envíos incluidos — comprá paquetes extras de 35 envíos",
+      "Sin envÃ­os incluidos â€” comprÃ¡ paquetes extras de 35 envÃ­os",
       "Soporte prioritario",
       "Reportes avanzados",
-      "Asignación con prioridad",
+      "AsignaciÃ³n con prioridad",
     ],
     highlight: true,
   },
@@ -52,7 +52,7 @@ function BlockOf35({
   monthly: number;
 }) {
   const used = Math.max(0, monthly - remaining);
-  // Bloque actual = los últimos `BLOCK_SIZE` envíos del cupo, o todos si total < 35.
+  // Bloque actual = los Ãºltimos `BLOCK_SIZE` envÃ­os del cupo, o todos si total < 35.
   const blockTotal = Math.min(BLOCK_SIZE, monthly || BLOCK_SIZE);
   const blockRemaining = Math.min(remaining, blockTotal);
   const blockUsed = blockTotal - blockRemaining;
@@ -87,7 +87,7 @@ function BlockOf35({
       </div>
       {blockUsed > 0 && (
         <div className="text-xs text-muted-foreground">
-          {blockUsed} {blockUsed === 1 ? "envío usado" : "envíos usados"} de este bloque.
+          {blockUsed} {blockUsed === 1 ? "envÃ­o usado" : "envÃ­os usados"} de este bloque.
         </div>
       )}
     </div>
@@ -102,25 +102,25 @@ export default function SubscriptionPage() {
   const recharge = useRechargeSubscription();
   const qc = useQueryClient();
   const sub = data?.subscription ?? null;
-  // Los planes ya no tienen cargo mensual; sólo se factura cada paquete
+  // Los planes ya no tienen cargo mensual; sÃ³lo se factura cada paquete
   // extra. Mostramos `extraPackagePrice` como referencia para que el
-  // cliente sepa cuánto le costará cada recarga.
+  // cliente sepa cuÃ¡nto le costarÃ¡ cada recarga.
   const extraPackagePrice = pricing?.extraPackagePrice ?? 0;
 
   const handleSubscribe = async (tier: SubscriptionTier) => {
     try {
       await subscribe.mutateAsync({ data: { tier } });
-      toast.success("Suscripción activada");
+      toast.success("SuscripciÃ³n activada");
       qc.invalidateQueries({ queryKey: getGetMySubscriptionQueryKey() });
     } catch {
-      toast.error("No se pudo procesar la suscripción");
+      toast.error("No se pudo procesar la suscripciÃ³n");
     }
   };
 
   const handleRecharge = async () => {
     try {
       await recharge.mutateAsync();
-      toast.success("Solicitud enviada: +35 envíos en tu paquete extra");
+      toast.success("Solicitud enviada: +35 envÃ­os en tu paquete extra");
       qc.invalidateQueries({ queryKey: getGetMySubscriptionQueryKey() });
     } catch {
       toast.error("No se pudo procesar la solicitud de paquete extra");
@@ -133,10 +133,10 @@ export default function SubscriptionPage() {
     <div className="space-y-6 max-w-5xl">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Crown className="w-7 h-7 text-[#00B5E2]" /> Mi suscripción
+          <Crown className="w-7 h-7 text-[#00B5E2]" /> Mi suscripciÃ³n
         </h1>
         <p className="text-muted-foreground mt-1">
-          Consulta tu plan activo y la cantidad de envíos disponibles.
+          Consulta tu plan activo y la cantidad de envÃ­os disponibles.
         </p>
       </div>
 
@@ -145,7 +145,7 @@ export default function SubscriptionPage() {
           <CardContent className="pt-6 grid sm:grid-cols-2 gap-4 text-sm">
             <div>
               <div className="text-xs text-muted-foreground">Establecimiento</div>
-              <div className="font-medium">{profile.businessName ?? "—"}</div>
+              <div className="font-medium">{profile.businessName ?? "â€”"}</div>
             </div>
             <div>
               <div className="text-xs text-muted-foreground flex items-center gap-1">
@@ -160,7 +160,7 @@ export default function SubscriptionPage() {
             </div>
             {profile.pickupAddress && (
               <div className="sm:col-span-2">
-                <div className="text-xs text-muted-foreground">Dirección de recolección</div>
+                <div className="text-xs text-muted-foreground">DirecciÃ³n de recolecciÃ³n</div>
                 <div className="font-medium">{profile.pickupAddress}</div>
               </div>
             )}
@@ -180,8 +180,8 @@ export default function SubscriptionPage() {
               data-testid="alert-low-remaining"
             >
               <AlertTriangle className="w-5 h-5" />
-              ¡Atención! Te quedan{" "}
-              <span className="font-bold">{sub.remainingDeliveries}</span> envíos. Solicita un
+              Â¡AtenciÃ³n! Te quedan{" "}
+              <span className="font-bold">{sub.remainingDeliveries}</span> envÃ­os. Solicita un
               paquete extra para no quedarte sin servicio.
             </div>
           )}
@@ -207,11 +207,11 @@ export default function SubscriptionPage() {
                     $ {extraPackagePrice.toLocaleString("es-MX")}
                   </div>
                   <div className="text-[10px] text-muted-foreground mt-1">
-                    por cada +35 envíos
+                    por cada +35 envÃ­os
                   </div>
                 </div>
                 <div className="border rounded-lg p-3">
-                  <div className="text-xs text-muted-foreground">Envíos del periodo</div>
+                  <div className="text-xs text-muted-foreground">EnvÃ­os del periodo</div>
                   <div className="text-xl font-bold">
                     {sub.usedDeliveries} / {sub.monthlyDeliveries}
                   </div>
@@ -239,7 +239,7 @@ export default function SubscriptionPage() {
                   ) : (
                     <Plus className="w-4 h-4 mr-2" />
                   )}
-                  Solicitar paquete extra (+35 envíos)
+                  Solicitar paquete extra (+35 envÃ­os)
                 </Button>
                 <p className="text-xs text-muted-foreground">
                   Periodo iniciado: {new Date(sub.periodStart).toLocaleDateString("es-MX")}
@@ -251,7 +251,7 @@ export default function SubscriptionPage() {
       ) : (
         <>
           <div className="text-sm text-muted-foreground">
-            Aún no tienes un plan activo. Elige uno para empezar a gestionar tus envíos.
+            AÃºn no tienes un plan activo. Elige uno para empezar a gestionar tus envÃ­os.
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -276,8 +276,8 @@ export default function SubscriptionPage() {
                       Sin cargo mensual
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Pagás sólo por los paquetes extras que uses (
-                      $ {extraPackagePrice.toLocaleString("es-MX")} c/u — 35 envíos).
+                      PagÃ¡s sÃ³lo por los paquetes extras que uses (
+                      $ {extraPackagePrice.toLocaleString("es-MX")} c/u â€” 35 envÃ­os).
                     </div>
                   </div>
                   <ul className="space-y-2 text-sm">
@@ -304,3 +304,5 @@ export default function SubscriptionPage() {
     </div>
   );
 }
+
+

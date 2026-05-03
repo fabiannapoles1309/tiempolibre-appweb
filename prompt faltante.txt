@@ -1,0 +1,82 @@
+🪨 PROMPT DE CONTINUACIÓN — TiempoLibre App
+Soy Fabian Napoles. Tengo una app web llamada TiempoLibre (sistema de reparto) desplegada en Google Cloud Run. Soy inexperto en programacion. Necesito instrucciones caveman — paso a paso, comando por comando, todo desde PowerShell en Windows. Nunca pegues dos comandos juntos en una sola linea.
+INFRAESTRUCTURA
+Repo GitHub: https://github.com/fabiannapoles1309/tiempolibre-appweb
+Frontend: https://tiempolibre-web-612959916526.us-central1.run.app
+Backend: https://tiempolibre-api-612959916526.us-central1.run.app
+Proyecto GCP: tiempo-libre-app-494607
+DB Neon TiempoLibre: postgresql://neondb_owner:npg_LF2O8sAhyzCp@ep-falling-cake-amnvoxzu-pooler.c-5.us-east-1.aws.neon.tech/neondb?sslmode=require
+SESSION_SECRET: tiempolibre-super-secret-2026
+Ruta local repo: C:\Users\Fabian Napoles\tiempolibre-appweb
+CREDENCIALES
+Admin: admin@tiempolibre.com / admin123
+Cliente: cliente@tiempolibre.com / cliente123
+Driver: driver@tiempolibre.com / driver123
+Superuser: fabian.napoles1309@gmail.com
+Marketing: bryanbecerra@tiempolibre.com / marketing123
+STACK TECNICO
+Frontend: React + TypeScript + Vite, esta en artifacts/delivery-saas/
+Backend API: Node.js ESM, esta en artifacts/api-server/
+Deploy: GitHub Actions — push a main despliega automaticamente
+Para escribir archivos usar VS Code — abrir con: code "ruta\archivo"
+NO usar npm install nada localmente
+NO correr node directo con conexiones a DB
+Todo cambio va al repo con git add -A, git commit, git push origin main
+LO QUE YA ESTA RESUELTO
+CSS cargando correctamente
+Backend conectado a Neon
+Tabla notifications creada
+GitHub Actions funcionando — Deploy Frontend y Deploy API en Success
+notification-bell.tsx corregido — ya usa localStorage
+login.tsx ya guarda token en localStorage como tiempolibre_token
+lib/api.ts ya tiene apiFetch con Authorization Bearer header
+middlewares/auth.ts ya acepta cookie Y Authorization header
+17 archivos del frontend cambiados de fetch a apiFetch
+App.tsx limpio sin caracteres especiales
+wallet.tsx limpio sin caracteres especiales y con apiFetch correcto
+Usuario bryanbecerra@tiempolibre.com creado en DB con rol MARKETING y password marketing123
+LO QUE FALTA — EN ORDEN
+MISION 1 PENDIENTE — Verificar que el 401 esta resuelto
+Entrar a la app con cliente@tiempolibre.com / cliente123
+Ir a Mi Billetera
+Verificar que no hay errores 401 en la consola del browser
+Si hay errores nuevos resolverlos
+MISION 2 PENDIENTE — Panel de Marketing
+El usuario bryanbecerra@tiempolibre.com ya existe en DB con rol MARKETING
+Pero el frontend no tiene ruta ni panel para ese rol
+Cuando Bryan hace login ve pantalla en blanco o error
+Necesita su propio panel con estas secciones:
+
+Base de datos de clientes de TiempoLibre — solo lectura, ver lista de clientes
+Modulo de campanas de marketing — espacio para redactar y enviar mensajes
+Links de redes sociales — Facebook, Instagram, TikTok de TiempoLibre
+Sin acceso a modulos de admin, driver ni superuser
+Los archivos del frontend estan en: artifacts/delivery-saas/src/
+El router principal esta en: artifacts/delivery-saas/src/App.tsx
+Hay que agregar una ruta /marketing y un componente MarketingDashboard.tsx
+
+MISION 3 — Modulo Angels Pilates
+Mismo repo GitHub, carpeta nueva: artifacts/angels-pilates/
+Servicio Cloud Run separado: tiempolibre-angels
+DB Neon nueva e independiente para Angels — crearla desde console.neon.tech
+GitHub Actions: agregar tercer job deploy-angels al archivo .github/workflows/deploy.yml
+El archivo deploy.yml esta en: .github/workflows/deploy.yml
+Funcionalidades del modulo Angels:
+
+Logo propio rosa con texto "angels pilates corner"
+Referencia visual: https://angelspilates.com.mx/
+Cargar base de datos propia de clientes
+Modulo de campanas de marketing
+Links de redes sociales
+Login completamente separado de TiempoLibre
+Sesion y DB completamente independientes
+
+REGLAS IMPORTANTES
+Todo desde PowerShell — nunca abrir terminales distintas
+Para editar archivos tsx usar VS Code con: code "ruta\archivo"
+Despues de cada cambio hacer git add -A, git commit -m "mensaje", git push origin main
+Esperar 3 minutos despues de cada push para que GitHub Actions despliegue
+Verificar en el browser despues de cada deploy
+Los warnings de LF/CRLF en git add son normales, ignorarlos
+El chat convierte emails y nombres de archivo en links — si un comando falla por eso, separar el comando en partes
+EMPIEZA POR MISION 1 — verifica que el 401 esta resuelto entrando a la app. Luego continua con MISION 2 y MISION 3 en orden. Modo caveman, paso a paso, comando por comando, un comando a la vez.

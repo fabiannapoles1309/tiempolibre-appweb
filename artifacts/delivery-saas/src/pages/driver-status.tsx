@@ -1,4 +1,4 @@
-import { useGetMyDriver, useUpdateMyDriverStatus, DriverStatus } from "@workspace/api-client-react";
+﻿import { useGetMyDriver, useUpdateMyDriverStatus, DriverStatus } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
@@ -45,7 +45,7 @@ export function DriverStatusCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          Cambialo según tu disponibilidad. Los admins ven tu estado en tiempo real.
+          Cambialo segÃºn tu disponibilidad. Los admins ven tu estado en tiempo real.
         </div>
         <div className="grid grid-cols-2 gap-2">
           {STATUSES.map((s) => (
@@ -67,3 +67,5 @@ export function DriverStatusCard() {
     </Card>
   );
 }
+
+

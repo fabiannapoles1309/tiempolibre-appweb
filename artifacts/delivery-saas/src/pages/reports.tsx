@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useGetDeliveriesReport, useGetDriversReport, GetDeliveriesReportRange, ZoneName } from "@workspace/api-client-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -33,13 +33,13 @@ export default function Reports() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Reportes</h1>
-        <p className="text-muted-foreground mt-1">Análisis detallado de entregas y rendimiento de equipo.</p>
+        <p className="text-muted-foreground mt-1">AnÃ¡lisis detallado de entregas y rendimiento de equipo.</p>
       </div>
 
       <Tabs defaultValue="entregas" className="space-y-6">
         <TabsList className="bg-card border w-full justify-start rounded-lg h-auto p-1">
           <TabsTrigger value="entregas" className="px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md text-base">
-            <TrendingUp className="h-4 w-4 mr-2" /> Entregas y Volúmen
+            <TrendingUp className="h-4 w-4 mr-2" /> Entregas y VolÃºmen
           </TabsTrigger>
           <TabsTrigger value="repartidores" className="px-6 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-md text-base">
             <Users className="h-4 w-4 mr-2" /> Rendimiento de Repartidores
@@ -53,9 +53,9 @@ export default function Reports() {
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">Últimas 24 horas</SelectItem>
-                <SelectItem value="week">Última semana</SelectItem>
-                <SelectItem value="month">Último mes</SelectItem>
+                <SelectItem value="day">Ãšltimas 24 horas</SelectItem>
+                <SelectItem value="week">Ãšltima semana</SelectItem>
+                <SelectItem value="month">Ãšltimo mes</SelectItem>
               </SelectContent>
             </Select>
             
@@ -75,7 +75,7 @@ export default function Reports() {
           <Card>
             <CardHeader>
               <CardTitle>Volumen vs Ingresos</CardTitle>
-              <CardDescription>Comparativa de cantidad de pedidos entregados y facturación generada</CardDescription>
+              <CardDescription>Comparativa de cantidad de pedidos entregados y facturaciÃ³n generada</CardDescription>
             </CardHeader>
             <CardContent className="h-[400px]">
               {loadingDeliveries ? (
@@ -130,9 +130,9 @@ export default function Reports() {
                 <SelectValue placeholder="Periodo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="day">Últimas 24 horas</SelectItem>
-                <SelectItem value="week">Última semana</SelectItem>
-                <SelectItem value="month">Último mes</SelectItem>
+                <SelectItem value="day">Ãšltimas 24 horas</SelectItem>
+                <SelectItem value="week">Ãšltima semana</SelectItem>
+                <SelectItem value="month">Ãšltimo mes</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -205,3 +205,5 @@ export default function Reports() {
     </div>
   );
 }
+
+

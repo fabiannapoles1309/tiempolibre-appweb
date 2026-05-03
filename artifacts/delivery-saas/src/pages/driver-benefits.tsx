@@ -1,4 +1,4 @@
-import {
+﻿import {
   useGetMyDriver,
   useGetMyDriverBenefits,
 } from "@workspace/api-client-react";
@@ -48,7 +48,7 @@ export default function DriverBenefits() {
           Mis beneficios
         </h1>
         <p className="text-muted-foreground mt-1">
-          Eres parte de TiempoLibre. Mientras más entregas completes, más
+          Eres parte de TiempoLibre. Mientras mÃ¡s entregas completes, mÃ¡s
           beneficios desbloqueas.
         </p>
       </div>
@@ -56,7 +56,7 @@ export default function DriverBenefits() {
       {driver && (
         <Card className="border-[#00B5E2]/30 bg-[#00B5E2]/5">
           <CardContent className="p-4 text-sm">
-            Hola <strong>{driver.name}</strong>, tienes registrado el vehículo{" "}
+            Hola <strong>{driver.name}</strong>, tienes registrado el vehÃ­culo{" "}
             <strong>{driver.vehicle}</strong>
             {driver.licensePlate ? ` (placas ${driver.licensePlate})` : ""} en
             zonas{" "}
@@ -96,26 +96,26 @@ export default function DriverBenefits() {
                     <p className="text-lg font-semibold flex items-center gap-2">
                       <Trophy className="w-5 h-5 text-[#00B5E2]" />
                       Nivel {data.currentLevel}
-                      {data.currentLevelName ? ` · ${data.currentLevelName}` : ""}
+                      {data.currentLevelName ? ` Â· ${data.currentLevelName}` : ""}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Aún no alcanzas el primer nivel
+                      AÃºn no alcanzas el primer nivel
                     </p>
                   )}
                 </div>
                 <div className="rounded-md border p-3">
                   <p className="text-xs text-muted-foreground">
-                    Próximo nivel
+                    PrÃ³ximo nivel
                   </p>
                   {data.nextLevel != null ? (
                     <p className="text-lg font-semibold">
                       Nivel {data.nextLevel}
-                      {data.nextLevelName ? ` · ${data.nextLevelName}` : ""}
+                      {data.nextLevelName ? ` Â· ${data.nextLevelName}` : ""}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Has alcanzado el nivel máximo
+                      Has alcanzado el nivel mÃ¡ximo
                     </p>
                   )}
                 </div>
@@ -137,16 +137,16 @@ export default function DriverBenefits() {
                       para desbloquear{" "}
                       <strong>
                         Nivel {data.nextLevel}
-                        {data.nextLevelName ? ` · ${data.nextLevelName}` : ""}
+                        {data.nextLevelName ? ` Â· ${data.nextLevelName}` : ""}
                       </strong>
                     </>
                   ) : data.nextLevel == null ? (
                     <span className="text-[#00B5E2]">
-                      ¡Felicidades! Has desbloqueado todos los niveles del mes.
+                      Â¡Felicidades! Has desbloqueado todos los niveles del mes.
                     </span>
                   ) : (
                     <span className="text-[#00B5E2]">
-                      ¡Listo! Acabas de alcanzar este nivel.
+                      Â¡Listo! Acabas de alcanzar este nivel.
                     </span>
                   )}
                 </p>
@@ -166,7 +166,7 @@ export default function DriverBenefits() {
         <CardContent>
           {!data || data.benefits.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Aún no tienes beneficios desbloqueados este mes. ¡Sigue entregando!
+              AÃºn no tienes beneficios desbloqueados este mes. Â¡Sigue entregando!
             </p>
           ) : (
             <div className="grid md:grid-cols-2 gap-3">
@@ -210,3 +210,5 @@ export default function DriverBenefits() {
     </div>
   );
 }
+
+

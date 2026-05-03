@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -137,7 +137,7 @@ export default function AdminClientesPage() {
   const handleRecharge = async (row: AdminClienteRow) => {
     try {
       await recharge.mutateAsync({ id: row.id });
-      toast.success(`Recarga aplicada a ${row.name} (+35 envíos)`);
+      toast.success(`Recarga aplicada a ${row.name} (+35 envÃ­os)`);
       refresh();
     } catch (e: any) {
       toast.error(e?.data?.error ?? "No se pudo recargar");
@@ -147,7 +147,7 @@ export default function AdminClientesPage() {
   const handleRenew = async (row: AdminClienteRow) => {
     try {
       await renew.mutateAsync({ id: row.id });
-      toast.success(`Suscripción renovada para ${row.name}`);
+      toast.success(`SuscripciÃ³n renovada para ${row.name}`);
       refresh();
     } catch (e: any) {
       toast.error(e?.data?.error ?? "No se pudo renovar");
@@ -162,7 +162,7 @@ export default function AdminClientesPage() {
             <Users className="w-7 h-7 text-[#00B5E2]" /> Clientes
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gestiona el perfil del cliente, su plan y los bloques de envíos asignados.
+            Gestiona el perfil del cliente, su plan y los bloques de envÃ­os asignados.
           </p>
         </div>
         <Button variant="outline" onClick={refresh}>
@@ -186,7 +186,7 @@ export default function AdminClientesPage() {
             </div>
           ) : !data || data.length === 0 ? (
             <div className="p-12 text-center text-sm text-muted-foreground">
-              Aún no hay clientes registrados.
+              AÃºn no hay clientes registrados.
             </div>
           ) : (
             <Table>
@@ -209,15 +209,15 @@ export default function AdminClientesPage() {
                       className="font-mono text-xs"
                       data-testid={`text-customer-code-${row.id}`}
                     >
-                      {row.customerCode ?? "—"}
+                      {row.customerCode ?? "â€”"}
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{row.name}</div>
                       <div className="text-xs text-muted-foreground">{row.email}</div>
                     </TableCell>
-                    <TableCell>{row.businessName ?? "—"}</TableCell>
+                    <TableCell>{row.businessName ?? "â€”"}</TableCell>
                     <TableCell>
-                      {row.clienteZone != null ? `Zona ${row.clienteZone}` : "—"}
+                      {row.clienteZone != null ? `Zona ${row.clienteZone}` : "â€”"}
                     </TableCell>
                     <TableCell>
                       {row.tier ? (
@@ -225,7 +225,7 @@ export default function AdminClientesPage() {
                           {row.tier}
                         </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-xs text-muted-foreground">â€”</span>
                       )}
                     </TableCell>
                     <TableCell>{statusBadge(row.status)}</TableCell>
@@ -247,7 +247,7 @@ export default function AdminClientesPage() {
                           className="bg-[#00B5E2] hover:bg-[#0096BD]"
                           onClick={() => handleRecharge(row)}
                           disabled={recharge.isPending || !row.tier}
-                          title={!row.tier ? "El cliente no tiene plan activo" : "Sumar 35 envíos"}
+                          title={!row.tier ? "El cliente no tiene plan activo" : "Sumar 35 envÃ­os"}
                           data-testid={`button-recharge-${row.id}`}
                         >
                           <Plus className="w-3.5 h-3.5 mr-1" /> Recargar
@@ -277,7 +277,7 @@ export default function AdminClientesPage() {
           <DialogHeader>
             <DialogTitle>Editar cliente</DialogTitle>
             <DialogDescription>
-              Actualiza el perfil, la zona de operación y el plan del cliente.
+              Actualiza el perfil, la zona de operaciÃ³n y el plan del cliente.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -315,7 +315,7 @@ export default function AdminClientesPage() {
                 name="pickupAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Dirección de recolección</FormLabel>
+                    <FormLabel>DirecciÃ³n de recolecciÃ³n</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -352,7 +352,7 @@ export default function AdminClientesPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Teléfono</FormLabel>
+                      <FormLabel>TelÃ©fono</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -377,10 +377,10 @@ export default function AdminClientesPage() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value={SubscriptionTier.ESTANDAR}>
-                            Estándar (35)
+                            EstÃ¡ndar (35)
                           </SelectItem>
                           <SelectItem value={SubscriptionTier.OPTIMO}>
-                            Óptimo (70)
+                            Ã“ptimo (70)
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -410,3 +410,5 @@ export default function AdminClientesPage() {
     </div>
   );
 }
+
+

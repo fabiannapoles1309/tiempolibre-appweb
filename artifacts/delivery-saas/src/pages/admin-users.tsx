@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -36,8 +36,8 @@ import { Loader2, UserPlus, Copy, Check } from "lucide-react";
 const schema = z.object({
   role: z.nativeEnum(AdminCreateUserBodyRole),
   name: z.string().min(1, "Requerido"),
-  email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Mínimo 6 caracteres"),
+  email: z.string().email("Email invÃ¡lido"),
+  password: z.string().min(6, "MÃ­nimo 6 caracteres"),
   // Cliente
   tier: z.nativeEnum(SubscriptionTier).optional(),
   businessName: z.string().optional(),
@@ -58,7 +58,7 @@ const schema = z.object({
     .optional()
     .refine(
       (v) => v === undefined || v === "" || VEHICLE_TYPE_SET.has(v),
-      "Selecciona un tipo de vehículo válido",
+      "Selecciona un tipo de vehÃ­culo vÃ¡lido",
     ),
   zones: z.array(z.nativeEnum(ZoneName)).optional(),
   licensePlate: z.string().optional(),
@@ -140,7 +140,7 @@ export default function AdminUsersPage() {
       }
       const created = await create.mutateAsync({ data: payload });
       toast.success("Usuario creado correctamente");
-      // Si el backend devolvió el mensaje de bienvenida (drivers), abrimos el modal.
+      // Si el backend devolviÃ³ el mensaje de bienvenida (drivers), abrimos el modal.
       if (data.role === AdminCreateUserBodyRole.DRIVER && created?.welcomeMessage) {
         setWelcomeDriverName(data.name);
         setWelcomeMessage(created.welcomeMessage);
@@ -173,7 +173,7 @@ export default function AdminUsersPage() {
           <UserPlus className="w-7 h-7 text-[#00B5E2]" /> Crear usuario
         </h1>
         <p className="text-muted-foreground mt-1">
-          Alta de cuentas: clientes con plan inicial o repartidores con datos del vehículo.
+          Alta de cuentas: clientes con plan inicial o repartidores con datos del vehÃ­culo.
         </p>
       </div>
 
@@ -221,7 +221,7 @@ export default function AdminUsersPage() {
                     <FormItem>
                       <FormLabel>Nombre</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre completo o razón social" {...field} />
+                        <Input placeholder="Nombre completo o razÃ³n social" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -247,12 +247,12 @@ export default function AdminUsersPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contraseña inicial</FormLabel>
+                    <FormLabel>ContraseÃ±a inicial</FormLabel>
                     <div className="flex gap-2">
                       <FormControl>
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="Mínimo 6 caracteres"
+                          placeholder="MÃ­nimo 6 caracteres"
                           {...field}
                         />
                       </FormControl>
@@ -290,7 +290,7 @@ export default function AdminUsersPage() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Teléfono de contacto</FormLabel>
+                          <FormLabel>TelÃ©fono de contacto</FormLabel>
                           <FormControl>
                             <Input placeholder="+52 55 ..." {...field} />
                           </FormControl>
@@ -304,10 +304,10 @@ export default function AdminUsersPage() {
                     name="pickupAddress"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Dirección de recolección</FormLabel>
+                        <FormLabel>DirecciÃ³n de recolecciÃ³n</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Calle, número, colonia, alcaldía"
+                            placeholder="Calle, nÃºmero, colonia, alcaldÃ­a"
                             {...field}
                           />
                         </FormControl>
@@ -357,10 +357,10 @@ export default function AdminUsersPage() {
                             </FormControl>
                             <SelectContent>
                               <SelectItem value={SubscriptionTier.ESTANDAR}>
-                                Estándar
+                                EstÃ¡ndar
                               </SelectItem>
                               <SelectItem value={SubscriptionTier.OPTIMO}>
-                                Óptimo
+                                Ã“ptimo
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -380,7 +380,7 @@ export default function AdminUsersPage() {
                       name="phone"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Teléfono</FormLabel>
+                          <FormLabel>TelÃ©fono</FormLabel>
                           <FormControl>
                             <Input placeholder="+52 55 ..." {...field} />
                           </FormControl>
@@ -393,14 +393,14 @@ export default function AdminUsersPage() {
                       name="vehicle"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Tipo de vehículo</FormLabel>
+                          <FormLabel>Tipo de vehÃ­culo</FormLabel>
                           <Select
                             onValueChange={field.onChange}
                             value={field.value ?? ""}
                           >
                             <FormControl>
                               <SelectTrigger data-testid="select-vehicle-type">
-                                <SelectValue placeholder="Selecciona el vehículo" />
+                                <SelectValue placeholder="Selecciona el vehÃ­culo" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
@@ -435,9 +435,9 @@ export default function AdminUsersPage() {
                       name="circulationCard"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Tarjeta de Circulación</FormLabel>
+                          <FormLabel>Tarjeta de CirculaciÃ³n</FormLabel>
                           <FormControl>
-                            <Input placeholder="N°" {...field} />
+                            <Input placeholder="NÂ°" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -517,7 +517,7 @@ export default function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>Mensaje de bienvenida para {welcomeDriverName || "el repartidor"}</DialogTitle>
             <DialogDescription>
-              Cópialo y envíaselo por SMS o WhatsApp. Incluye sus accesos y el enlace a la app.
+              CÃ³pialo y envÃ­aselo por SMS o WhatsApp. Incluye sus accesos y el enlace a la app.
             </DialogDescription>
           </DialogHeader>
           <Textarea
@@ -556,3 +556,5 @@ export default function AdminUsersPage() {
     </div>
   );
 }
+
+

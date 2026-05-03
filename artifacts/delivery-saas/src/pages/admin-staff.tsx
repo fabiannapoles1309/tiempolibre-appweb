@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ShieldCheck, Mail } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { apiFetch } from "@/lib/api";
 
 type StaffUser = {
   id: number;
@@ -129,3 +130,5 @@ export default function AdminStaffPage() {
     </div>
   );
 }
+
+

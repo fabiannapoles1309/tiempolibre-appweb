@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+﻿import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, UserRole, useGetMe, getGetMeQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -81,3 +81,5 @@ export function useAuth() {
   }
   return context;
 }
+
+

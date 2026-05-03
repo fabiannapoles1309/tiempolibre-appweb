@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   useListIncidents,
   useCreateIncident,
@@ -29,13 +29,13 @@ const TYPE_LABELS: Record<string, string> = {
   ROBO: "Robo",
   DEMORA: "Demora",
   CLIENTE_AUSENTE: "Cliente ausente",
-  VEHICULO: "Vehículo",
+  VEHICULO: "VehÃ­culo",
   OTRO: "Otro",
 };
 
 const STATUS_LABELS: Record<string, string> = {
   ABIERTO: "Abierto",
-  EN_REVISION: "En revisión",
+  EN_REVISION: "En revisiÃ³n",
   RESUELTO: "Resuelto",
 };
 
@@ -60,7 +60,7 @@ export default function IncidentsPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim().length < 5) {
-      toast.error("Contanos un poco más sobre lo que pasó");
+      toast.error("Contanos un poco mÃ¡s sobre lo que pasÃ³");
       return;
     }
     try {
@@ -100,7 +100,7 @@ export default function IncidentsPage() {
         <p className="text-muted-foreground mt-1">
           {admin
             ? "Seguimiento de todos los reportes de los repartidores."
-            : "Reportá lo que pasa en la calle. El equipo va a revisarlo."}
+            : "ReportÃ¡ lo que pasa en la calle. El equipo va a revisarlo."}
         </p>
       </div>
 
@@ -131,7 +131,7 @@ export default function IncidentsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">
-                    N° de envío (opcional)
+                    NÂ° de envÃ­o (opcional)
                   </label>
                   <Input
                     type="number"
@@ -143,7 +143,7 @@ export default function IncidentsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">¿Qué pasó?</label>
+                <label className="text-xs font-medium text-muted-foreground">Â¿QuÃ© pasÃ³?</label>
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -198,13 +198,13 @@ export default function IncidentsPage() {
                       </Badge>
                       {inc.orderId ? (
                         <span className="text-xs text-muted-foreground">
-                          Envío #{inc.orderId}
+                          EnvÃ­o #{inc.orderId}
                         </span>
                       ) : null}
                     </div>
                     <p className="text-sm">{inc.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {admin ? `${inc.driverName} · ` : ""}
+                      {admin ? `${inc.driverName} Â· ` : ""}
                       {new Date(inc.createdAt).toLocaleString("es-MX")}
                     </p>
                   </div>
@@ -234,3 +234,5 @@ export default function IncidentsPage() {
     </div>
   );
 }
+
+

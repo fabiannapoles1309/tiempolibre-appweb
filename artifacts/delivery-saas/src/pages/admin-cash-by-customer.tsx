@@ -1,4 +1,4 @@
-import { useAdminCashByCustomer } from "@workspace/api-client-react";
+﻿import { useAdminCashByCustomer } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Table,
@@ -76,3 +76,5 @@ export default function AdminCashByCustomerPage() {
     </div>
   );
 }
+
+

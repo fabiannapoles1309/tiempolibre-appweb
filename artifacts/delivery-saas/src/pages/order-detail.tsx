@@ -1,4 +1,4 @@
-import { useParams } from "wouter";
+﻿import { useParams } from "wouter";
 import { useGetOrder, getGetOrderQueryKey, useUpdateOrder, useAssignOrderManual, useListDrivers, getListDriversQueryKey, OrderStatus, UserRole, getListOrdersQueryKey, getGetDashboardQueryKey } from "@workspace/api-client-react";
 import { useAuth, isAdmin } from "@/lib/auth";
 import { useQueryClient } from "@tanstack/react-query";
@@ -87,7 +87,7 @@ export default function OrderDetail() {
     );
   }
 
-  if (!order) return <div>Envío no encontrado</div>;
+  if (!order) return <div>EnvÃ­o no encontrado</div>;
 
   const validDrivers = drivers?.filter(d => d.active && (order.zone ? d.zones.includes(order.zone) : true)) || [];
 
@@ -102,7 +102,7 @@ export default function OrderDetail() {
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">Envío #{order.id}</h1>
+              <h1 className="text-3xl font-bold tracking-tight">EnvÃ­o #{order.id}</h1>
               <Badge variant="outline" className={statusColors[order.status]}>
                 {order.status}
               </Badge>
@@ -135,10 +135,10 @@ export default function OrderDetail() {
                  onClick={() => handleStatusChange(OrderStatus.EN_RUTA)}
                  data-testid="button-recoleccion"
                >
-                 <Truck className="w-4 h-4 mr-2" /> Recolección
+                 <Truck className="w-4 h-4 mr-2" /> RecolecciÃ³n
                </Button>
              )}
-             {/* Liquidación al recoger: visible mientras el envío está
+             {/* LiquidaciÃ³n al recoger: visible mientras el envÃ­o estÃ¡
                   ASIGNADO o EN_RUTA. Nada que ver con el COD del destinatario. */}
              {(order.status === OrderStatus.ASIGNADO ||
                order.status === OrderStatus.EN_RUTA) && (
@@ -160,7 +160,7 @@ export default function OrderDetail() {
         )}
       </div>
 
-      {/* Bloque del cliente: confirmar / disputar la liquidación al recoger.
+      {/* Bloque del cliente: confirmar / disputar la liquidaciÃ³n al recoger.
            Aparece tanto en estado pendiente como en estados terminales
            (confirmada / disputada) para mostrar la trazabilidad. */}
       {user?.role === UserRole.CLIENTE &&
@@ -182,7 +182,7 @@ export default function OrderDetail() {
                   <MapPin className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">Recolección</h4>
+                  <h4 className="font-semibold text-sm text-muted-foreground mb-1">RecolecciÃ³n</h4>
                   <p className="text-foreground">{order.pickup}</p>
                 </div>
               </div>
@@ -231,7 +231,7 @@ export default function OrderDetail() {
           {order.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Notas del envío</CardTitle>
+                <CardTitle>Notas del envÃ­o</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground whitespace-pre-wrap">{order.notes}</p>
@@ -243,7 +243,7 @@ export default function OrderDetail() {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Información General</CardTitle>
+              <CardTitle>InformaciÃ³n General</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
@@ -263,7 +263,7 @@ export default function OrderDetail() {
               <div className="flex items-center gap-3">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm font-medium">Última actualización</p>
+                  <p className="text-sm font-medium">Ãšltima actualizaciÃ³n</p>
                   <p className="text-sm text-muted-foreground">
                     {format(new Date(order.updatedAt), "dd/MM/yyyy HH:mm")}
                   </p>
@@ -293,7 +293,7 @@ export default function OrderDetail() {
                   
                   {isAdmin(user) && order.status === OrderStatus.PENDIENTE && (
                     <div className="space-y-3 pt-2 border-t border-border">
-                      <p className="text-sm font-medium">Asignación manual</p>
+                      <p className="text-sm font-medium">AsignaciÃ³n manual</p>
                       {loadingDrivers ? (
                         <Skeleton className="h-10 w-full" />
                       ) : (
@@ -327,3 +327,5 @@ export default function OrderDetail() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetBenefitsTracking,
@@ -62,13 +62,13 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-// Catálogo cerrado de beneficios disponibles (M2). El admin selecciona uno
-// de estos 5 tipos al asignar beneficios a un nivel; el ícono se infiere.
+// CatÃ¡logo cerrado de beneficios disponibles (M2). El admin selecciona uno
+// de estos 5 tipos al asignar beneficios a un nivel; el Ã­cono se infiere.
 const BENEFIT_TYPES: { name: string; icon: string; Icon: LucideIcon }[] = [
-  { name: "Asistencia Médica", icon: "stethoscope", Icon: Stethoscope },
+  { name: "Asistencia MÃ©dica", icon: "stethoscope", Icon: Stethoscope },
   { name: "Mantenimiento de Moto", icon: "wrench", Icon: Wrench },
   { name: "Vales de Gasolina", icon: "fuel", Icon: Fuel },
-  { name: "Reparación de Celular (30% descuento)", icon: "smartphone", Icon: Smartphone },
+  { name: "ReparaciÃ³n de Celular (30% descuento)", icon: "smartphone", Icon: Smartphone },
   { name: "Accesorios para Celular (30% descuento)", icon: "headphones", Icon: Headphones },
 ];
 
@@ -212,7 +212,7 @@ export default function AdminBenefitsTrackingPage() {
           Seguimiento de Beneficios Mensuales
         </h1>
         <p className="text-muted-foreground mt-1">
-          Valida el desempeño mensual de los repartidores y entrega los
+          Valida el desempeÃ±o mensual de los repartidores y entrega los
           beneficios que han desbloqueado.
         </p>
       </div>
@@ -239,7 +239,7 @@ export default function AdminBenefitsTrackingPage() {
               </Select>
             </div>
             <div>
-              <Label className="text-xs">Año</Label>
+              <Label className="text-xs">AÃ±o</Label>
               <Select
                 value={String(year)}
                 onValueChange={(v) => setYear(Number(v))}
@@ -298,11 +298,11 @@ export default function AdminBenefitsTrackingPage() {
                         {row.currentLevel > 0 ? (
                           <Badge className="bg-[#00B5E2]/15 text-[#0096BD] border-0">
                             Nivel {row.currentLevel}
-                            {row.currentLevelName ? ` · ${row.currentLevelName}` : ""}
+                            {row.currentLevelName ? ` Â· ${row.currentLevelName}` : ""}
                           </Badge>
                         ) : (
                           <span className="text-xs text-muted-foreground">
-                            Sin nivel aún
+                            Sin nivel aÃºn
                           </span>
                         )}
                       </TableCell>
@@ -316,11 +316,11 @@ export default function AdminBenefitsTrackingPage() {
                                 {" "}
                                 <strong>
                                   Nivel {row.nextLevel}
-                                  {row.nextLevelName ? ` · ${row.nextLevelName}` : ""}
+                                  {row.nextLevelName ? ` Â· ${row.nextLevelName}` : ""}
                                 </strong>
                               </>
                             ) : (
-                              <span>Nivel máximo alcanzado</span>
+                              <span>Nivel mÃ¡ximo alcanzado</span>
                             )}
                           </div>
                         </div>
@@ -328,7 +328,7 @@ export default function AdminBenefitsTrackingPage() {
                       <TableCell>
                         {row.benefits.length === 0 ? (
                           <span className="text-xs text-muted-foreground">
-                            Aún no desbloquea beneficios
+                            AÃºn no desbloquea beneficios
                           </span>
                         ) : (
                           <div className="flex flex-col gap-1.5">
@@ -393,7 +393,7 @@ export default function AdminBenefitsTrackingPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Gift className="w-5 h-5 text-[#00B5E2]" />
-            Catálogo de beneficios por nivel
+            CatÃ¡logo de beneficios por nivel
           </CardTitle>
           <CardDescription>
             Define los beneficios concretos (ej. "Vales de gasolina") que se
@@ -475,7 +475,7 @@ export default function AdminBenefitsTrackingPage() {
 
           {(items ?? []).length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No hay beneficios cargados todavía.
+              No hay beneficios cargados todavÃ­a.
             </p>
           ) : (
             <div className="border rounded-md divide-y">
@@ -493,7 +493,7 @@ export default function AdminBenefitsTrackingPage() {
                       <span className="text-sm font-medium truncate">{it.name}</span>
                       {it.description && (
                         <span className="text-xs text-muted-foreground truncate">
-                          — {it.description}
+                          â€” {it.description}
                         </span>
                       )}
                     </div>
@@ -516,3 +516,5 @@ export default function AdminBenefitsTrackingPage() {
     </div>
   );
 }
+
+

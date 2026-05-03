@@ -1,6 +1,6 @@
-export const VEHICLE_TYPES = [
+﻿export const VEHICLE_TYPES = [
   "Moto",
-  "Bicicleta eléctrica",
+  "Bicicleta elÃ©ctrica",
   "Moto taxi",
   "Carro",
 ] as const;
@@ -8,3 +8,5 @@ export const VEHICLE_TYPES = [
 export type VehicleType = (typeof VEHICLE_TYPES)[number];
 
 export const VEHICLE_TYPE_SET = new Set<string>(VEHICLE_TYPES);
+
+

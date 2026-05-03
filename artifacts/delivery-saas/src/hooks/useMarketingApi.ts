@@ -28,3 +28,5 @@ export function useMarketingApi<T>(endpoint: string) {
   // Exponemos setData por si tus formularios necesitan actualizar el estado local temporalmente
   return { data, setData, isLoading, error, refetch: fetchData };
 }
+
+

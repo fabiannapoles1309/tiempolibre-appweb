@@ -132,4 +132,22 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+  @layer utilities {
+  @media (max-width: 767px) {
+    .md\:flex {
+      display: flex !important;
+    }
+    .hidden {
+      display: none !important;
+    }
+  }
+  @media (min-width: 768px) {
+    .md\:hidden {
+      display: none !important;
+    }
+    .md\:flex {
+      display: flex !important;
+    }
+  }
+}
 }

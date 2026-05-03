@@ -209,15 +209,15 @@ export default function AdminClientesPage() {
                       className="font-mono text-xs"
                       data-testid={`text-customer-code-${row.id}`}
                     >
-                      {row.customerCode ?? "â€”"}
+                      {row.customerCode ?? "-"}
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{row.name}</div>
                       <div className="text-xs text-muted-foreground">{row.email}</div>
                     </TableCell>
-                    <TableCell>{row.businessName ?? "â€”"}</TableCell>
+                    <TableCell>{row.businessName ?? "-"}</TableCell>
                     <TableCell>
-                      {row.clienteZone != null ? `Zona ${row.clienteZone}` : "â€”"}
+                      {row.clienteZone != null ? `Zona ${row.clienteZone}` : "-"}
                     </TableCell>
                     <TableCell>
                       {row.tier ? (

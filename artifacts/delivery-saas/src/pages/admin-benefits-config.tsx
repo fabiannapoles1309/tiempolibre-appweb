@@ -82,10 +82,10 @@ export default function AdminBenefitsConfigPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Award className="w-7 h-7 text-[#00B5E2]" /> ConfiguraciÃ³n de beneficios
+          <Award className="w-7 h-7 text-[#00B5E2]" /> Configuración de beneficios
         </h1>
         <p className="text-muted-foreground mt-1">
-          DefinÃ­ los niveles de premios para repartidores segÃºn envÃ­os completados.
+          Definí los niveles de premios para repartidores según envíos completados.
         </p>
       </div>
 
@@ -94,7 +94,7 @@ export default function AdminBenefitsConfigPage() {
           <div>
             <CardTitle>Niveles</CardTitle>
             <CardDescription>
-              Cada nivel se desbloquea al alcanzar la cantidad de envÃ­os indicada.
+              Cada nivel se desbloquea al alcanzar la cantidad de envíos indicada.
             </CardDescription>
           </div>
           <Button variant="outline" onClick={add} data-testid="button-add-level">
@@ -127,7 +127,7 @@ export default function AdminBenefitsConfigPage() {
                   />
                 </div>
                 <div className="col-span-3">
-                  <Label className="text-xs">EnvÃ­os requeridos</Label>
+                  <Label className="text-xs">Envíos requeridos</Label>
                   <Input
                     type="number"
                     min={0}
@@ -178,5 +178,6 @@ export default function AdminBenefitsConfigPage() {
     </div>
   );
 }
+
 
 

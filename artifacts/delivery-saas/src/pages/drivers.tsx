@@ -28,11 +28,11 @@ import { Users, Plus, Pencil, Trash2, Loader2, CheckCircle2, XCircle } from "luc
 
 const driverSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  phone: z.string().min(1, "El telÃ©fono es requerido"),
+  phone: z.string().min(1, "El teléfono es requerido"),
   vehicle: z
     .string()
-    .min(1, "El vehÃ­culo es requerido")
-    .refine((v) => VEHICLE_TYPE_SET.has(v), "Selecciona un tipo de vehÃ­culo vÃ¡lido"),
+    .min(1, "El vehículo es requerido")
+    .refine((v) => VEHICLE_TYPE_SET.has(v), "Selecciona un tipo de vehículo válido"),
   zones: z.array(z.nativeEnum(ZoneName)).min(1, "Selecciona al menos una zona"),
   active: z.boolean().default(true),
   licensePlate: z.string().optional(),
@@ -117,7 +117,7 @@ export default function Drivers() {
   const handleSettle = async (driverId: number, amount: number) => {
     try {
       await settleCash.mutateAsync({ id: driverId, data: { amount } });
-      toast.success("LiquidaciÃ³n registrada");
+      toast.success("Liquidación registrada");
       queryClient.invalidateQueries({ queryKey: getListDriversQueryKey() });
     } catch {
       toast.error("No se pudo liquidar");
@@ -141,7 +141,7 @@ export default function Drivers() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Repartidores</h1>
-          <p className="text-muted-foreground mt-1">GestionÃ¡ el equipo de entrega y sus zonas de cobertura.</p>
+          <p className="text-muted-foreground mt-1">Gestioná el equipo de entrega y sus zonas de cobertura.</p>
         </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -152,7 +152,7 @@ export default function Drivers() {
             <DialogHeader>
               <DialogTitle>{editingDriver ? "Editar repartidor" : "Nuevo repartidor"}</DialogTitle>
               <DialogDescription>
-                CompletÃ¡ los datos del repartidor para agregarlo al sistema.
+                Completá los datos del repartidor para agregarlo al sistema.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
@@ -164,7 +164,7 @@ export default function Drivers() {
                     <FormItem>
                       <FormLabel>Nombre completo</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ej. Juan PÃ©rez" {...field} />
+                        <Input placeholder="Ej. Juan Pérez" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -175,7 +175,7 @@ export default function Drivers() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>TelÃ©fono</FormLabel>
+                      <FormLabel>Teléfono</FormLabel>
                       <FormControl>
                         <Input placeholder="+54 11..." {...field} />
                       </FormControl>
@@ -188,14 +188,14 @@ export default function Drivers() {
                   name="vehicle"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de vehÃ­culo</FormLabel>
+                      <FormLabel>Tipo de vehículo</FormLabel>
                       <Select
                         onValueChange={field.onChange}
                         value={field.value ?? ""}
                       >
                         <FormControl>
                           <SelectTrigger data-testid="select-driver-vehicle">
-                            <SelectValue placeholder="Selecciona el vehÃ­culo" />
+                            <SelectValue placeholder="Selecciona el vehículo" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -217,7 +217,7 @@ export default function Drivers() {
                     <FormItem>
                       <div className="mb-4">
                         <FormLabel className="text-base">Zonas de cobertura</FormLabel>
-                        <FormDescription>Selecciona las zonas donde operarÃ¡.</FormDescription>
+                        <FormDescription>Selecciona las zonas donde operará.</FormDescription>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         {Object.values(ZoneName).map((zone) => (
@@ -268,7 +268,7 @@ export default function Drivers() {
                     name="circulationCard"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Tarjeta de CirculaciÃ³n</FormLabel>
+                        <FormLabel>Tarjeta de Circulación</FormLabel>
                         <FormControl>
                           <Input placeholder="NÂ° de tarjeta" {...field} />
                         </FormControl>
@@ -308,9 +308,9 @@ export default function Drivers() {
         <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Â¿Eliminar repartidor?</DialogTitle>
+              <DialogTitle>¿Eliminar repartidor?</DialogTitle>
               <DialogDescription>
-                Esta acciÃ³n no se puede deshacer. El repartidor ya no podrÃ¡ acceder al sistema ni recibir pedidos.
+                Esta acción no se puede deshacer. El repartidor ya no podrá acceder al sistema ni recibir pedidos.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
@@ -341,8 +341,8 @@ export default function Drivers() {
                 <TableRow>
                   <TableHead>Folio</TableHead>
                   <TableHead>Nombre</TableHead>
-                  <TableHead>TelÃ©fono</TableHead>
-                  <TableHead>VehÃ­culo / Placas</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                  <TableHead>Vehículo / Placas</TableHead>
                   <TableHead>Zonas</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="text-right">Efectivo a rendir</TableHead>
@@ -419,5 +419,6 @@ export default function Drivers() {
 function FormDescription({ children }: { children: React.ReactNode }) {
   return <p className="text-sm text-muted-foreground">{children}</p>;
 }
+
 
 

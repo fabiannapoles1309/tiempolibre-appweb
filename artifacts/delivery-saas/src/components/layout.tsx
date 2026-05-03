@@ -16,11 +16,11 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard, roles: [UserRole.ADMIN, UserRole.CLIENTE, UserRole.DRIVER] },
-  { title: "Mis envÃ­os", href: "/orders", icon: Package, roles: [UserRole.CLIENTE] },
-  { title: "Crear envÃ­o", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
+  { title: "Mis envíos", href: "/orders", icon: Package, roles: [UserRole.CLIENTE] },
+  { title: "Crear envío", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
   { title: "Mi billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },
   { title: "Repartos", href: "/orders", icon: Package, roles: [UserRole.ADMIN] },
-  { title: "AsignaciÃ³n", href: "/admin", icon: Settings, roles: [UserRole.ADMIN] },
+  { title: "Asignación", href: "/admin", icon: Settings, roles: [UserRole.ADMIN] },
   { title: "Mapa de zonas", href: "/map", icon: MapIcon, roles: [UserRole.ADMIN] },
   { title: "Repartidores", href: "/drivers", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Mis entregas", href: "/orders", icon: Truck, roles: [UserRole.DRIVER] },
@@ -32,22 +32,22 @@ const navItems: NavItem[] = [
   { title: "Clientes", href: "/admin/clientes", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Destinatarios", href: "/admin/destinatarios", icon: BookUser, roles: [UserRole.ADMIN] },
   { title: "Solicitudes de paquete", href: "/admin/solicitudes-paquetes", icon: PackagePlus, roles: [UserRole.ADMIN] },
-  { title: "ConfiguraciÃ³n de precios", href: "/admin/pricing-settings", icon: Settings2, roles: [UserRole.ADMIN] },
+  { title: "Configuración de precios", href: "/admin/pricing-settings", icon: Settings2, roles: [UserRole.ADMIN] },
   { title: "Suscripciones", href: "/admin/subscriptions", icon: Crown, roles: [UserRole.ADMIN] },
-  { title: "EnvÃ­os por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
+  { title: "Envíos por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
   { title: "Cash por cliente", href: "/admin/cash-by-customer", icon: Banknote, roles: [UserRole.ADMIN] },
   { title: "Beneficios", href: "/admin/benefits-config", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Seguimiento Beneficios", href: "/admin/benefits-tracking", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
   { title: "Personal interno", href: "/admin/staff", icon: ShieldCheck, roles: [UserRole.ADMIN] },
   { title: "Reporte combinado", href: "/admin/reports-combined", icon: FileSpreadsheet, roles: [UserRole.ADMIN] },
-  { title: "BuzÃ³n de quejas", href: "/admin/feedback", icon: Inbox, roles: [UserRole.ADMIN] },
+  { title: "Buzón de quejas", href: "/admin/feedback", icon: Inbox, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
   // Quejas y sugerencias accesible a cualquier usuario logueado (cliente / driver / admin).
   { title: "Quejas y sugerencias", href: "/feedback", icon: MessageSquareWarning, roles: [UserRole.CLIENTE, UserRole.DRIVER] },
   // El CLIENTE accede a "Mi billetera" para ver el saldo acumulado por
-  // cobros en efectivo que los repartidores hacen al entregar sus envÃ­os.
-  // No puede recargar ni gastar saldo: es sÃ³lo visualizaciÃ³n de cobranza.
+  // cobros en efectivo que los repartidores hacen al entregar sus envíos.
+  // No puede recargar ni gastar saldo: es sólo visualización de cobranza.
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -67,9 +67,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // SUPERUSER (Soporte): perfil de gestiÃ³n, no operativo. SÃ³lo ve lo que
-  // ve un ADMIN. Excluye Ã­tems personales (Mi suscripciÃ³n, Mis pedidos,
-  // Mis beneficios, Billetera) y especÃ­ficos de DRIVER/CLIENTE.
+  // SUPERUSER (Soporte): perfil de gestión, no operativo. Sólo ve lo que
+  // ve un ADMIN. Excluye ítems personales (Mi suscripción, Mis pedidos,
+  // Mis beneficios, Billetera) y específicos de DRIVER/CLIENTE.
   const filteredNav =
     user.role === "SUPERUSER"
       ? navItems.filter((item) => item.roles.includes(UserRole.ADMIN))
@@ -114,7 +114,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             disabled={logoutMutation.isPending}
           >
             {logoutMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LogOut className="w-4 h-4 mr-2" />}
-            Cerrar sesiÃ³n
+            Cerrar sesión
           </Button>
         </div>
       </aside>
@@ -129,5 +129,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
 
 

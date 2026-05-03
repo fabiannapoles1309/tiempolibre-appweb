@@ -48,7 +48,7 @@ export default function DriverBenefits() {
           Mis beneficios
         </h1>
         <p className="text-muted-foreground mt-1">
-          Eres parte de TiempoLibre. Mientras mÃ¡s entregas completes, mÃ¡s
+          Eres parte de TiempoLibre. Mientras más entregas completes, más
           beneficios desbloqueas.
         </p>
       </div>
@@ -56,7 +56,7 @@ export default function DriverBenefits() {
       {driver && (
         <Card className="border-[#00B5E2]/30 bg-[#00B5E2]/5">
           <CardContent className="p-4 text-sm">
-            Hola <strong>{driver.name}</strong>, tienes registrado el vehÃ­culo{" "}
+            Hola <strong>{driver.name}</strong>, tienes registrado el vehículo{" "}
             <strong>{driver.vehicle}</strong>
             {driver.licensePlate ? ` (placas ${driver.licensePlate})` : ""} en
             zonas{" "}
@@ -100,13 +100,13 @@ export default function DriverBenefits() {
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
-                      AÃºn no alcanzas el primer nivel
+                      Aún no alcanzas el primer nivel
                     </p>
                   )}
                 </div>
                 <div className="rounded-md border p-3">
                   <p className="text-xs text-muted-foreground">
-                    PrÃ³ximo nivel
+                    Próximo nivel
                   </p>
                   {data.nextLevel != null ? (
                     <p className="text-lg font-semibold">
@@ -115,7 +115,7 @@ export default function DriverBenefits() {
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
-                      Has alcanzado el nivel mÃ¡ximo
+                      Has alcanzado el nivel máximo
                     </p>
                   )}
                 </div>
@@ -142,11 +142,11 @@ export default function DriverBenefits() {
                     </>
                   ) : data.nextLevel == null ? (
                     <span className="text-[#00B5E2]">
-                      Â¡Felicidades! Has desbloqueado todos los niveles del mes.
+                      ¡Felicidades! Has desbloqueado todos los niveles del mes.
                     </span>
                   ) : (
                     <span className="text-[#00B5E2]">
-                      Â¡Listo! Acabas de alcanzar este nivel.
+                      ¡Listo! Acabas de alcanzar este nivel.
                     </span>
                   )}
                 </p>
@@ -166,7 +166,7 @@ export default function DriverBenefits() {
         <CardContent>
           {!data || data.benefits.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              AÃºn no tienes beneficios desbloqueados este mes. Â¡Sigue entregando!
+              Aún no tienes beneficios desbloqueados este mes. ¡Sigue entregando!
             </p>
           ) : (
             <div className="grid md:grid-cols-2 gap-3">
@@ -210,5 +210,6 @@ export default function DriverBenefits() {
     </div>
   );
 }
+
 
 

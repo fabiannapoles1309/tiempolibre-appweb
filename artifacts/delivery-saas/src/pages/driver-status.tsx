@@ -45,7 +45,7 @@ export function DriverStatusCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          Cambialo segÃºn tu disponibilidad. Los admins ven tu estado en tiempo real.
+          Cambialo según tu disponibilidad. Los admins ven tu estado en tiempo real.
         </div>
         <div className="grid grid-cols-2 gap-2">
           {STATUSES.map((s) => (
@@ -67,5 +67,6 @@ export function DriverStatusCard() {
     </Card>
   );
 }
+
 
 

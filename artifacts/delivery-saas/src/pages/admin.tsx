@@ -115,9 +115,9 @@ export default function AdminDispatch() {
     try {
       const res = await assignAuto.mutateAsync();
       queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
-      toast.success(`AsignaciÃ³n completada: ${res.assigned} asignados, ${res.skipped} omitidos.`);
+      toast.success(`Asignación completada: ${res.assigned} asignados, ${res.skipped} omitidos.`);
     } catch (error: any) {
-      toast.error(error?.data?.error || "Error al asignar automÃ¡ticamente");
+      toast.error(error?.data?.error || "Error al asignar automáticamente");
     }
   };
 
@@ -125,9 +125,9 @@ export default function AdminDispatch() {
     try {
       await assignManual.mutateAsync({ id: orderId, data: { driverId } });
       queryClient.invalidateQueries({ queryKey: getListOrdersQueryKey() });
-      toast.success("EnvÃ­o asignado correctamente");
+      toast.success("Envío asignado correctamente");
     } catch (error: any) {
-      toast.error(error?.data?.error || "Error al asignar envÃ­o");
+      toast.error(error?.data?.error || "Error al asignar envío");
     }
   };
 
@@ -168,11 +168,11 @@ export default function AdminDispatch() {
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Despacho</h1>
-          <p className="text-muted-foreground mt-1">Asigna envÃ­os pendientes a tus repartidores.</p>
+          <p className="text-muted-foreground mt-1">Asigna envíos pendientes a tus repartidores.</p>
         </div>
         <Button size="lg" onClick={handleAutoAssign} disabled={assignAuto.isPending} className="w-full md:w-auto shadow-md">
           {assignAuto.isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Zap className="mr-2 h-5 w-5" />}
-          AsignaciÃ³n automÃ¡tica
+          Asignación automática
         </Button>
       </div>
 
@@ -182,8 +182,8 @@ export default function AdminDispatch() {
             <div className="bg-primary/10 p-4 rounded-full mb-4">
               <Package className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-bold">Sin envÃ­os pendientes</h3>
-            <p className="text-muted-foreground mt-2 max-w-md">Todos los envÃ­os han sido asignados o no hay nuevos envÃ­os por el momento.</p>
+            <h3 className="text-xl font-bold">Sin envíos pendientes</h3>
+            <p className="text-muted-foreground mt-2 max-w-md">Todos los envíos han sido asignados o no hay nuevos envíos por el momento.</p>
           </CardContent>
         </Card>
       ) : (
@@ -203,7 +203,7 @@ export default function AdminDispatch() {
                       <CardTitle className="text-xl">Zona {zone}</CardTitle>
                     </div>
                     <Badge variant="secondary" className="text-base px-3 py-1">
-                      {zoneOrders.length} {zoneOrders.length === 1 ? 'envÃ­o' : 'envÃ­os'}
+                      {zoneOrders.length} {zoneOrders.length === 1 ? 'envío' : 'envíos'}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -227,5 +227,6 @@ export default function AdminDispatch() {
     </div>
   );
 }
+
 
 

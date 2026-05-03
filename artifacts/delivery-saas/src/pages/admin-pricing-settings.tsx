@@ -58,10 +58,10 @@ export default function AdminPricingSettingsPage() {
     <div className="space-y-6 max-w-3xl">
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings2 className="w-7 h-7 text-[#00B5E2]" /> ConfiguraciÃ³n de Precios
+          <Settings2 className="w-7 h-7 text-[#00B5E2]" /> Configuración de Precios
         </h1>
         <p className="text-muted-foreground mt-1">
-          Estos precios se aplican al contratar una suscripciÃ³n y al aprobar
+          Estos precios se aplican al contratar una suscripción y al aprobar
           solicitudes de paquete extra. Los cambios entran en efecto al instante.
         </p>
       </div>
@@ -70,14 +70,14 @@ export default function AdminPricingSettingsPage() {
         <CardHeader>
           <CardTitle>Planes y paquete extra</CardTitle>
           <CardDescription>
-            El costo del paquete extra se descuenta automÃ¡ticamente del saldo
+            El costo del paquete extra se descuenta automáticamente del saldo
             de billetera del cliente al momento de aprobar su solicitud.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Cargando precios actualesâ€¦
+              <Loader2 className="w-4 h-4 animate-spin" /> Cargando precios actuales…
             </div>
           ) : (
             <Form {...form}>
@@ -87,7 +87,7 @@ export default function AdminPricingSettingsPage() {
                   name="estandarPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan EstÃ¡ndar â€” precio mensual (MXN)</FormLabel>
+                      <FormLabel>Plan Estándar â€” precio mensual (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -101,7 +101,7 @@ export default function AdminPricingSettingsPage() {
                           />
                         </div>
                       </FormControl>
-                      <FormDescription>Incluye 35 envÃ­os mensuales.</FormDescription>
+                      <FormDescription>Incluye 35 envíos mensuales.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -112,7 +112,7 @@ export default function AdminPricingSettingsPage() {
                   name="optimoPrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Plan Ã“ptimo â€” precio mensual (MXN)</FormLabel>
+                      <FormLabel>Plan Á“ptimo â€” precio mensual (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -126,7 +126,7 @@ export default function AdminPricingSettingsPage() {
                           />
                         </div>
                       </FormControl>
-                      <FormDescription>Incluye 35 envÃ­os mensuales.</FormDescription>
+                      <FormDescription>Incluye 35 envíos mensuales.</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -137,7 +137,7 @@ export default function AdminPricingSettingsPage() {
                   name="extraPackagePrice"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Paquete extra â€” costo por bloque de 35 envÃ­os (MXN)</FormLabel>
+                      <FormLabel>Paquete extra â€” costo por bloque de 35 envíos (MXN)</FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-2.5 text-muted-foreground">$</span>
@@ -178,5 +178,6 @@ export default function AdminPricingSettingsPage() {
     </div>
   );
 }
+
 
 

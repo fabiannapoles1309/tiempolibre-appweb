@@ -32,7 +32,7 @@ const EXPORT_LABELS: Record<ExportType, string> = {
   accounting: "Reporte contable",
 };
 
-// Mapeo determinÃ­stico color/etiqueta por mÃ©todo. Los 5 mÃ©todos soportados
+// Mapeo determinístico color/etiqueta por método. Los 5 métodos soportados
 // son EFECTIVO, TRANSFERENCIA, BILLETERA, TARJETA y CORTESIA. Si el backend
 // devuelve otro valor (legacy/desconocido) cae a un color neutro.
 const METHOD_LABELS: Record<string, string> = {
@@ -40,7 +40,7 @@ const METHOD_LABELS: Record<string, string> = {
   TRANSFERENCIA: 'Transferencia',
   BILLETERA: 'Billetera',
   TARJETA: 'Tarjeta',
-  CORTESIA: 'CortesÃ­a',
+  CORTESIA: 'Cortesía',
 };
 const METHOD_COLORS: Record<string, string> = {
   EFECTIVO: '#f97316',       // naranja
@@ -142,10 +142,10 @@ export default function Finance() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="day">DÃ­a</SelectItem>
+                  <SelectItem value="day">Día</SelectItem>
                   <SelectItem value="week">Semana</SelectItem>
                   <SelectItem value="month">Mes</SelectItem>
-                  <SelectItem value="year">AÃ±o</SelectItem>
+                  <SelectItem value="year">Año</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -202,7 +202,7 @@ export default function Finance() {
             <div className="text-2xl font-bold text-foreground" data-testid="value-reparto-today">
               {formatMoney(todaySplit?.repartoToday ?? 0)}
             </div>
-            <p className="text-xs text-muted-foreground mt-1">EnvÃ­os entregados hoy</p>
+            <p className="text-xs text-muted-foreground mt-1">Envíos entregados hoy</p>
           </CardContent>
         </Card>
         <Card className="border-[#00B5E2]/40">
@@ -270,7 +270,7 @@ export default function Finance() {
 
           <Card className="bg-card">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">EnvÃ­os liquidados</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">Envíos liquidados</CardTitle>
               <Activity className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -294,7 +294,7 @@ export default function Finance() {
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Flujo de Caja</CardTitle>
-            <CardDescription>EvoluciÃ³n de ingresos y egresos en el tiempo</CardDescription>
+            <CardDescription>Evolución de ingresos y egresos en el tiempo</CardDescription>
           </CardHeader>
           <CardContent className="h-[350px]">
             {loadingSummary ? <Skeleton className="h-full w-full" /> : summary?.timeline.length === 0 ? (
@@ -327,20 +327,20 @@ export default function Finance() {
 
         <Card>
           <CardHeader>
-            <CardTitle>MÃ©todos de Pago</CardTitle>
-            <CardDescription>DistribuciÃ³n de ingresos por canal</CardDescription>
+            <CardTitle>Métodos de Pago</CardTitle>
+            <CardDescription>Distribución de ingresos por canal</CardDescription>
           </CardHeader>
           <CardContent className="h-[350px]">
             {(() => {
               if (loadingSummary) return <Skeleton className="h-full w-full" />;
               const raw = summary?.byMethod ?? [];
-              // Ordenamos en el orden canÃ³nico y traducimos las claves a etiquetas
-              // legibles. CortesÃ­a siempre se muestra aunque su monto sea $0,
+              // Ordenamos en el orden canónico y traducimos las claves a etiquetas
+              // legibles. Cortesía siempre se muestra aunque su monto sea $0,
               // porque cuenta como servicio prestado.
-              // Siempre mostramos los 5 mÃ©todos canÃ³nicos (Efectivo, Transferencia,
-              // Billetera, Tarjeta, CortesÃ­a) aunque alguno no tenga actividad,
+              // Siempre mostramos los 5 métodos canónicos (Efectivo, Transferencia,
+              // Billetera, Tarjeta, Cortesía) aunque alguno no tenga actividad,
               // para que la leyenda y los colores sean estables y para que la
-              // CortesÃ­a permanezca visible aun con $0 de ingreso.
+              // Cortesía permanezca visible aun con $0 de ingreso.
               const data = METHOD_ORDER.map((m) => {
                 const found = raw.find((r) => r.method === m);
                 return {
@@ -350,8 +350,8 @@ export default function Finance() {
                   count: found ? found.count : 0,
                 };
               });
-              // MÃ©todos legacy que no estÃ©n en METHOD_ORDER se anexan al final
-              // (sÃ³lo si tuvieron actividad, para no contaminar la leyenda).
+              // Métodos legacy que no estén en METHOD_ORDER se anexan al final
+              // (sólo si tuvieron actividad, para no contaminar la leyenda).
               for (const r of raw) {
                 if (
                   !METHOD_ORDER.includes(r.method as typeof METHOD_ORDER[number]) &&
@@ -373,9 +373,9 @@ export default function Finance() {
                   </div>
                 );
               }
-              // Para el Ã¡rea del pie usamos `Math.max(total, 0)` para que las
-              // cortesÃ­as ($0 ingreso) sigan apareciendo en la leyenda con un
-              // Ã¡rea mÃ­nima y un color identificable.
+              // Para el área del pie usamos `Math.max(total, 0)` para que las
+              // cortesías ($0 ingreso) sigan apareciendo en la leyenda con un
+              // área mínima y un color identificable.
               const pieData = data.map((d) => ({
                 ...d,
                 slice: d.total > 0 ? d.total : Math.max(1, d.count),
@@ -423,13 +423,13 @@ export default function Finance() {
             <CardTitle>Efectivo en mano de repartidores</CardTitle>
             <CardDescription>
               Total a rendir: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashPending ?? 0)}</span>
-              {" Â· "}Cobrado en el perÃ­odo: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashCollected ?? 0)}</span>
+              {" Â· "}Cobrado en el período: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashCollected ?? 0)}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             {!cashReport || cashReport.drivers.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
-                No hay efectivo pendiente de rendiciÃ³n.
+                No hay efectivo pendiente de rendición.
               </div>
             ) : (
               <Table>
@@ -456,7 +456,7 @@ export default function Finance() {
 
         <Card>
           <CardHeader>
-            <CardTitle>RecaudaciÃ³n B2B (suscripciones)</CardTitle>
+            <CardTitle>Recaudación B2B (suscripciones)</CardTitle>
             <CardDescription>
               MRR activo:{" "}
               <span className="font-bold text-foreground">{formatMoney(b2b?.totalMrr ?? 0)}</span>{" "}
@@ -467,7 +467,7 @@ export default function Finance() {
           <CardContent className="p-0">
             {!b2b || b2b.clients.length === 0 ? (
               <div className="p-8 text-center text-sm text-muted-foreground">
-                AÃºn no hay clientes suscritos.
+                Aún no hay clientes suscritos.
               </div>
             ) : (
               <Table>
@@ -475,8 +475,8 @@ export default function Finance() {
                   <TableRow>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Plan</TableHead>
-                    <TableHead className="text-right">EnvÃ­os del mes</TableHead>
-                    <TableHead className="text-right">RecaudaciÃ³n</TableHead>
+                    <TableHead className="text-right">Envíos del mes</TableHead>
+                    <TableHead className="text-right">Recaudación</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -506,7 +506,7 @@ export default function Finance() {
       <Card>
         <CardHeader>
           <CardTitle>Transacciones Recientes</CardTitle>
-          <CardDescription>Ãšltimos movimientos financieros del sistema</CardDescription>
+          <CardDescription>Ášltimos movimientos financieros del sistema</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {loadingTx ? (
@@ -520,9 +520,9 @@ export default function Finance() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha</TableHead>
-                  <TableHead>DescripciÃ³n</TableHead>
+                  <TableHead>Descripción</TableHead>
                   <TableHead>Tipo</TableHead>
-                  <TableHead>MÃ©todo</TableHead>
+                  <TableHead>Método</TableHead>
                   <TableHead className="text-right">Monto</TableHead>
                 </TableRow>
               </TableHeader>
@@ -534,7 +534,7 @@ export default function Finance() {
                     </TableCell>
                     <TableCell className="font-medium">
                       {tx.description}
-                      {tx.orderId && <span className="ml-2 text-xs text-muted-foreground">EnvÃ­o #{tx.orderId}</span>}
+                      {tx.orderId && <span className="ml-2 text-xs text-muted-foreground">Envío #{tx.orderId}</span>}
                     </TableCell>
                     <TableCell>
                       {tx.type === "INGRESO" ? (
@@ -559,5 +559,6 @@ export default function Finance() {
     </div>
   );
 }
+
 
 

@@ -93,7 +93,7 @@ function Router() {
       <Route path="/reports" component={() => <ProtectedRoute component={Reports} roles={["ADMIN"]} />} />
       <Route path="/finance" component={() => <ProtectedRoute component={Finance} roles={["ADMIN"]} />} />
       {/* CLIENTE puede ver su saldo de cobranza en efectivo acumulado por las
-          entregas de sus envÃ­os. ADMIN mantiene el acceso para visualizaciÃ³n. */}
+          entregas de sus envíos. ADMIN mantiene el acceso para visualización. */}
       <Route path="/wallet" component={() => <ProtectedRoute component={WalletPage} roles={["CLIENTE", "ADMIN"]} />} />
       <Route path="/driver/benefits" component={() => <ProtectedRoute component={DriverBenefits} roles={["DRIVER"]} />} />
       <Route path="/driver/ranking" component={() => <ProtectedRoute component={DriverRankingPage} roles={["DRIVER", "ADMIN"]} />} />
@@ -140,6 +140,7 @@ function App() {
 }
 
 export default App;
+
 
 
 

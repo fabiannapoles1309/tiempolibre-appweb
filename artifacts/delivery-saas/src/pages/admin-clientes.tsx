@@ -137,7 +137,7 @@ export default function AdminClientesPage() {
   const handleRecharge = async (row: AdminClienteRow) => {
     try {
       await recharge.mutateAsync({ id: row.id });
-      toast.success(`Recarga aplicada a ${row.name} (+35 envÃ­os)`);
+      toast.success(`Recarga aplicada a ${row.name} (+35 Envíos)`);
       refresh();
     } catch (e: any) {
       toast.error(e?.data?.error ?? "No se pudo recargar");
@@ -147,7 +147,7 @@ export default function AdminClientesPage() {
   const handleRenew = async (row: AdminClienteRow) => {
     try {
       await renew.mutateAsync({ id: row.id });
-      toast.success(`SuscripciÃ³n renovada para ${row.name}`);
+      toast.success(`Suscripción renovada para ${row.name}`);
       refresh();
     } catch (e: any) {
       toast.error(e?.data?.error ?? "No se pudo renovar");
@@ -162,7 +162,7 @@ export default function AdminClientesPage() {
             <Users className="w-7 h-7 text-[#00B5E2]" /> Clientes
           </h1>
           <p className="text-muted-foreground mt-1">
-            Gestiona el perfil del cliente, su plan y los bloques de envÃ­os asignados.
+            Gestiona el perfil del cliente, su plan y los bloques de Envíos asignados.
           </p>
         </div>
         <Button variant="outline" onClick={refresh}>
@@ -186,7 +186,7 @@ export default function AdminClientesPage() {
             </div>
           ) : !data || data.length === 0 ? (
             <div className="p-12 text-center text-sm text-muted-foreground">
-              AÃºn no hay clientes registrados.
+              Aún no hay clientes registrados.
             </div>
           ) : (
             <Table>
@@ -247,7 +247,7 @@ export default function AdminClientesPage() {
                           className="bg-[#00B5E2] hover:bg-[#0096BD]"
                           onClick={() => handleRecharge(row)}
                           disabled={recharge.isPending || !row.tier}
-                          title={!row.tier ? "El cliente no tiene plan activo" : "Sumar 35 envÃ­os"}
+                          title={!row.tier ? "El cliente no tiene plan activo" : "Sumar 35 Envíos"}
                           data-testid={`button-recharge-${row.id}`}
                         >
                           <Plus className="w-3.5 h-3.5 mr-1" /> Recargar
@@ -277,7 +277,7 @@ export default function AdminClientesPage() {
           <DialogHeader>
             <DialogTitle>Editar cliente</DialogTitle>
             <DialogDescription>
-              Actualiza el perfil, la zona de operaciÃ³n y el plan del cliente.
+              Actualiza el perfil, la zona de operación y el plan del cliente.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -315,7 +315,7 @@ export default function AdminClientesPage() {
                 name="pickupAddress"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>DirecciÃ³n de recolecciÃ³n</FormLabel>
+                    <FormLabel>Dirección de recolección</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>
@@ -352,7 +352,7 @@ export default function AdminClientesPage() {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>TelÃ©fono</FormLabel>
+                      <FormLabel>Teléfono</FormLabel>
                       <FormControl>
                         <Input {...field} />
                       </FormControl>
@@ -377,10 +377,10 @@ export default function AdminClientesPage() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value={SubscriptionTier.ESTANDAR}>
-                            EstÃ¡ndar (35)
+                            Estándar (35)
                           </SelectItem>
                           <SelectItem value={SubscriptionTier.OPTIMO}>
-                            Ã“ptimo (70)
+                            Á“ptimo (70)
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -410,5 +410,7 @@ export default function AdminClientesPage() {
     </div>
   );
 }
+
+
 
 

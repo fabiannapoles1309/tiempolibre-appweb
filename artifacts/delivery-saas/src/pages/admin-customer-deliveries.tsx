@@ -20,10 +20,10 @@ export default function AdminCustomerDeliveriesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
-          <BarChart3 className="w-7 h-7 text-[#00B5E2]" /> EnvÃ­os por cliente
+          <BarChart3 className="w-7 h-7 text-[#00B5E2]" /> Envíos por cliente
         </h1>
         <p className="text-muted-foreground mt-1">
-          Estado del consumo de cada cliente y envÃ­os restantes en su plan.
+          Estado del consumo de cada cliente y envíos restantes en su plan.
         </p>
       </div>
 
@@ -31,7 +31,7 @@ export default function AdminCustomerDeliveriesPage() {
         <CardHeader>
           <CardTitle>Clientes ({rows.length})</CardTitle>
           <CardDescription>
-            Los que tienen 5 envÃ­os o menos aparecen marcados.
+            Los que tienen 5 envíos o menos aparecen marcados.
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
@@ -109,5 +109,6 @@ export default function AdminCustomerDeliveriesPage() {
     </div>
   );
 }
+
 
 

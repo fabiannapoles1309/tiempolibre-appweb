@@ -13,8 +13,8 @@ import { Loader2 } from "lucide-react";
 import { Logo } from "@/components/logo";
 
 const loginSchema = z.object({
-  email: z.string().email("Correo invÃ¡lido"),
-  password: z.string().min(1, "La contraseÃ±a es requerida"),
+  email: z.string().email("Correo inválido"),
+  password: z.string().min(1, "La contraseña es requerida"),
 });
 
 const DEMO_ACCOUNTS = [
@@ -40,10 +40,10 @@ export default function Login() {
       if (res.token) localStorage.setItem("tiempolibre_token", res.token);
       setUser(res.user);
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-      toast.success("Â¡Bienvenido a TiempoLibre!");
+      toast.success("¡Bienvenido a TiempoLibre!");
       setLocation("/");
     } catch (error: any) {
-      toast.error(error.data?.error || "Error al iniciar sesiÃ³n");
+      toast.error(error.data?.error || "Error al iniciar sesión");
     }
   };
 
@@ -61,7 +61,7 @@ export default function Login() {
           </div>
 
           <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
-            Iniciar sesiÃ³n
+            Iniciar sesión
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
             Plataforma exclusiva para clientes y operadores autorizados de TiempoLibre.
@@ -75,7 +75,7 @@ export default function Login() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Correo electrÃ³nico</FormLabel>
+                      <FormLabel>Correo electrónico</FormLabel>
                       <FormControl>
                         <Input placeholder="nombre@empresa.com" autoComplete="email" {...field} />
                       </FormControl>
@@ -89,7 +89,7 @@ export default function Login() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ContraseÃ±a</FormLabel>
+                      <FormLabel>Contraseña</FormLabel>
                       <FormControl>
                         <Input type="password" autoComplete="current-password" {...field} />
                       </FormControl>
@@ -138,7 +138,7 @@ export default function Login() {
               Somos tu sistema de reparto
             </div>
             <h1 className="text-5xl font-extrabold tracking-tight mb-6 leading-tight">
-              La logÃ­stica de Ãºltima milla, simplificada.
+              La logística de última milla, simplificada.
             </h1>
             <p className="text-xl opacity-90">
               Confianza y seguridad en cada kilometro.
@@ -149,5 +149,6 @@ export default function Login() {
     </div>
   );
 }
+
 
 

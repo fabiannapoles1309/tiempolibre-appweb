@@ -39,14 +39,14 @@ export default function OrdersList() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">EnvÃ­os</h1>
-          <p className="text-muted-foreground mt-1">Gestiona y da seguimiento a los envÃ­os del sistema.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Envíos</h1>
+          <p className="text-muted-foreground mt-1">Gestiona y da seguimiento a los envíos del sistema.</p>
         </div>
         {user?.role === UserRole.CLIENTE && (
           <Link href="/orders/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Nuevo envÃ­o
+              Nuevo envío
             </Button>
           </Link>
         )}
@@ -55,7 +55,7 @@ export default function OrdersList() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-            <CardTitle>Listado de envÃ­os</CardTitle>
+            <CardTitle>Listado de envíos</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-full sm:w-[180px]">
@@ -94,7 +94,7 @@ export default function OrdersList() {
           ) : !orders || orders.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <PackageIcon className="mx-auto h-12 w-12 mb-4 text-muted/50" />
-              <p>No se encontraron envÃ­os con estos filtros.</p>
+              <p>No se encontraron envíos con estos filtros.</p>
             </div>
           ) : (
             <div className="border rounded-md">
@@ -137,7 +137,7 @@ export default function OrdersList() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {/* Cliente con liquidaciÃ³n al recoger pendiente:
+                          {/* Cliente con liquidación al recoger pendiente:
                               botones inline (Confirmar / Disputar) sin abrir
                               detalle. */}
                           {user?.role === UserRole.CLIENTE &&
@@ -147,11 +147,11 @@ export default function OrdersList() {
                               <>
                                 <span
                                   className="hidden md:inline-flex items-center gap-1 mr-1 text-[11px] font-medium text-amber-800 bg-amber-100 border border-amber-300 px-2 py-0.5 rounded"
-                                  title={`LiquidaciÃ³n pendiente: $${(order as any).pickupSettledAmount?.toFixed(2) ?? "?"}`}
+                                  title={`Liquidación pendiente: $${(order as any).pickupSettledAmount?.toFixed(2) ?? "?"}`}
                                   data-testid={`badge-settlement-pending-${order.id}`}
                                 >
                                   <HandCoins className="h-3 w-3" />
-                                  LiquidaciÃ³n
+                                  Liquidación
                                 </span>
                                 <CustomerPickupSettleActions
                                   order={order as unknown as PickupSettlementOrder}
@@ -199,5 +199,6 @@ function PackageIcon(props: any) {
     </svg>
   );
 }
+
 
 

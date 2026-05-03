@@ -29,13 +29,13 @@ const TYPE_LABELS: Record<string, string> = {
   ROBO: "Robo",
   DEMORA: "Demora",
   CLIENTE_AUSENTE: "Cliente ausente",
-  VEHICULO: "VehÃ­culo",
+  VEHICULO: "Vehículo",
   OTRO: "Otro",
 };
 
 const STATUS_LABELS: Record<string, string> = {
   ABIERTO: "Abierto",
-  EN_REVISION: "En revisiÃ³n",
+  EN_REVISION: "En revisión",
   RESUELTO: "Resuelto",
 };
 
@@ -60,7 +60,7 @@ export default function IncidentsPage() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (description.trim().length < 5) {
-      toast.error("Contanos un poco mÃ¡s sobre lo que pasÃ³");
+      toast.error("Contanos un poco más sobre lo que pasó");
       return;
     }
     try {
@@ -100,7 +100,7 @@ export default function IncidentsPage() {
         <p className="text-muted-foreground mt-1">
           {admin
             ? "Seguimiento de todos los reportes de los repartidores."
-            : "ReportÃ¡ lo que pasa en la calle. El equipo va a revisarlo."}
+            : "Reportá lo que pasa en la calle. El equipo va a revisarlo."}
         </p>
       </div>
 
@@ -131,7 +131,7 @@ export default function IncidentsPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground">
-                    NÂ° de envÃ­o (opcional)
+                    NÂ° de envío (opcional)
                   </label>
                   <Input
                     type="number"
@@ -143,7 +143,7 @@ export default function IncidentsPage() {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-medium text-muted-foreground">Â¿QuÃ© pasÃ³?</label>
+                <label className="text-xs font-medium text-muted-foreground">¿Qué pasó?</label>
                 <Textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -198,7 +198,7 @@ export default function IncidentsPage() {
                       </Badge>
                       {inc.orderId ? (
                         <span className="text-xs text-muted-foreground">
-                          EnvÃ­o #{inc.orderId}
+                          Envío #{inc.orderId}
                         </span>
                       ) : null}
                     </div>
@@ -234,5 +234,6 @@ export default function IncidentsPage() {
     </div>
   );
 }
+
 
 

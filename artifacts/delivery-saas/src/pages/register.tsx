@@ -17,8 +17,8 @@ import { Logo } from "@/components/logo";
 
 const registerSchema = z.object({
   name: z.string().min(1, "El nombre es requerido"),
-  email: z.string().email("Correo invÃ¡lido"),
-  password: z.string().min(6, "La contraseÃ±a debe tener al menos 6 caracteres"),
+  email: z.string().email("Correo inválido"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   role: z.nativeEnum(UserRole),
 });
 
@@ -43,7 +43,7 @@ export default function Register() {
       const res = await registerMutation.mutateAsync({ data });
       setUser(res.user);
       queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
-      toast.success("Â¡Cuenta creada exitosamente!");
+      toast.success("¡Cuenta creada exitosamente!");
       setLocation("/");
     } catch (error: any) {
       toast.error(error.data?.error || "Error al crear cuenta");
@@ -64,7 +64,7 @@ export default function Register() {
           <p className="mt-2 text-sm text-muted-foreground">
             O{" "}
             <Link href="/login" className="font-medium text-primary hover:text-primary/80">
-              inicia sesiÃ³n si ya tienes una
+              inicia sesión si ya tienes una
             </Link>
           </p>
 
@@ -78,7 +78,7 @@ export default function Register() {
                     <FormItem>
                       <FormLabel>Nombre completo</FormLabel>
                       <FormControl>
-                        <Input placeholder="Juan PÃ©rez" {...field} />
+                        <Input placeholder="Juan Pérez" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -90,7 +90,7 @@ export default function Register() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Correo electrÃ³nico</FormLabel>
+                      <FormLabel>Correo electrónico</FormLabel>
                       <FormControl>
                         <Input placeholder="nombre@empresa.com" {...field} />
                       </FormControl>
@@ -104,7 +104,7 @@ export default function Register() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>ContraseÃ±a</FormLabel>
+                      <FormLabel>Contraseña</FormLabel>
                       <FormControl>
                         <Input type="password" {...field} />
                       </FormControl>
@@ -149,10 +149,10 @@ export default function Register() {
         <div className="absolute inset-0 h-full w-full bg-gradient-to-bl from-[#00B5E2] via-[#0096BD] to-[#0B1E2D] flex items-center justify-center p-12">
           <div className="text-white max-w-2xl">
             <h1 className="text-5xl font-extrabold tracking-tight mb-6">
-              Haz crecer tu negocio con entregas rÃ¡pidas.
+              Haz crecer tu negocio con entregas rápidas.
             </h1>
             <p className="text-xl opacity-90">
-              Sumate a las empresas que confÃ­an en TiempoLibre para su logÃ­stica de Ãºltima milla.
+              Sumate a las empresas que confían en TiempoLibre para su logística de última milla.
             </p>
           </div>
         </div>
@@ -160,5 +160,6 @@ export default function Register() {
     </div>
   );
 }
+
 
 

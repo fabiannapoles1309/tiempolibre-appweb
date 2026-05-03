@@ -26,7 +26,7 @@ const ARS = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN',
 export default function Dashboard() {
   const { user } = useAuth();
   const { data: dashboardData, isLoading } = useGetDashboard();
-  // SÃ³lo el cliente tiene suscripciÃ³n/bloque de envÃ­os. El hook estÃ¡
+  // Sólo el cliente tiene suscripción/bloque de Envíos. El hook está
   // condicionado con `enabled` para no llamar al endpoint con admins/drivers.
   const { data: mySubData } = useGetMySubscription({
     query: {
@@ -58,7 +58,7 @@ export default function Dashboard() {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Buenos dÃ­as";
+    if (hour < 12) return "Buenos Días";
     if (hour < 19) return "Buenas tardes";
     return "Buenas noches";
   };
@@ -71,13 +71,13 @@ export default function Dashboard() {
           <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mt-1">
             Panel de Control de Reparto
           </h1>
-          <p className="text-muted-foreground mt-2">Resumen en tiempo real de tu operaciÃ³n.</p>
+          <p className="text-muted-foreground mt-2">Resumen en tiempo real de tu operación.</p>
         </div>
         {user?.role === UserRole.CLIENTE && (
           <Link href="/orders/new">
             <Button size="lg" className="h-11 text-base font-semibold shadow-sm">
               <Plus className="w-5 h-5 mr-2" />
-              Crear nuevo envÃ­o
+              Crear nuevo envío
             </Button>
           </Link>
         )}
@@ -100,19 +100,19 @@ export default function Dashboard() {
           )}
           <AlertTitle>
             {mySub.remainingDeliveries === 0
-              ? "Te quedaste sin envÃ­os disponibles"
-              : "Tu bloque de envÃ­os estÃ¡ por agotarse"}
+              ? "Te quedaste sin Envíos disponibles"
+              : "Tu bloque de Envíos está por agotarse"}
           </AlertTitle>
           <AlertDescription>
             {mySub.remainingDeliveries === 0 ? (
               <>
-                Solicita una recarga de tu paquete para seguir generando envÃ­os.{" "}
+                Solicita una recarga de tu paquete para seguir generando Envíos.{" "}
                 <Link
                   href="/subscription"
                   className="underline font-medium"
                   data-testid="link-subscription-from-alert"
                 >
-                  Ir a SuscripciÃ³n
+                  Ir a Suscripción
                 </Link>
                 .
               </>
@@ -122,7 +122,7 @@ export default function Dashboard() {
                 <span className="font-bold" data-testid="text-remaining-deliveries">
                   {mySub.remainingDeliveries}
                 </span>{" "}
-                envÃ­os del bloque mensual ({mySub.usedDeliveries} / {mySub.monthlyDeliveries}{" "}
+                Envíos del bloque mensual ({mySub.usedDeliveries} / {mySub.monthlyDeliveries}{" "}
                 consumidos). Solicita una recarga antes de que se agoten.{" "}
                 <Link
                   href="/subscription"
@@ -141,7 +141,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">EnvÃ­os de hoy</CardTitle>
+            <CardTitle className="text-sm font-medium">Envíos de hoy</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -187,14 +187,14 @@ export default function Dashboard() {
         {user?.role === UserRole.CLIENTE && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gasto en envÃ­os hoy</CardTitle>
+              <CardTitle className="text-sm font-medium">Gasto en Envíos hoy</CardTitle>
               <DollarSign className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold" data-testid="text-today-expense">
                 {ARS.format(Number((kpis as { todayDeliveryExpense?: number }).todayDeliveryExpense ?? 0))}
               </div>
-              <p className="text-xs text-muted-foreground">Suma del valor de los envÃ­os creados hoy</p>
+              <p className="text-xs text-muted-foreground">Suma del valor de los Envíos creados hoy</p>
             </CardContent>
           </Card>
         )}
@@ -215,8 +215,8 @@ export default function Dashboard() {
       <div className={`grid grid-cols-1 ${isAdmin(user) ? "lg:grid-cols-2" : ""} gap-6`}>
         <Card>
           <CardHeader>
-            <CardTitle>EnvÃ­os por estado</CardTitle>
-            <CardDescription>DistribuciÃ³n actual de Ã³rdenes</CardDescription>
+            <CardTitle>Envíos por estado</CardTitle>
+            <CardDescription>Distribución actual de órdenes</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px]">
             {ordersByStatus.length === 0 ? (
@@ -249,7 +249,7 @@ export default function Dashboard() {
         {isAdmin(user) && (
           <Card>
             <CardHeader>
-              <CardTitle>EnvÃ­os por zona</CardTitle>
+              <CardTitle>Envíos por zona</CardTitle>
               <CardDescription>Volumen de entregas por sector</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
@@ -272,20 +272,20 @@ export default function Dashboard() {
 
       <Card>
         <CardHeader>
-          <CardTitle>EnvÃ­os recientes</CardTitle>
-          <CardDescription>Ãšltimas 5 Ã³rdenes registradas en el sistema</CardDescription>
+          <CardTitle>Envíos recientes</CardTitle>
+          <CardDescription>Ášltimas 5 órdenes registradas en el sistema</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {recentOrders.length === 0 ? (
-              <div className="py-8 text-center text-muted-foreground">No hay envÃ­os recientes.</div>
+              <div className="py-8 text-center text-muted-foreground">No hay Envíos recientes.</div>
             ) : (
               recentOrders.map((order) => (
                 <Link key={order.id} href={`/orders/${order.id}`}>
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className="space-y-1">
                       <div className="font-medium">
-                        EnvÃ­o #{order.id} â€¢ <span className="text-muted-foreground">{order.customerName}</span>
+                        Envío #{order.id} â€¢ <span className="text-muted-foreground">{order.customerName}</span>
                       </div>
                       <div className="text-sm text-muted-foreground line-clamp-1">
                         De: {order.pickup} â†’ Para: {order.delivery}
@@ -312,5 +312,7 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
 
 

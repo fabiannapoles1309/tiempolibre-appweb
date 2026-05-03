@@ -71,6 +71,7 @@ export interface User {
    */
   customerCode?: string | null;
   createdAt: string;
+  mustChangePassword?: boolean;
 }
 
 /**

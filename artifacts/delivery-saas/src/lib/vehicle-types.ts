@@ -1,4 +1,4 @@
-﻿export const VEHICLE_TYPES = [
+﻿﻿export const VEHICLE_TYPES = [
   "Moto",
   "Bicicleta elÃ©ctrica",
   "Moto taxi",

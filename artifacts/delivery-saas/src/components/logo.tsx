@@ -1,4 +1,4 @@
-﻿interface LogoProps {
+﻿﻿interface LogoProps {
   /** `full` includes TL mark + wordmark + slogan; `wordmark` is wordmark + slogan only (horizontal) */
   variant?: "full" | "wordmark";
   /** Height in px */

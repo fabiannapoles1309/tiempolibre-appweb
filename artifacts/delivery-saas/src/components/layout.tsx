@@ -120,7 +120,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background">
 
       {/* Sidebar desktop */}
-      <aside className="hidden md:flex w-64 flex-shrink-0 flex-col bg-[#00B5E2] text-white">
+      <aside className="w-64 flex-shrink-0 flex-col bg-[#00B5E2] text-white" style={{ display: typeof window !== 'undefined' && window.innerWidth < 768 ? 'none' : 'flex' }}>
         <SidebarContent />
       </aside>
 

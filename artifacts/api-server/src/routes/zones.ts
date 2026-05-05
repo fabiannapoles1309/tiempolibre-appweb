@@ -22,9 +22,10 @@ router.get("/zones/validate", requireAuth, requireRole("ADMIN", "CLIENTE", "SUPE
   res.json(result);
 });
 
-router.get("/zones/status", requireAuth, (_req, res) => {
+router.get("/zones/status", (_req, res) => {
   const status = getMapStatus();
   res.json(status);
 });
 
 export default router;
+

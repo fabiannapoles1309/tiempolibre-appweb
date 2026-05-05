@@ -412,6 +412,20 @@ export default function NewOrder() {
       setSelectedPoint({ lat, lng });
       form.setValue("deliveryLat", lat);
       form.setValue("deliveryLng", lng);
+      // Reverse geocoding para llenar el campo de dirección automáticamente
+      fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=jsonv2&accept-language=es`, {
+        headers: { "User-Agent": "TiempoLibre/1.0" }
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          if (d?.display_name) {
+            form.setValue("delivery", d.display_name, { shouldValidate: true });
+          }
+        })
+        .catch(() => {
+          // Si falla el reverse geocoding ponemos las coordenadas como texto
+          form.setValue("delivery", `${lat.toFixed(6)}, ${lng.toFixed(6)}`, { shouldValidate: true });
+        });
       if (!matched) {
         setMatchedZone(null);
         if (isCliente && clienteZone) {
@@ -926,6 +940,7 @@ export default function NewOrder() {
     </div>
   );
 }
+
 
 
 

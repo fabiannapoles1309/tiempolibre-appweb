@@ -1,4 +1,4 @@
-import { readFileSync, existsSync, statSync } from "node:fs";
+﻿import { readFileSync, existsSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import { DOMParser } from "@xmldom/xmldom";
 import { kml as kmlToGeoJson } from "@tmcw/togeojson";
@@ -110,8 +110,13 @@ export interface GeocodeResult {
 export async function geocodeNominatim(direccion: string): Promise<GeocodeResult | null> {
   const q = direccion.trim();
   if (!q) return null;
+  // Si la dirección no menciona Guadalajara ni Jalisco, lo agregamos
+  // para que Nominatim encuentre direcciones cortas dentro de la zona
+  const qEnriquecida = /guadalajara|jalisco|zapopan|tlaquepaque|tonala/i.test(q)
+    ? q
+    : `${q}, Guadalajara, Jalisco, Mexico`;
   const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("q", q);
+  url.searchParams.set("q", qEnriquecida);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "1");
   url.searchParams.set("countrycodes", "mx");
@@ -185,3 +190,4 @@ export async function validarZona(direccion: string): Promise<ValidationResult> 
     displayName: geo.displayName,
   };
 }
+

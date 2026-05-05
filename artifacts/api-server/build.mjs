@@ -1,4 +1,4 @@
-import { createRequire } from "node:module";
+﻿import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { build as esbuild } from "esbuild";
@@ -124,3 +124,4 @@ buildAll().catch((err) => {
   console.error(err);
   process.exit(1);
 });
+

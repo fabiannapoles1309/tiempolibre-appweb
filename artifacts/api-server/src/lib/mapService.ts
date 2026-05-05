@@ -45,13 +45,21 @@ function normalizeName(raw: unknown, idx: number): string {
 export function loadZones(force = false): MapServiceState | null {
   if (state && !force) return state;
   const path = findKmlPath();
-  if (!path) {
-    lastError = "zonas.kml no encontrado";
-    logger.warn({ msg: lastError });
-    return null;
-  }
   try {
-    const xml = readFileSync(path, "utf8");
+    let xml: string;
+    if (path) {
+      xml = readFileSync(path, "utf8");
+    } else {
+      // En Cloud Run el KML no esta en disco, lo bajamos del frontend
+      const kmlUrl = "https://tiempolibre-web-vtjqjnnayq-uc.a.run.app/zonas.kml";
+      const syncRes = require("child_process").execSync(`curl -s "${kmlUrl}"`);
+      xml = syncRes.toString("utf8");
+      if (!xml || xml.includes("404")) {
+        lastError = "zonas.kml no encontrado ni en disco ni en URL";
+        logger.warn({ msg: lastError });
+        return null;
+      }
+    }
     const doc = new DOMParser().parseFromString(xml, "text/xml") as unknown as DomDocLike;
     const fc = kmlToGeoJson(doc) as FeatureCollection;
     const polys: ZonePolygonFeature[] = [];
@@ -190,4 +198,5 @@ export async function validarZona(direccion: string): Promise<ValidationResult> 
     displayName: geo.displayName,
   };
 }
+
 

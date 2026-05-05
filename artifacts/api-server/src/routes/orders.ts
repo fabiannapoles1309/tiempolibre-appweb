@@ -284,7 +284,7 @@ router.post(
         });
         return;
       }
-      if (computedZone !== assignedZone) {
+      if (computedZone !== String(assignedZone)) {
         res.status(400).json({
           error: `Tu zona registrada es la Zona ${assignedZone}. El destino debe estar dentro de esa zona (cae en Zona ${computedZone}).`,
           reason: "FUERA_DE_ZONA_ASIGNADA",
@@ -1083,3 +1083,4 @@ router.post(
 );
 
 export default router;
+

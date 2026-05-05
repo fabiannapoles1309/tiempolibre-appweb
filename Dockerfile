@@ -15,6 +15,7 @@ FROM node:22-alpine
 RUN npm install -g serve
 WORKDIR /app
 COPY --from=builder /workspace/artifacts/delivery-saas/dist/public ./public
+COPY zonas.kml ./public/zonas.kml
 COPY --from=builder /workspace/artifacts/delivery-saas/serve.json ./serve.json
 EXPOSE 8080
 CMD ["serve", "public", "-l", "8080", "--single"]

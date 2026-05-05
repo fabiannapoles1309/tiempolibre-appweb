@@ -309,7 +309,7 @@ export default function NewOrder() {
     (async () => {
       try {
         const base = import.meta.env.BASE_URL ?? "/";
-        const res = await apiFetch(`${base}zonas.kml`);
+        const res = await fetch(`${base}zonas.kml`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const text = await res.text();
         const doc = new XmlDomParser().parseFromString(text, "text/xml") as unknown as Document;
@@ -940,6 +940,7 @@ export default function NewOrder() {
     </div>
   );
 }
+
 
 
 

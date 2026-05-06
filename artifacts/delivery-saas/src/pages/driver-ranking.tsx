@@ -1,4 +1,4 @@
-﻿﻿import { useGetDriverRanking, useGetMyDriver } from "@workspace/api-client-react";
+﻿import { useGetDriverRanking, useGetMyDriver } from "@workspace/api-client-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Loader2 } from "lucide-react";
 

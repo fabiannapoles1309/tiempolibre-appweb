@@ -1,4 +1,4 @@
-﻿﻿import { createRoot } from "react-dom/client";
+﻿import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";

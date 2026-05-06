@@ -1,8 +1,8 @@
-ï»¿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useLogout, UserRole } from "@workspace/api-client-react";
-import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2, ShieldCheck, FileSpreadsheet, MessageSquareWarning, Inbox, Menu, X } from "lucide-react";
+import { Package, LayoutDashboard, Truck, Settings, FileText, LogOut, Loader2, Users, DollarSign, Map as MapIcon, AlertTriangle, Trophy, Gift, Crown, UserPlus, BarChart3, Banknote, Award, Wallet, BookUser, PackagePlus, Settings2, ShieldCheck, FileSpreadsheet, MessageSquareWarning, Inbox, Menu, X, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 import { NotificationBell } from "@/components/notification-bell";
@@ -16,32 +16,33 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard, roles: [UserRole.ADMIN, UserRole.CLIENTE, UserRole.DRIVER] },
-  { title: "Mis envÃ­os", href: "/orders", icon: Package, roles: [UserRole.CLIENTE] },
-  { title: "Crear envÃ­o", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
+  { title: "Mis envíos", href: "/orders", icon: Package, roles: [UserRole.CLIENTE] },
+  { title: "Crear envío", href: "/orders/new", icon: Package, roles: [UserRole.CLIENTE] },
   { title: "Mi billetera", href: "/wallet", icon: Wallet, roles: [UserRole.CLIENTE] },
   { title: "Repartos", href: "/orders", icon: Package, roles: [UserRole.ADMIN] },
-  { title: "AsignaciÃ³n", href: "/admin", icon: Settings, roles: [UserRole.ADMIN] },
+  { title: "Asignación", href: "/admin", icon: Settings, roles: [UserRole.ADMIN] },
   { title: "Mapa de zonas", href: "/map", icon: MapIcon, roles: [UserRole.ADMIN] },
   { title: "Repartidores", href: "/drivers", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Mis entregas", href: "/orders", icon: Truck, roles: [UserRole.DRIVER] },
   { title: "Mis beneficios", href: "/driver/benefits", icon: Gift, roles: [UserRole.DRIVER] },
   { title: "Ranking", href: "/driver/ranking", icon: Trophy, roles: [UserRole.DRIVER] },
   { title: "Incidentes", href: "/driver/incidents", icon: AlertTriangle, roles: [UserRole.DRIVER] },
+  { title: "Mis ganancias", href: "/driver/earnings", icon: TrendingUp, roles: [UserRole.DRIVER] },
   { title: "Reportes", href: "/reports", icon: FileText, roles: [UserRole.ADMIN] },
   { title: "Finanzas", href: "/finance", icon: DollarSign, roles: [UserRole.ADMIN] },
   { title: "Clientes", href: "/admin/clientes", icon: Users, roles: [UserRole.ADMIN] },
   { title: "Destinatarios", href: "/admin/destinatarios", icon: BookUser, roles: [UserRole.ADMIN] },
   { title: "Solicitudes de paquete", href: "/admin/solicitudes-paquetes", icon: PackagePlus, roles: [UserRole.ADMIN] },
-  { title: "ConfiguraciÃ³n de precios", href: "/admin/pricing-settings", icon: Settings2, roles: [UserRole.ADMIN] },
+  { title: "Configuración de precios", href: "/admin/pricing-settings", icon: Settings2, roles: [UserRole.ADMIN] },
   { title: "Suscripciones", href: "/admin/subscriptions", icon: Crown, roles: [UserRole.ADMIN] },
-  { title: "EnvÃ­os por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
+  { title: "Envíos por cliente", href: "/admin/customer-deliveries", icon: BarChart3, roles: [UserRole.ADMIN] },
   { title: "Cash por cliente", href: "/admin/cash-by-customer", icon: Banknote, roles: [UserRole.ADMIN] },
   { title: "Beneficios", href: "/admin/benefits-config", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Seguimiento Beneficios", href: "/admin/benefits-tracking", icon: Award, roles: [UserRole.ADMIN] },
   { title: "Crear usuario", href: "/admin/users", icon: UserPlus, roles: [UserRole.ADMIN] },
   { title: "Personal interno", href: "/admin/staff", icon: ShieldCheck, roles: [UserRole.ADMIN] },
   { title: "Reporte combinado", href: "/admin/reports-combined", icon: FileSpreadsheet, roles: [UserRole.ADMIN] },
-  { title: "BuzÃ³n de quejas", href: "/admin/feedback", icon: Inbox, roles: [UserRole.ADMIN] },
+  { title: "Buzón de quejas", href: "/admin/feedback", icon: Inbox, roles: [UserRole.ADMIN] },
   { title: "Incidentes", href: "/admin/incidents", icon: AlertTriangle, roles: [UserRole.ADMIN] },
   { title: "Quejas y sugerencias", href: "/feedback", icon: MessageSquareWarning, roles: [UserRole.CLIENTE, UserRole.DRIVER] },
 ];
@@ -116,7 +117,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           disabled={logoutMutation.isPending}
         >
           {logoutMutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <LogOut className="w-4 h-4 mr-2" />}
-          Cerrar sesiÃ³n
+          Cerrar sesión
         </Button>
       </div>
     </>
@@ -125,14 +126,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
 
-      {/* Sidebar â€” solo visible en PC */}
+      {/* Sidebar — solo visible en PC */}
       {!isMobile && (
         <aside className="w-64 flex-shrink-0 flex flex-col bg-[#00B5E2] text-white">
           <SidebarContent />
         </aside>
       )}
 
-      {/* Sidebar mÃ³vil - overlay */}
+      {/* Sidebar móvil - overlay */}
       {isMobile && sidebarOpen && (
         <div className="fixed inset-0 z-40 flex">
           <div className="fixed inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />

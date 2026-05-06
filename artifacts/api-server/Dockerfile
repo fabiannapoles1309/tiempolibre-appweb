@@ -1,7 +1,9 @@
-﻿FROM node:22-alpine
+FROM node:22-alpine
 WORKDIR /app
-COPY dist/ ./dist/
-COPY zonas.kml ./zonas.kml
+COPY package.json ./
+RUN npm install
+COPY . .
+RUN node build.mjs
 ENV NODE_ENV=production
 ENV PORT=8080
 EXPOSE 8080

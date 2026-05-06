@@ -1,4 +1,4 @@
-﻿export const ZONAS_KML_EMBEDDED = `<?xml version="1.0" encoding="UTF-8"?>
+export const ZONAS_KML_EMBEDDED = `<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
   <Document>
     <name>TIEMPO LIBRE BASE</name>
@@ -78,7 +78,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <Style id="poly-01579B-3101-77-nodesc-highlight">
@@ -92,7 +92,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <StyleMap id="poly-01579B-3101-77-nodesc">
@@ -116,7 +116,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <Style id="poly-0F9D58-3501-77-nodesc-highlight">
@@ -130,7 +130,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <StyleMap id="poly-0F9D58-3501-77-nodesc">
@@ -154,7 +154,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <Style id="poly-795548-2801-89-nodesc-highlight">
@@ -168,7 +168,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <StyleMap id="poly-795548-2801-89-nodesc">
@@ -192,7 +192,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <Style id="poly-7CB342-4001-110-nodesc-highlight">
@@ -206,7 +206,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <StyleMap id="poly-7CB342-4001-110-nodesc">
@@ -262,7 +262,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <Style id="poly-C2185B-2901-77-nodesc-highlight">
@@ -276,7 +276,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <StyleMap id="poly-C2185B-2901-77-nodesc">
@@ -300,7 +300,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <Style id="poly-F9A825-3601-84-nodesc-highlight">
@@ -314,7 +314,7 @@
         <outline>1</outline>
       </PolyStyle>
       <BalloonStyle>
-        <text><![CDATA[<h3>`$[name]</h3>]]></text>
+        <text><![CDATA[<h3>${name}</h3>]]></text>
       </BalloonStyle>
     </Style>
     <StyleMap id="poly-F9A825-3601-84-nodesc">
@@ -400,7 +400,7 @@
       <name>ZONA 2 REPARTO TIEMPO LIBRE</name>
       <Placemark>
         <name>ZONA 2</name>
-        <description>ITALIA MIA, MORENOÂ´S, KUBO, EMPANADAS CHAPALITA, EL BICHI, FURTER</description>
+        <description>ITALIA MIA, MORENO´S, KUBO, EMPANADAS CHAPALITA, EL BICHI, FURTER</description>
         <styleUrl>#poly-000000-2801-77</styleUrl>
         <Polygon>
           <outerBoundaryIs>

@@ -58,11 +58,13 @@ router.use("/driver", driverStatusRouter);
 router.use("/orders", deliveryTimerRouter);
 router.use("/admin/refunds", refundsRouter);
 router.use("/admin/messaging", messagingRouter);
-router.use("/admin/reports", reportsRouter);router.use("/reports", reportsRouter);
+router.use("/admin/reports", reportsRouter);
+router.use("/reports", reportsRouter);
 router.use("/admin/shipping-costs", shippingCostsRouter);
 
 router.use('/marketing', marketingRouter);
 export default router;
+
 
 
 

@@ -81,7 +81,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 const orderSchema = z
   .object({
     pickup: z.string().min(1, "La dirección de recolección es requerida"),
-    delivery: z.string().min(1, "La dirección de entrega es requerida"),
+    delivery: z.string().min(1, "La dirección de entrega es requerida").refine((v) => /\d/.test(v), { message: "Incluye el número exterior de la dirección" }),
     recipientName: z.string().min(2, "Captura el nombre del destinatario"),
     recipientPhone: z.string().min(6, "Ingresa el teléfono del destinatario"),
     recipientEmail: z
@@ -975,6 +975,7 @@ export default function NewOrder() {
     </div>
   );
 }
+
 
 
 

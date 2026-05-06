@@ -26,6 +26,10 @@ function findKmlPath(): string | null {
     resolve(process.cwd(), "../../zonas.kml"),
     resolve(process.cwd(), "../zonas.kml"),
     resolve(process.cwd(), "attached_assets/zonas.kml"),
+    resolve(__dirname, "../../../zonas.kml"),
+    resolve(__dirname, "../../../../zonas.kml"),
+    resolve(__dirname, "../zonas.kml"),
+    resolve(__dirname, "zonas.kml"),
   ];
   for (const p of candidates) {
     if (existsSync(p) && statSync(p).isFile()) return p;
@@ -50,15 +54,8 @@ export function loadZones(force = false): MapServiceState | null {
     if (path) {
       xml = readFileSync(path, "utf8");
     } else {
-      // En Cloud Run el KML no esta en disco, lo bajamos del frontend
-      const kmlUrl = "https://tiempolibre-web-vtjqjnnayq-uc.a.run.app/zonas.kml";
-      const syncRes = require("child_process").execSync(`curl -s "${kmlUrl}"`);
-      xml = syncRes.toString("utf8");
-      if (!xml || xml.includes("404")) {
-        lastError = "zonas.kml no encontrado ni en disco ni en URL";
-        logger.warn({ msg: lastError });
-        return null;
-      }
+      const { ZONAS_KML_EMBEDDED } = await import("./zonas-kml.js");
+      xml = ZONAS_KML_EMBEDDED;
     }
     const doc = new DOMParser().parseFromString(xml, "text/xml") as unknown as DomDocLike;
     const fc = kmlToGeoJson(doc) as FeatureCollection;
@@ -198,5 +195,8 @@ export async function validarZona(direccion: string): Promise<ValidationResult> 
     displayName: geo.displayName,
   };
 }
+
+
+
 
 

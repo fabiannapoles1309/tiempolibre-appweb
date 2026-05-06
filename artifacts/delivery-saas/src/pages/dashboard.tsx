@@ -285,7 +285,7 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors cursor-pointer">
                     <div className="space-y-1">
                       <div className="font-medium">
-                        Envío #{order.id} â€¢ <span className="text-muted-foreground">{order.customerName}</span>
+                        Envío #{order.id} • <span className="text-muted-foreground">{order.customerName}</span>
                       </div>
                       <div className="text-sm text-muted-foreground line-clamp-1">
                         De: {order.pickup} â†’ Para: {order.delivery}

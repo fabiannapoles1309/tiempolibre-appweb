@@ -204,7 +204,7 @@ export default function IncidentsPage() {
                     </div>
                     <p className="text-sm">{inc.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {admin ? `${inc.driverName} Â· ` : ""}
+                      {admin ? `${inc.driverName} · ` : ""}
                       {new Date(inc.createdAt).toLocaleString("es-MX")}
                     </p>
                   </div>

@@ -96,7 +96,7 @@ export default function DriverBenefits() {
                     <p className="text-lg font-semibold flex items-center gap-2">
                       <Trophy className="w-5 h-5 text-[#00B5E2]" />
                       Nivel {data.currentLevel}
-                      {data.currentLevelName ? ` Â· ${data.currentLevelName}` : ""}
+                      {data.currentLevelName ? ` · ${data.currentLevelName}` : ""}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -111,7 +111,7 @@ export default function DriverBenefits() {
                   {data.nextLevel != null ? (
                     <p className="text-lg font-semibold">
                       Nivel {data.nextLevel}
-                      {data.nextLevelName ? ` Â· ${data.nextLevelName}` : ""}
+                      {data.nextLevelName ? ` · ${data.nextLevelName}` : ""}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground mt-2">
@@ -137,7 +137,7 @@ export default function DriverBenefits() {
                       para desbloquear{" "}
                       <strong>
                         Nivel {data.nextLevel}
-                        {data.nextLevelName ? ` Â· ${data.nextLevelName}` : ""}
+                        {data.nextLevelName ? ` · ${data.nextLevelName}` : ""}
                       </strong>
                     </>
                   ) : data.nextLevel == null ? (

@@ -65,7 +65,7 @@ function PendingOrderRow({ order, zoneDrivers, onAssign }: PendingOrderRowProps)
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             {order.amount.toFixed(2)}
           </span>
-          <span className="text-muted-foreground">â€¢</span>
+          <span className="text-muted-foreground">•</span>
           <span className="text-muted-foreground">Pago: {order.payment}</span>
         </div>
       </div>

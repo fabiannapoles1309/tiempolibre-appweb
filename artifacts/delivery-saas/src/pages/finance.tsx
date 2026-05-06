@@ -164,7 +164,7 @@ export default function Finance() {
                   <SelectItem value="ALL">Todos los clientes</SelectItem>
                   {(clientes ?? []).map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name} {c.businessName ? `Â· ${c.businessName}` : ""}
+                      {c.name} {c.businessName ? `· ${c.businessName}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -402,7 +402,7 @@ export default function Finance() {
                         const d = p?.payload;
                         if (!d) return ['', ''];
                         return [
-                          `${formatMoney(d.total)} Â· ${d.count} servicio${d.count === 1 ? '' : 's'}`,
+                          `${formatMoney(d.total)} · ${d.count} servicio${d.count === 1 ? '' : 's'}`,
                           d.label,
                         ];
                       }}
@@ -423,7 +423,7 @@ export default function Finance() {
             <CardTitle>Efectivo en mano de repartidores</CardTitle>
             <CardDescription>
               Total a rendir: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashPending ?? 0)}</span>
-              {" Â· "}Cobrado en el período: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashCollected ?? 0)}</span>
+              {" · "}Cobrado en el período: <span className="font-bold text-foreground">{formatMoney(cashReport?.totalCashCollected ?? 0)}</span>
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
@@ -460,7 +460,7 @@ export default function Finance() {
             <CardDescription>
               MRR activo:{" "}
               <span className="font-bold text-foreground">{formatMoney(b2b?.totalMrr ?? 0)}</span>{" "}
-              Â· Ingresos del mes:{" "}
+              · Ingresos del mes:{" "}
               <span className="font-bold text-foreground">{formatMoney(b2b?.totalRevenue ?? 0)}</span>
             </CardDescription>
           </CardHeader>

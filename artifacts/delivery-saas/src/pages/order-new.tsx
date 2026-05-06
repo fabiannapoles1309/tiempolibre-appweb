@@ -700,7 +700,42 @@ export default function NewOrder() {
                     <FormItem>
                       <FormLabel>Dirección de entrega</FormLabel>
                       <FormControl>
-                        <Input placeholder="Calle 456, Apto 2B" {...field} />
+                        <Input
+                          placeholder="Calle 456, Apto 2B"
+                          {...field}
+                          onBlur={async (e) => {
+                            field.onBlur();
+                            const addr = e.target.value.trim();
+                            if (!addr || !mapRef.current || !geo) return;
+                            const q = /guadalajara|jalisco|zapopan|tlaquepaque|tonala/i.test(addr)
+                              ? addr : `${addr}, Guadalajara, Jalisco, Mexico`;
+                            try {
+                              const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=jsonv2&limit=1&countrycodes=mx`, {
+                                headers: { "User-Agent": "TiempoLibre/1.0" }
+                              });
+                              const data = await res.json();
+                              if (!data[0]) return;
+                              const lat = parseFloat(data[0].lat);
+                              const lng = parseFloat(data[0].lon);
+                              if (markerRef.current) markerRef.current.remove();
+                              const matched = pointInZones(geo, lng, lat);
+                              markerRef.current = new maplibregl.Marker({ color: matched ? "#00B5E2" : "#dc2626" })
+                                .setLngLat([lng, lat])
+                                .addTo(mapRef.current);
+                              mapRef.current.flyTo({ center: [lng, lat], zoom: 15 });
+                              setSelectedPoint({ lat, lng });
+                              form.setValue("deliveryLat", lat);
+                              form.setValue("deliveryLng", lng);
+                              if (matched) {
+                                setMatchedZone(matched);
+                                setZoneError(null);
+                              } else {
+                                setMatchedZone(null);
+                                setZoneError("Dirección fuera de zona de cobertura.");
+                              }
+                            } catch { /* ignorar */ }
+                          }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -940,6 +975,7 @@ export default function NewOrder() {
     </div>
   );
 }
+
 
 
 

@@ -1,4 +1,4 @@
-﻿import { Router, type IRouter } from "express";
+import { Router, type IRouter } from "express";
 import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { db, ordersTable, driversTable } from "@workspace/db";
 import { requireAuth, requireRole } from "../middlewares/auth";

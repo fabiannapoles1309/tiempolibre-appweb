@@ -46,6 +46,8 @@ function normalizeName(raw: unknown, idx: number): string {
   return String(idx + 1);
 }
 
+import { ZONAS_KML_EMBEDDED } from "./zonas-kml.js";
+
 export function loadZones(force = false): MapServiceState | null {
   if (state && !force) return state;
   const path = findKmlPath();
@@ -54,7 +56,6 @@ export function loadZones(force = false): MapServiceState | null {
     if (path) {
       xml = readFileSync(path, "utf8");
     } else {
-      const { ZONAS_KML_EMBEDDED } = await import("./zonas-kml.js");
       xml = ZONAS_KML_EMBEDDED;
     }
     const doc = new DOMParser().parseFromString(xml, "text/xml") as unknown as DomDocLike;
@@ -195,6 +196,7 @@ export async function validarZona(direccion: string): Promise<ValidationResult> 
     displayName: geo.displayName,
   };
 }
+
 
 
 

@@ -1,0 +1,52 @@
+name: Deploy STAGING
+on:
+  push:
+    branches:
+      - staging
+env:
+  PROJECT_ID: tiempo-libre-app-494607
+  REGION: us-central1
+jobs:
+  deploy-frontend:
+    name: Deploy Frontend Staging
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/612959916526/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-deploy@tiempo-libre-app-494607.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy Frontend a Cloud Run Staging
+        run: |
+          gcloud run deploy tiempolibre-web-staging \
+            --source . \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --port 8080 \
+            --project tiempo-libre-app-494607
+  deploy-api:
+    name: Deploy API Staging
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/612959916526/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-deploy@tiempo-libre-app-494607.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy API a Cloud Run Staging
+        run: |
+          gcloud run deploy tiempolibre-api-staging \
+            --source artifacts/api-server \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --port 8080 \
+            --project tiempo-libre-app-494607 \
+            --set-env-vars="NODE_ENV=staging,DATABASE_URL=${{ secrets.DATABASE_URL }},SESSION_SECRET=${{ secrets.SESSION_SECRET }}"

@@ -49,4 +49,4 @@ jobs:
             --allow-unauthenticated \
             --port 8080 \
             --project tiempo-libre-app-494607 \
-            --set-env-vars="NODE_ENV=staging,DATABASE_URL=${{ secrets.DATABASE_URL }},SESSION_SECRET=${{ secrets.SESSION_SECRET }}"
+            --set-env-vars="NODE_ENV=staging,DATABASE_URL=${{ secrets.DATABASE_URL_STAGING }},SESSION_SECRET=${{ secrets.SESSION_SECRET }}"

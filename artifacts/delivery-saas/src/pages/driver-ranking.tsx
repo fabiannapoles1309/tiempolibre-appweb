@@ -35,8 +35,7 @@ export default function DriverRankingPage() {
                   <tr>
                     <th className="py-2 pr-4 w-16">#</th>
                     <th className="py-2 pr-4">Repartidor</th>
-                    <th className="py-2 pr-4 text-right">Entregas</th>
-                    <th className="py-2 text-right">Recaudación</th>
+                    <th className="py-2 text-right">Entregas</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -66,10 +65,9 @@ export default function DriverRankingPage() {
                         </td>
                         <td className="py-2 pr-4">
                           {r.driverName}
-                          {isMe ? <span className="ml-2 text-xs text-[#0096BD]">(vos)</span> : null}
+                          {isMe ? <span className="ml-2 text-xs text-[#0096BD]">(tú)</span> : null}
                         </td>
-                        <td className="py-2 pr-4 text-right">{r.deliveries}</td>
-                        <td className="py-2 text-right">$ {Number(r.revenue).toLocaleString("es-MX")}</td>
+                        <td className="py-2 text-right">{r.deliveries}</td>
                       </tr>
                     );
                   })}
@@ -82,6 +80,3 @@ export default function DriverRankingPage() {
     </div>
   );
 }
-
-
-

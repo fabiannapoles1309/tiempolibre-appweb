@@ -41,6 +41,8 @@ jobs:
           workload_identity_provider: projects/612959916526/locations/global/workloadIdentityPools/github-pool/providers/github-provider
           service_account: github-deploy@tiempo-libre-app-494607.iam.gserviceaccount.com
       - uses: google-github-actions/setup-gcloud@v2
+      - name: Limpiar dist anterior
+        run: rm -rf artifacts/api-server/dist
       - name: Deploy API a Cloud Run Staging
         run: |
           gcloud run deploy tiempolibre-api-staging \
